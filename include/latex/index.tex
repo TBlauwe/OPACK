@@ -1,0 +1,109 @@
+\label{index_md_D__dev_cpp_OPACK_README}%
+\Hypertarget{index_md_D__dev_cpp_OPACK_README}%
+ \hypertarget{index_autotoc_md1}{}\doxysection{OPACK}\label{index_autotoc_md1}
+(Last known as {\bfseries{Dynamo}})
+
+{\bfseries{OPACK}} is a C++ library to simulate cognitive agents. The main goal is to allow quick construction of an agent model tailored to your needs. An agent model in OPACK is defined as follow \+:
+
+
+\begin{DoxyItemize}
+\item {\bfseries{O}} \+: set of operations manipulating {\bfseries{PACK}}
+\item {\bfseries{PACK}} \+: set of data specific for an agent
+\item {\bfseries{P}} \+: set of current percepts
+\item {\bfseries{A}} \+: set of current actions
+\item {\bfseries{C}} \+: set of caracteristics (stable, e.\+g personality traits, or dynamic, e.\+g stress, emotion, etc.)
+\item {\bfseries{K}} \+: set of knowledge.
+\end{DoxyItemize}
+
+We provide tools to facilitate the construction of an OPACK that suit your needs. While a whole virtual environment can be created using this tool, here we suppose you already have one.
+
+\begin{quote}
+\+:warning\+: Project not ready yet ! \end{quote}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{preprocessor}{\#include <opack/core.hpp>}}
+\DoxyCodeLine{\textcolor{keywordtype}{int} main()}
+\DoxyCodeLine{\{}
+\DoxyCodeLine{    \textcolor{comment}{// Step I : Initialize an empty simulation}}
+\DoxyCodeLine{    \textcolor{comment}{//========================================}}
+\DoxyCodeLine{    \textcolor{keyword}{auto} sim = opk::Simulation();       }
+\DoxyCodeLine{}
+\DoxyCodeLine{    \textcolor{comment}{// Step II : Populate your simulation}}
+\DoxyCodeLine{    \textcolor{comment}{//  -\/ Can also be done when running the simulation}}
+\DoxyCodeLine{    \textcolor{comment}{//===================================}}
+\DoxyCodeLine{    \textcolor{keyword}{auto} artefact   = sim.artefact(\textcolor{stringliteral}{"{}An artefact"{}});  \textcolor{comment}{// Create an artefact.}}
+\DoxyCodeLine{    \textcolor{keyword}{auto} arthur     = sim.agent(\textcolor{stringliteral}{"{}Arthur"{}});          \textcolor{comment}{// Create an agent.}}
+\DoxyCodeLine{}
+\DoxyCodeLine{}
+\DoxyCodeLine{    \textcolor{comment}{// Step III : Loop}}
+\DoxyCodeLine{    \textcolor{comment}{//===================================}}
+\DoxyCodeLine{}
+\DoxyCodeLine{    \textcolor{comment}{//  -\/ 1. Tell what the agent perceive}}
+\DoxyCodeLine{    \textcolor{comment}{//-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{    sim.percept<your::senses>(artefact)             \textcolor{comment}{// Create a percept coming from artefact, perceived by arthur.}}
+\DoxyCodeLine{        .perceived\_by(arthur); }
+\DoxyCodeLine{}
+\DoxyCodeLine{    \textcolor{comment}{//  -\/ 2. Advance simulation}}
+\DoxyCodeLine{    \textcolor{comment}{//-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{    sim.step(); \textcolor{comment}{// advance simulation by one step}}
+\DoxyCodeLine{    sim.step(1.0f); \textcolor{comment}{// advance simulation by one step as if 1 second has passed}}
+\DoxyCodeLine{    sim.step\_n(100); \textcolor{comment}{// advance simulation by 100 steps}}
+\DoxyCodeLine{    sim.step\_n(100, 1.0f); \textcolor{comment}{// advance simulation by 100 steps, as if 1 seconds passed between each steps}}
+\DoxyCodeLine{}
+\DoxyCodeLine{    \textcolor{comment}{//  -\/ 3. Retrieve actions}}
+\DoxyCodeLine{    \textcolor{comment}{//-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{    sim.actions();}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\hypertarget{index_autotoc_md2}{}\doxysubsection{Installation}\label{index_autotoc_md2}
+\begin{quote}
+\+:warning\+: needs to be tested ! \end{quote}
+To use the library, include the library in your build system \+:\hypertarget{index_autotoc_md3}{}\doxysubsubsection{CMake}\label{index_autotoc_md3}
+We recommend to use \href{https://github.com/cpm-cmake/CPM.cmake}{\texttt{ CPM}} 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{CPMAddPackage(}
+\DoxyCodeLine{        NAME opack }
+\DoxyCodeLine{        GITHUB\_REPOSITORY TBlauwe/OPACK}
+\DoxyCodeLine{        OPTIONS}
+\DoxyCodeLine{            "{}OPK\_BUILD\_APPS OFF"{}}
+\DoxyCodeLine{            "{}OPK\_BUILD\_BENCHMARKS OFF"{}}
+\DoxyCodeLine{            "{}OPK\_BUILD\_DOCS OFF"{}}
+\DoxyCodeLine{            "{}OPK\_BUILD\_TESTS OFF"{}}
+\DoxyCodeLine{)}
+
+\end{DoxyCode}
+\hypertarget{index_autotoc_md4}{}\doxyparagraph{CMake options}\label{index_autotoc_md4}
+\tabulinesep=1mm
+\begin{longtabu}spread 0pt [c]{*{3}{|X[-1]}|}
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Options   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Default   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Description    }\\\cline{1-3}
+\endfirsthead
+\hline
+\endfoot
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Options   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Default   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Description    }\\\cline{1-3}
+\endhead
+OPK\+\_\+\+BUILD\+\_\+\+SAMPLES   &OFF   &Build several applications showcasing the library    \\\cline{1-3}
+OPK\+\_\+\+BUILD\+\_\+\+BENCHMARKS   &OFF   &Build benchmarks    \\\cline{1-3}
+OPK\+\_\+\+BUILD\+\_\+\+DOCS   &OFF   &Build documentation    \\\cline{1-3}
+OPK\+\_\+\+BUILD\+\_\+\+TESTS   &OFF   &Build tests   \\\cline{1-3}
+\end{longtabu}
+\hypertarget{index_autotoc_md5}{}\doxysubsubsection{Prerequisites}\label{index_autotoc_md5}
+Each target will automatically install dependencies via \href{https://github.com/cpm-cmake/}{\texttt{ CPM}}.
+
+However, some dependencies needs to be downloaded manually (for some targets) \+:\hypertarget{index_autotoc_md6}{}\doxyparagraph{Docs}\label{index_autotoc_md6}
+\begin{quote}
+Only if {\ttfamily BUILD\+\_\+\+DOCS ON} ! \end{quote}
+Install \href{https://www.doxygen.nl/download.html}{\texttt{ doxygen}}
+
+If you are seeing this error \+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{error : Problems running epstopdf. Check your TeX installation!}
+
+\end{DoxyCode}
+
+
+Install a TeX distribution on your systems, see \+: \href{https://www.latex-project.org/get/}{\texttt{ https\+://www.\+latex-\/project.\+org/get/}} . 
