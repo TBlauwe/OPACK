@@ -1,6 +1,5 @@
 # Project exclude paths
 bin/
-/cmake*/
 /.idea/
 /CMakePresets.json
 /CMakeSettings.json

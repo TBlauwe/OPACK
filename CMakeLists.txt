@@ -17,6 +17,12 @@ project(OPACK
         LANGUAGES CXX
 )
 
+# CMake libraries
+# ---------------
+set(CPM_DOWNLOAD_VERSION 0.35.0)
+include(cmake/FindCPM.cmake)
+
+
 # Build options
 # -------------
 option(OPACK_BUILD_APPS           "Build several samples to showcase the library." OFF)
