@@ -10,7 +10,7 @@ configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
 add_custom_target(doc_doxygen
         ALL
         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/include"
+        WORKING_DIRECTORY "${OPACK_SOURCE_DIR}/include"
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM 
 )

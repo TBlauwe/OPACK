@@ -1,19 +1,43 @@
-﻿# ==================================================================
-# OPACK - top cmake file
-# Tries to follow : https://cliutils.gitlab.io/modern-cmake/
-# Any helps, corrections, tips or tricks will be highly appreciated
-# ==================================================================
-cmake_minimum_required (VERSION 3.12...3.23)
-
-# Header files
+﻿# Library files
+# ==============
 set(HEADER_LIST 
 	"${OPACK_SOURCE_DIR}/include/opack/core.hpp"
-	"${OPACK_SOURCE_DIR}/src/opack.h"
 )
 
-# Source files
 set(SOURCE_LIST 
-	"${OPACK_SOURCE_DIR}/src/OPACK.cpp"
+	"${OPACK_SOURCE_DIR}/src/core/simulation.cpp"
 )
 
-add_executable (OPACK ${SOURCE_LIST} ${HEADER_LIST})
+# Dependencies
+# ============
+
+# General-purpose Parallel and Heterogeneous Task Programming System
+CPMAddPackage(
+        NAME taskflow
+        GITHUB_REPOSITORY taskflow/taskflow
+        GIT_TAG v3.3.0
+        OPTIONS
+        "TF_BUILD_TESTS OFF"
+        "TF_BUILD_EXAMPLES OFF"
+)
+
+# A fast entity component system (ECS) for C & C++
+CPMAddPackage(
+        NAME flecs
+        GITHUB_REPOSITORY SanderMertens/flecs
+        GIT_TAG master
+        OPTIONS
+        "FLECS_STATIC_LIBS ON"
+        "FLECS_SHARED_LIBS OFF"
+)
+
+# Target : opack
+# ==============
+add_library (opack ${SOURCE_LIST} ${HEADER_LIST})
+target_include_directories(opack PUBLIC "${OPACK_SOURCE_DIR}/include")
+target_link_libraries(opack PUBLIC Taskflow flecs_static)
+target_compile_features(opack PUBLIC cxx_std_20)
+
+if(OPACK_DEVELOPPER_WARNINGS)
+	target_default_compile_warnings_cxx(opack)
+endif()
