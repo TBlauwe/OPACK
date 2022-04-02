@@ -20,6 +20,7 @@ CPMAddPackage(
         "TF_BUILD_TESTS OFF"
         "TF_BUILD_EXAMPLES OFF"
 )
+set_target_properties(Taskflow PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:Taskflow,INTERFACE_INCLUDE_DIRECTORIES>)
 
 # A fast entity component system (ECS) for C & C++
 CPMAddPackage(
@@ -30,6 +31,7 @@ CPMAddPackage(
         "FLECS_STATIC_LIBS ON"
         "FLECS_SHARED_LIBS OFF"
 )
+set_target_properties(flecs_static PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:flecs_static,INTERFACE_INCLUDE_DIRECTORIES>)
 
 # Target : opack
 # ==============
