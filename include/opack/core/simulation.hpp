@@ -1,6 +1,7 @@
 #pragma once
 
 #include <flecs.h>
+#include <taskflow/core/executor.hpp>
 
 /**
 @brief Main entry point to use the library.
@@ -15,12 +16,11 @@ namespace opack {
 	*/
 	class Simulation {
 	public:
-		/**
-		@brief Construct an empty simulation.
-		*/
 		Simulation();
+		~Simulation();
 
 	private:
+		tf::Executor executor;
 		flecs::world world;
 	};
 
