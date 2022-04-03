@@ -78,7 +78,7 @@ namespace opack {
         */
         float time() const;
 
-	private:
+	public:
 		tf::Executor executor;
 		flecs::world world;
 	};
