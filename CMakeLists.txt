@@ -70,9 +70,8 @@ add_library (opack STATIC ${SOURCE_LIST} ${HEADER_LIST})
 target_include_directories(opack PUBLIC include)
 target_link_libraries(opack PUBLIC Taskflow flecs_static)
 target_compile_features(opack PUBLIC cxx_std_20)
-
 if(OPACK_DEVELOPPER_WARNINGS)
-	target_default_compile_warnings_cxx(opack)
+    target_set_compile_warnings_cxx(opack)
 endif()
 
 

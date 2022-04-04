@@ -1,9 +1,8 @@
-function(target_default_compile_warnings_cxx THIS)
-
+function(target_set_compile_warnings_cxx _TARGET)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
             OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
-        target_compile_options(${THIS} PRIVATE
+        target_compile_options(${_TARGET} PRIVATE
                 #$<$<CONFIG:RELEASE>:-Werror>
                 $<$<CONFIG:Debug>:-Wshadow>
                 $<$<CONFIG:Debug>:-Wunused>
@@ -16,11 +15,15 @@ function(target_default_compile_warnings_cxx THIS)
                 -Wconversion
                 -Wsign-conversion
                 -Wdouble-promotion
-                -Wformat=2)
+                -Wformat=2
+                -Wno-c++98-compat
+                -Wno-c++98-compat-pedantic
+                -Wno-c++98-c++11-compat-pedantic
+        )
 
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
-        target_compile_options(${THIS} PRIVATE
+        target_compile_options(${_TARGET} PRIVATE
                 #$<$<CONFIG:RELEASE>:-Werror>
                 $<$<CONFIG:Debug>:-Wshadow>
                 $<$<CONFIG:Debug>:-Wunused>
@@ -33,11 +36,15 @@ function(target_default_compile_warnings_cxx THIS)
                 -Wconversion
                 -Wsign-conversion
                 -Wdouble-promotion
-                -Wformat=2)
+                -Wformat=2
+                -Wno-c++98-compat
+                -Wno-c++98-compat-pedantic
+                -Wno-c++98-c++11-compat-pedantic
+        )
 
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
-        target_compile_options(${THIS} PRIVATE
+        target_compile_options(${_TARGET} PRIVATE
                 #$<$<CONFIG:RELEASE>:/WX>
                 /W4
                 /w14242 /w14254 /w14263

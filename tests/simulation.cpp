@@ -1,5 +1,6 @@
 #include <doctest/doctest.h>
 #include <opack/core/simulation.hpp>
+#include <string.h> // For const char * comparisons
 
 TEST_SUITE_BEGIN("Simulation");
 
@@ -7,6 +8,8 @@ TEST_CASE("Basics")
 {
 	auto sim = opack::Simulation();
 	REQUIRE(sim.tick() == 0);
+	REQUIRE(sim.count<opack::Agent>() == 0);
+	REQUIRE(sim.count<opack::Percept>() == 0);
 
 	SUBCASE("Controls - setting")
 	{
@@ -59,6 +62,61 @@ TEST_CASE("Basics")
 	SUBCASE("Controls - shutdown")
 	{
 		sim.stop();
+	}
+
+	SUBCASE("Agents")
+	{
+		// Agent without name
+		auto agent_1 = sim.agent<opack::Agent>();
+		CHECK(agent_1.has<opack::Agent>());
+		CHECK(sim.count<opack::Agent>() == 1);
+
+		// Agent with different ids, even without name
+		auto agent_2 = sim.agent<opack::Agent>();
+		auto agent_3 = sim.agent<opack::Agent>();
+		CHECK(agent_1 != agent_2);
+		CHECK(agent_2 != agent_3);
+		CHECK(agent_1 != agent_3);
+		CHECK(sim.count<opack::Agent>() == 3);
+
+		// Agent of different types
+		struct AgentA : opack::Agent {};
+		sim.register_agent_type<AgentA>();
+		auto agent_a = sim.agent<AgentA>();
+		CHECK(agent_a.has<AgentA>());
+		CHECK(sim.count<opack::Agent>() == 3);
+		CHECK(sim.count<AgentA>() == 1);
+
+		// Agent with name
+		auto bob = sim.agent<opack::Agent>("Bob");
+		CHECK(strcmp(bob.name().c_str(), "Bob") == 0);
+	}
+
+	SUBCASE("Percepts")
+	{
+		struct PerceptA : opack::Percept {};
+		sim.register_percept_type<PerceptA>();
+
+		// Add percept
+		auto agent = sim.agent<opack::Agent>();
+		auto percept = sim.percept<PerceptA>(agent);
+		CHECK(percept.has<PerceptA>());
+		CHECK(percept.has(flecs::ChildOf, agent));
+		CHECK(agent.has<PerceptA>(percept));
+		CHECK(sim.count<PerceptA>() == 1);
+
+		// Retrieve percept only for a specific agent
+		auto another_agent = sim.agent<opack::Agent>();
+		sim.percept<PerceptA>(another_agent);
+		sim.percept<PerceptA>(another_agent);
+		sim.percept<PerceptA>(another_agent);
+		sim.percept<PerceptA>(agent);
+		CHECK(sim.query_perceptions_of(agent).size() == 2);
+		CHECK(sim.query_perceptions_of(another_agent).size() == 3);
+
+		// Check deletion 
+		agent.destruct(); // All percepts should be also deleted (and anything associated with them).
+		CHECK(percept.is_alive() == false);
 	}
 }
 
