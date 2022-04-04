@@ -67,13 +67,13 @@ TEST_CASE("Basics")
 	SUBCASE("Agents")
 	{
 		// Agent without name
-		auto agent_1 = sim.agent<opack::Agent>();
+		auto agent_1 = sim.agent();
 		CHECK(agent_1.has<opack::Agent>());
 		CHECK(sim.count<opack::Agent>() == 1);
 
 		// Agent with different ids, even without name
-		auto agent_2 = sim.agent<opack::Agent>();
-		auto agent_3 = sim.agent<opack::Agent>();
+		auto agent_2 = sim.agent();
+		auto agent_3 = sim.agent();
 		CHECK(agent_1 != agent_2);
 		CHECK(agent_2 != agent_3);
 		CHECK(agent_1 != agent_3);
@@ -88,8 +88,36 @@ TEST_CASE("Basics")
 		CHECK(sim.count<AgentA>() == 1);
 
 		// Agent with name
-		auto bob = sim.agent<opack::Agent>("Bob");
+		auto bob = sim.agent("Bob");
 		CHECK(strcmp(bob.name().c_str(), "Bob") == 0);
+	}
+
+	SUBCASE("Artefacts")
+	{
+		// Artefact without name
+		auto artefact_1 = sim.artefact();
+		CHECK(artefact_1.has<opack::Artefact>());
+		CHECK(sim.count<opack::Artefact>() == 1);
+
+		// Artefact with different ids, even without name
+		auto artefact_2 = sim.artefact();
+		auto artefact_3 = sim.artefact();
+		CHECK(artefact_1 != artefact_2);
+		CHECK(artefact_2 != artefact_3);
+		CHECK(artefact_1 != artefact_3);
+		CHECK(sim.count<opack::Artefact>() == 3);
+
+		// Artefact of different types
+		struct ArtefactA : opack::Artefact {};
+		sim.register_artefact_type<ArtefactA>();
+		auto artefact_a = sim.artefact<ArtefactA>();
+		CHECK(artefact_a.has<ArtefactA>());
+		CHECK(sim.count<opack::Artefact>() == 3);
+		CHECK(sim.count<ArtefactA>() == 1);
+
+		// Artefact with name
+		auto artefact = sim.artefact("Some artefact");
+		CHECK(strcmp(artefact.name().c_str(), "Some artefact") == 0);
 	}
 
 	SUBCASE("Percepts")
@@ -98,7 +126,7 @@ TEST_CASE("Basics")
 		sim.register_percept_type<PerceptA>();
 
 		// Add percept
-		auto agent = sim.agent<opack::Agent>();
+		auto agent = sim.agent();
 		auto percept = sim.percept<PerceptA>(agent);
 		CHECK(percept.has<PerceptA>());
 		CHECK(percept.has(flecs::ChildOf, agent));
@@ -106,7 +134,7 @@ TEST_CASE("Basics")
 		CHECK(sim.count<PerceptA>() == 1);
 
 		// Retrieve percept only for a specific agent
-		auto another_agent = sim.agent<opack::Agent>();
+		auto another_agent = sim.agent();
 		sim.percept<PerceptA>(another_agent);
 		sim.percept<PerceptA>(another_agent);
 		sim.percept<PerceptA>(another_agent);

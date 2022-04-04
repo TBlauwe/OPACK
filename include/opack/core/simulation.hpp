@@ -11,6 +11,7 @@
 namespace opack {
 
 	struct Agent {};
+	struct Artefact {};
 	struct Percept {};
 
 	/**
@@ -31,7 +32,15 @@ namespace opack {
 		template<std::derived_from<Agent> T>
 		inline void register_agent_type()
 		{
-			world.component<T>().template is_a<Agent>();
+			register_t_as<T, Agent>();
+		}
+
+		/** Shorthand to say that T is a artefact.
+		*/
+		template<std::derived_from<Artefact> T>
+		inline void register_artefact_type()
+		{
+			register_t_as<T, Artefact>();
 		}
 
 		/** Shorthand to say that T is a percept.
@@ -39,7 +48,7 @@ namespace opack {
 		template<std::derived_from<Percept> T>
 		inline void register_percept_type()
 		{
-			world.component<T>().template is_a<Percept>();
+			register_t_as<T, Percept>();
 		}
 
 		// Simulation interaction
@@ -47,8 +56,17 @@ namespace opack {
 		/**
 		@brief Add an agent.
 		*/
-		template<std::derived_from<Agent> T>
+		template<std::derived_from<Agent> T = opack::Agent>
 		inline flecs::entity agent(const char * name = "")
+		{
+			return world.entity(name).add<T>();
+		}
+
+		/**
+		@brief Add an artefact.
+		*/
+		template<std::derived_from<Artefact> T = opack::Artefact>
+		inline flecs::entity artefact(const char * name = "")
 		{
 			return world.entity(name).add<T>();
 		}
@@ -57,7 +75,7 @@ namespace opack {
 		@brief Add a percept for the agent. You are responsible for deleting it, if it is perceived anymore.
 		@param agent Which agent perceives this
 		*/
-		template<std::derived_from<Percept> T>
+		template<std::derived_from<Percept> T = opack::Percept>
 		inline flecs::entity percept(flecs::entity agent)
 		{
 			auto p = world.entity().add<T>();
@@ -155,8 +173,15 @@ namespace opack {
 		*/
 		float time() const;
 
+	private:
+		template<typename T, typename U>
+		void register_t_as()
+		{
+			world.component<T>().template is_a<U>();
+		}
 
-	public:
+
+	private:
 		tf::Executor	executor;
 
 		flecs::world	world;
