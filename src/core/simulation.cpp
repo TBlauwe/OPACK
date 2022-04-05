@@ -3,6 +3,11 @@
 
 opack::Simulation::Simulation()
 {
+	world.set<flecs::rest::Rest>({});
+
+	world.entity("::opack").add(flecs::Module);
+	world.component<source>().add(flecs::OnDeleteObject, flecs::Delete);
+
 	rule_perceptions = world.rule_builder()
 		.term<Agent>().subj().var("Agent")
 		.term<Percept>().obj().var("Percept").subj().var("Agent")

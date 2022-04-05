@@ -122,29 +122,33 @@ TEST_CASE("Basics")
 
 	SUBCASE("Percepts")
 	{
+		auto agent = sim.agent("MyAgent");
+		auto artefact = sim.artefact("MyArtefact");
+
+		// Add one percept
 		struct PerceptA : opack::Percept {};
 		sim.register_percept_type<PerceptA>();
-
-		// Add percept
-		auto agent = sim.agent();
-		auto percept = sim.percept<PerceptA>(agent);
+		auto percept = sim.percept<PerceptA>(agent, artefact);
 		CHECK(percept.has<PerceptA>());
 		CHECK(percept.has(flecs::ChildOf, agent));
+		CHECK(percept.has<opack::source>(artefact));
 		CHECK(agent.has<PerceptA>(percept));
 		CHECK(sim.count<PerceptA>() == 1);
 
 		// Retrieve percept only for a specific agent
 		auto another_agent = sim.agent();
-		sim.percept<PerceptA>(another_agent);
-		sim.percept<PerceptA>(another_agent);
-		sim.percept<PerceptA>(another_agent);
-		sim.percept<PerceptA>(agent);
+		sim.percept<PerceptA>(another_agent, agent);
+		sim.percept<PerceptA>(another_agent, agent);
+		sim.percept<PerceptA>(another_agent, agent);
+		sim.percept<PerceptA>(agent, another_agent);
 		CHECK(sim.query_perceptions_of(agent).size() == 2);
 		CHECK(sim.query_perceptions_of(another_agent).size() == 3);
 
 		// Check deletion 
-		agent.destruct(); // All percepts should be also deleted (and anything associated with them).
+		agent.destruct(); // All percepts (of this agent) should be also deleted (and anything associated with them).
 		CHECK(percept.is_alive() == false);
+		// Check deletion of percepts when object is removed
+		CHECK(sim.query_perceptions_of(another_agent).size() == 0);
 	}
 }
 

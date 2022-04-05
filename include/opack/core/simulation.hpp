@@ -10,9 +10,13 @@
 */
 namespace opack {
 
+	// Types
 	struct Agent {};
 	struct Artefact {};
 	struct Percept {};
+
+	// Relation
+	struct source {};
 
 	/**
 	@class Simulation
@@ -75,11 +79,13 @@ namespace opack {
 		@brief Add a percept for the agent. You are responsible for deleting it, if it is perceived anymore.
 		@param agent Which agent perceives this
 		*/
-		template<std::derived_from<Percept> T = opack::Percept>
-		inline flecs::entity percept(flecs::entity agent)
+		template<std::derived_from<Percept> T = opack::Percept, typename ... Args>
+		inline flecs::entity percept(flecs::entity agent, flecs::entity object)
 		{
 			auto p = world.entity().add<T>();
 			p.child_of(agent);
+			p.template add<source>(object);
+			(p.template add<Args>, ...);
 			agent.add<T>(p);
 			return p;
 		}
