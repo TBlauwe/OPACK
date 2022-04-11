@@ -1,36 +1,35 @@
 #include <opack/core/simulation.hpp>
 #include <iostream>
 
+std::ostream& operator<<(std::ostream& os, const opack::Percept& p)
+{
+	os << "[" << p.sense.path() << "] - " << p.subject.path() << " has " << p.predicat.path();
+	if (p.type == opack::Percept::Type::Relation)
+		os << " with " << p.object.path();
+	return os;
+}
+
 opack::Simulation::Simulation()
 {
 	world.set<flecs::rest::Rest>({});
 
 	world.entity("::opack").add(flecs::Module);
-	world.component<source>().add(flecs::OnDeleteObject, flecs::Delete);
 
-	rule_perceptions = world.rule_builder()
-		.term<Agent>().subj().var("Agent")
-		.term<Percept>().obj().var("Percept").subj().var("Agent")
+	rule_components_perception = world.rule_builder()
+		.expr("$Sense($Observer, $Subject), $Predicat($Subject)")
+		.term<Sense>().subj().var("Sense").obj().var("Predicat")
+		.build();
+
+	rule_relations_perception = world.rule_builder()
+		.expr("$Sense($Observer, $Subject), $Predicat($Subject, $Object)")
+		.term<Sense>().subj().var("Sense").obj().var("Predicat")
 		.build();
 }
 
 opack::Simulation::~Simulation()
 {
-	rule_perceptions.destruct();
+	rule_components_perception.destruct();
 	stop();
-}
-
-std::vector<flecs::entity> opack::Simulation::query_perceptions_of(flecs::entity agent)
-{
-	int agent_var = rule_perceptions.find_var("Agent");
-	int percept_var = rule_perceptions.find_var("Percept");
-
-	std::vector<flecs::entity> percepts;
-	rule_perceptions.iter().set_var(agent_var, agent)
-		.iter([&](flecs::iter& it) {
-		percepts.emplace_back(it.get_var(percept_var));
-			});
-	return percepts;
 }
 
 bool opack::Simulation::step(float elapsed_time) {

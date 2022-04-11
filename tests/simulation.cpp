@@ -9,7 +9,7 @@ TEST_CASE("Basics")
 	auto sim = opack::Simulation();
 	REQUIRE(sim.tick() == 0);
 	REQUIRE(sim.count<opack::Agent>() == 0);
-	REQUIRE(sim.count<opack::Percept>() == 0);
+	REQUIRE(sim.count<opack::Sense>() == 0);
 
 	SUBCASE("Controls - setting")
 	{
@@ -56,7 +56,6 @@ TEST_CASE("Basics")
 		CHECK(sim.delta_time() == delta_time);
 		total_time += 10*delta_time;
 		CHECK(sim.time() >= total_time);
-
 	}
 
 	SUBCASE("Controls - shutdown")
@@ -122,33 +121,117 @@ TEST_CASE("Basics")
 
 	SUBCASE("Percepts")
 	{
-		auto agent = sim.agent("MyAgent");
-		auto artefact = sim.artefact("MyArtefact");
+		auto agent_1 = sim.agent("Agent_1");
+		auto artefact_1 = sim.artefact("Artefact_1");
 
-		// Add one percept
-		struct PerceptA : opack::Percept {};
-		sim.register_percept_type<PerceptA>();
-		auto percept = sim.percept<PerceptA>(agent, artefact);
-		CHECK(percept.has<PerceptA>());
-		CHECK(percept.has(flecs::ChildOf, agent));
-		CHECK(percept.has<opack::source>(artefact));
-		CHECK(agent.has<PerceptA>(percept));
-		CHECK(sim.count<PerceptA>() == 1);
+		// Add a sense
+		struct MySense : opack::Sense {};
+		auto sense = sim.register_sense<MySense>();
+
+		// Add a perceivable component by sense
+		struct A { float value{ 0 }; };
+		struct B { int value{ 0 }; };
+		struct C { double value{ 0 }; }; // Not perceived by MySense
+		struct R { };
+
+		sim.perceive<MySense, A>();
+		sim.perceive<MySense, B>();
+		sim.perceive<MySense, R>();
+		// Visualisation
+		// =============
+		// Mysense			--Sense-->		A
+		//					--Sense-->		B
+		//					--Sense-->		R
+		CHECK(sense.has<opack::Sense, A>());
+		CHECK(sense.has<opack::Sense, B>());
+		CHECK(!sense.has<opack::Sense, C>());
+		CHECK(sense.has<opack::Sense, R>());
+
+
+		// Add the component to some entities
+		agent_1.set<A>({ 2.0f }); // perceivable
+		agent_1.set<B>({ 2 }); // not perceivable
+		artefact_1.set<A>({ 3.0f }); //perceivable
+		artefact_1.set<B>({ 3 }); //perceivable
+
+		// Tells that the agent can now perceive the artefact thourgh MySense.
+		sim.perceive<MySense>(agent_1, artefact_1);
+
+		// Visualisation
+		// =============
+		// Mysense			--Sense-->		A
+		//					--Sense-->		B
+		//					--Sense-->		R
+		// artefact_1		[A, B]
+		// agent_1			[A, B]
+		//					--MySense-->	artefact_1
+		CHECK(agent_1.has<MySense>(artefact_1));
+		CHECK(sim.count<MySense>(flecs::Wildcard) == 1);
+		// CHECK(sim.count<opack::Percept>(flecs::Wildcard) == 1); // Sadly, there is no transitivity 'count'. 
+		auto percepts = sim.query_percepts<MySense>(agent_1);
+		for (auto p : percepts)
+		{
+			CHECK(p.use<MySense>());
+			CHECK(p.subject == artefact_1);
+			if (p.is_pred<A>())
+				CHECK(p.fetch<A>()->value == 3.0f);
+			else if (p.is_pred<B>())
+				CHECK(p.fetch<B>()->value == 3);
+			else
+				CHECK_MESSAGE(false, "A percept do not have a correct value ! Check above test.");
+		}
+
+
+		// Multiple add shouldn't be taken into account
+		sim.perceive<MySense>(agent_1, artefact_1);
+		sim.perceive<MySense>(agent_1, artefact_1);
+		sim.perceive<MySense>(agent_1, artefact_1);
+		CHECK(sim.count<MySense>(flecs::Wildcard) == 1);
 
 		// Retrieve percept only for a specific agent
-		auto another_agent = sim.agent();
-		sim.percept<PerceptA>(another_agent, agent);
-		sim.percept<PerceptA>(another_agent, agent);
-		sim.percept<PerceptA>(another_agent, agent);
-		sim.percept<PerceptA>(agent, another_agent);
-		CHECK(sim.query_perceptions_of(agent).size() == 2);
-		CHECK(sim.query_perceptions_of(another_agent).size() == 3);
+		auto agent_2 = sim.agent("Agent_2");
+		auto artefact_2 = sim.agent("Artefact_2");
+		agent_2.add<R>(artefact_1);
+		agent_2.add<R>(artefact_2);
+		sim.perceive<MySense>(agent_2, agent_1);
+		sim.perceive<MySense>(agent_1, agent_2);
 
-		// Check deletion 
-		agent.destruct(); // All percepts (of this agent) should be also deleted (and anything associated with them).
-		CHECK(percept.is_alive() == false);
+		// Visualisation
+		// =============
+		// Mysense			--Sense-->		A
+		//					--Sense-->		B
+		//					--Sense-->		R
+		// artefact_1		[A, B]
+		// agent_1			[A, B]
+		//					--MySense-->	artefact_1
+		//					--MySense-->	agent_2
+		// artefact_2		
+		// agent_2		    --R-->		    artefact_1	
+		//        		    --R-->		    artefact_2	
+		//					--MySense-->	agent_1
+		CHECK(sim.count<MySense>(flecs::Wildcard) == 3);
+		percepts = sim.query_percepts<MySense>(agent_1);
+		for (auto p : percepts)
+		{
+			CHECK(p.use<MySense>());
+		}
+
+		CHECK(percepts.size() == 4);
+		CHECK(sim.query_percepts<MySense>(agent_2).size() == 2);
+
+		// Deletion 
+		// ======== 
+		// Mysense			--Sense-->		A
+		//					--Sense-->		B
+		//					--Sense-->		R
+		// artefact_1		[A, B]
+		// artefact_2		
+		// agent_2		    --R-->		    artefact_1	
+		//        		    --R-->		    artefact_2	
+		agent_1.destruct(); // All percepts (of this agent) should be also deleted (and anything associated with them).
 		// Check deletion of percepts when object is removed
-		CHECK(sim.query_perceptions_of(another_agent).size() == 0);
+		CHECK(sim.query_percepts(agent_2).size() == 0);
+		CHECK(sim.count<MySense>(flecs::Wildcard) == 0);
 	}
 }
 

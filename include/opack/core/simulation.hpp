@@ -5,6 +5,8 @@
 #include <flecs.h>
 #include <taskflow/core/executor.hpp>
 
+#include <opack/utils/type_map.hpp>
+
 /**
 @brief Main entry point to use the library.
 */
@@ -13,10 +15,55 @@ namespace opack {
 	// Types
 	struct Agent {};
 	struct Artefact {};
-	struct Percept {};
+	struct Sense {};
 
-	// Relation
-	struct source {};
+
+	/**
+	@brief A percept is a small class to tell what can be perceived for a given entity and sense.
+	*/
+	struct Percept 
+	{
+		enum class Type {Component, Relation};
+		Type				type {Type::Component};
+		flecs::entity_view	sense;
+		flecs::entity_view	subject;
+		flecs::entity_view	predicat;
+		flecs::entity_view	object; // Only set if @c type is equal to @c Type::Component.
+
+		Percept(flecs::entity_view _sense, flecs::entity_view _subject, flecs::entity_view _predicat) : 
+			type{ Type::Component }, sense { _sense }, subject{ _subject }, predicat{_predicat}, object {}
+		{}
+
+		Percept(flecs::entity_view _sense, flecs::entity_view _subject, flecs::entity_view _predicat, flecs::entity_view _object) : 
+			type{ Type::Relation }, sense { _sense }, subject{ _subject }, predicat{ _predicat}, object {_object}
+		{}
+
+		/**
+		@brief Tells if percept is using given sense.
+		*/
+		template<std::derived_from<Sense> T = Sense>
+		inline bool use() { return sense == sense.world().id<T>(); }
+
+		template<typename T>
+		inline bool is_pred() { return predicat == predicat.world().id<T>(); }
+
+		template<typename T>
+		inline bool is_pred(flecs::entity object) 
+		{ 
+			auto world = subject.world();
+			return world.pair<T>(object) == world.pair(component, object);
+		}
+
+		/**
+		@brief Retrieve the current value from the perceived entity. 
+		Pointer stability is not guaranteed. Copy value if you need to keep it.
+		Does not check if @c T is indeed accessible from this sense and if @c target do have it.
+		Use @c is() if you wish to check this beforehand.
+		*/
+		template<typename T>
+		inline const T * fetch() { return subject.get<T>(); }
+	};
+	using Percepts = std::vector<Percept>;
 
 	/**
 	@class Simulation
@@ -34,25 +81,36 @@ namespace opack {
 		/** Shorthand to say that T is an agent.
 		*/
 		template<std::derived_from<Agent> T>
-		inline void register_agent_type()
+		inline flecs::entity register_agent_type()
 		{
-			register_t_as<T, Agent>();
+			return register_t_as<T, Agent>();
 		}
 
 		/** Shorthand to say that T is a artefact.
 		*/
 		template<std::derived_from<Artefact> T>
-		inline void register_artefact_type()
+		inline flecs::entity register_artefact_type()
 		{
-			register_t_as<T, Artefact>();
+			return register_t_as<T, Artefact>();
 		}
 
-		/** Shorthand to say that T is a percept.
+		/** Shorthand to say that T is a sense.
 		*/
-		template<std::derived_from<Percept> T>
-		inline void register_percept_type()
+		template<std::derived_from<Sense> T>
+		inline flecs::entity register_sense()
 		{
-			register_t_as<T, Percept>();
+			return register_t_as<T, Sense>();
+		}
+
+		/**
+		@brief @c T sense is now able to perceive @c U component.
+		@param agent Which agent perceives this
+		@return entity of @c U component;
+		*/
+		template<std::derived_from<Sense> T = Sense, typename U>
+		inline flecs::entity perceive()
+		{
+			return world.component<T>().template add<Sense, U>();
 		}
 
 		// Simulation interaction
@@ -76,18 +134,21 @@ namespace opack {
 		}
 
 		/**
-		@brief Add a percept for the agent. You are responsible for deleting it, if it is perceived anymore.
-		@param agent Which agent perceives this
+		@brief @c source is now able to perceive @c target through @c T sense.
 		*/
-		template<std::derived_from<Percept> T = opack::Percept, typename ... Args>
-		inline flecs::entity percept(flecs::entity agent, flecs::entity object)
+		template<std::derived_from<Sense> T = opack::Sense>
+		inline void perceive(flecs::entity source, flecs::entity target)
 		{
-			auto p = world.entity().add<T>();
-			p.child_of(agent);
-			p.template add<source>(object);
-			(p.template add<Args>, ...);
-			agent.add<T>(p);
-			return p;
+			source.add<T>(target);
+		}
+
+		/**
+		@brief @c source is now not able to perceive @c target through @c T sense.
+		*/
+		template<std::derived_from<Sense> T = opack::Sense>
+		inline void conceal(flecs::entity source, flecs::entity target)
+		{
+			source.remove<T>(target);
 		}
 
 		// Simulation queries
@@ -95,9 +156,60 @@ namespace opack {
 
 		/**
 		Retrieve percepts for a specific agent.
-		@return A vector of all percepts percevied by the agent.
+
+		TODO With default type @c opack::Sense no perception are retrieved since there is no percepts retrievable with this Sense.
+		Maybe specialize function to return all percepts ?
+
+		@return A vector of all percepts of this type, perceived by the agent.
 		*/
-		std::vector<flecs::entity> query_perceptions_of(flecs::entity agent);
+		template<std::derived_from<Sense> T = opack::Sense>
+		Percepts query_percepts(flecs::entity source)
+		{
+			Percepts percepts{};
+			{
+				auto observer_var = rule_components_perception.find_var("Observer");
+				auto sense_var = rule_components_perception.find_var("Sense");
+				auto subject_var = rule_components_perception.find_var("Subject");
+				auto predicat_var = rule_components_perception.find_var("Predicat");
+
+				rule_components_perception.iter()
+					.set_var(observer_var, source)
+					.set_var(sense_var, world.id<T>())
+					.iter(
+						[&](flecs::iter& it)
+						{
+							percepts.push_back(Percept{ it.get_var(sense_var), it.get_var(subject_var), it.get_var(predicat_var) });
+						}
+					)
+				;
+			}
+			{
+				auto observer_var = rule_relations_perception.find_var("Observer");
+				auto sense_var	= rule_relations_perception.find_var("Sense");
+				auto subject_var = rule_relations_perception.find_var("Subject");
+				auto predicat_var= rule_relations_perception.find_var("Predicat");
+				auto object_var	= rule_relations_perception.find_var("Object");
+
+				rule_relations_perception.iter()
+					.set_var(observer_var, source)
+					.set_var(sense_var, world.id<T>())
+					.iter(
+						[&](flecs::iter& it)
+						{
+							percepts.push_back(Percept{ it.get_var(sense_var), it.get_var(subject_var), it.get_var(predicat_var), it.get_var(object_var)});
+						}
+					)
+				;
+			}
+
+			return percepts;
+		}
+
+		template<typename T>
+		flecs::id id() const
+		{
+			return world.id<T>();
+		}
 
 
 		// Simulation control
@@ -154,12 +266,12 @@ namespace opack {
 		}
 
 		template<typename T>
-		inline size_t count(flecs::entity obj) const
+		inline size_t count(const flecs::entity_t obj) const
 		{
 			return static_cast<size_t>(world.count<T>(obj));
 		}
 
-		inline size_t count(flecs::entity rel, flecs::entity obj) const
+		inline size_t count(flecs::entity_t rel, flecs::entity_t obj) const
 		{
 			return static_cast<size_t>(world.count(rel, obj));
 		}
@@ -181,9 +293,9 @@ namespace opack {
 
 	private:
 		template<typename T, typename U>
-		void register_t_as()
+		flecs::entity register_t_as()
 		{
-			world.component<T>().template is_a<U>();
+			return world.component<T>().template is_a<U>();
 		}
 
 
@@ -191,7 +303,10 @@ namespace opack {
 		tf::Executor	executor;
 
 		flecs::world	world;
-		flecs::rule<>	rule_perceptions;
+		flecs::rule<>	rule_components_perception;
+		flecs::rule<>	rule_relations_perception;
 	};
 
 } // namespace opack
+	
+std::ostream& operator<<(std::ostream& os, const opack::Percept& p);

@@ -27,17 +27,6 @@ option(OPACK_BUILD_TESTS          "Build tests." OFF)
 option(OPACK_DEVELOPPER_WARNINGS   "Enable more warnings" OFF)
 
 
-# OPACK Library
-# =============
-set(HEADER_LIST 
-	"include/opack/core.hpp"
-)
-
-set(SOURCE_LIST 
-	"src/core/simulation.cpp"
-)
-
-
 # Dependencies
 # ============
 
@@ -62,6 +51,18 @@ CPMAddPackage(
         "FLECS_SHARED_LIBS OFF"
 )
 set_target_properties(flecs_static PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:flecs_static,INTERFACE_INCLUDE_DIRECTORIES>)
+
+
+# OPACK Library
+# =============
+set(HEADER_LIST 
+	"include/opack/core.hpp"
+	"include/opack/utils/type_map.hpp"
+)
+
+set(SOURCE_LIST 
+	"src/core/simulation.cpp"
+)
 
 
 # Target : opack
