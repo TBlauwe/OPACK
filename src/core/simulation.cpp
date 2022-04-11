@@ -94,8 +94,3 @@ float opack::Simulation::time() const
 {
 	return world.time();
 }
-
-flecs::world& opack::Simulation::flecs_world()
-{
-	return world; 
-};

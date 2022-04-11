@@ -136,19 +136,19 @@ namespace opack {
 		/**
 		@brief @c source is now able to perceive @c target through @c T sense.
 		*/
-		template<std::derived_from<Sense> T = opack::Sense>
+		template<std::derived_from<Sense> ... T>
 		inline void perceive(flecs::entity source, flecs::entity target)
 		{
-			source.add<T>(target);
+			(source.add<T>(target), ...);
 		}
 
 		/**
 		@brief @c source is now not able to perceive @c target through @c T sense.
 		*/
-		template<std::derived_from<Sense> T = opack::Sense>
+		template<std::derived_from<Sense> ...T>
 		inline void conceal(flecs::entity source, flecs::entity target)
 		{
-			source.remove<T>(target);
+			(source.remove<T>(target), ...);
 		}
 
 		// Simulation queries
@@ -254,11 +254,6 @@ namespace opack {
 		*/
 		void time_scale(float value);
 
-		/**
-		@brief Retrieve underlying flecs world (an ecs database). Use only if you now what you're doing.
-		*/
-		flecs::world& flecs_world();
-
 		// Simulation stats
 		// ================
 		/**
@@ -303,11 +298,15 @@ namespace opack {
 			return world.component<T>().template is_a<U>();
 		}
 
+	public:
+		/**
+		@brief Underlying flecs world (an ecs database). Use only if you now what you're doing.
+		*/
+		flecs::world	world;
 
 	private:
 		tf::Executor	executor;
 
-		flecs::world	world;
 		flecs::rule<>	rule_components_perception;
 		flecs::rule<>	rule_relations_perception;
 	};
