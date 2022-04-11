@@ -24,6 +24,7 @@ include(cmake/target_default_compile_options.cmake)
 # =============
 option(OPACK_BUILD_BENCHMARKS     "Build benchmarks using google benchmarks." OFF)
 option(OPACK_BUILD_TESTS          "Build tests." OFF)
+option(OPACK_BUILD_EXAMPLES       "Build examples." OFF)
 option(OPACK_DEVELOPPER_WARNINGS   "Enable more warnings" OFF)
 
 
@@ -75,13 +76,16 @@ if(OPACK_DEVELOPPER_WARNINGS)
     target_set_compile_warnings_cxx(opack)
 endif()
 
+if(OPACK_BUILD_BENCHMARKS)
+    add_subdirectory ("benchmarks")
+endif()
+
+if(OPACK_BUILD_EXAMPLES)
+    add_subdirectory ("examples")
+endif()
 
 if(OPACK_BUILD_TESTS)
     add_subdirectory ("tests")
-endif()
-
-if(OPACK_BUILD_BENCHMARKS)
-    add_subdirectory ("benchmarks")
 endif()
 
 

@@ -9,10 +9,9 @@ std::ostream& operator<<(std::ostream& os, const opack::Percept& p)
 	return os;
 }
 
-opack::Simulation::Simulation()
+opack::Simulation::Simulation(int argc, char* argv[]) 
+	: world{ argc, argv }
 {
-	world.set<flecs::rest::Rest>({});
-
 	world.entity("::opack").add(flecs::Module);
 
 	rule_components_perception = world.rule_builder()
@@ -95,3 +94,8 @@ float opack::Simulation::time() const
 {
 	return world.time();
 }
+
+flecs::world& opack::Simulation::flecs_world()
+{
+	return world; 
+};

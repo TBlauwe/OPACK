@@ -73,7 +73,7 @@ namespace opack {
 	*/
 	class Simulation {
 	public:
-		Simulation();
+		Simulation(int argc = 0, char * argv[] = nullptr);
 		~Simulation();
 
 		// Simulation register 
@@ -253,6 +253,11 @@ namespace opack {
 		@brief Set time scale.
 		*/
 		void time_scale(float value);
+
+		/**
+		@brief Retrieve underlying flecs world (an ecs database). Use only if you now what you're doing.
+		*/
+		flecs::world& flecs_world();
 
 		// Simulation stats
 		// ================
