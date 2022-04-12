@@ -1,7 +1,9 @@
-#define FLECS_APP
-#include <opack/core.hpp>
+#pragma once
 
-struct SimpleSim
+#include <opack/core.hpp>
+#include <opack/utils/simulation_template.hpp>
+
+struct SimpleSim : opack::SimulationTemplate
 {
 	// Types : sense
 	// =============
@@ -17,7 +19,7 @@ struct SimpleSim
 	// ==============
 	struct AudioMessage { const char* value; };
 
-	SimpleSim(int argc = 0, char * argv[] = nullptr) : sim{argc, argv}
+	SimpleSim(int argc = 0, char * argv[] = nullptr) : opack::SimulationTemplate{argc, argv}
 	{
 		sim.world.entity("::SimpleSim").add(flecs::Module);
 
@@ -28,6 +30,22 @@ struct SimpleSim
 
 		sim.register_sense<Vision>();
 		sim.perceive<Vision, Act>();
+
+		sim.world.observer()
+			.term<Act>().obj().var("Object")
+			.term<opack::Artefact>().subj().var("Object")
+			.event(flecs::OnAdd)
+			.iter(
+				[](flecs::iter& iter)
+				{
+					for (auto i : iter)
+					{
+						auto e = iter.entity(i).object();
+						auto obj = iter.id(1).object();
+						std::cout << e.path() << " is acting on " << obj.path() << "\n";
+					}
+				}
+		);
 
 		// Step II : Populate world
 		// ------------------------
@@ -52,12 +70,4 @@ struct SimpleSim
 		sim.perceive<Vision, Hearing>(beatrice, cyril);
 		sim.perceive<Vision, Hearing>(beatrice, radio);
 	}
-
-	void run()
-	{
-		sim.world.set<flecs::rest::Rest>({});
-		while (sim.step());
-	}
-
-	opack::Simulation sim;
 };

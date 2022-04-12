@@ -59,10 +59,12 @@ set_target_properties(flecs_static PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORI
 set(HEADER_LIST 
 	"include/opack/core.hpp"
 	"include/opack/utils/type_map.hpp"
+	"include/opack/utils/simulation_template.hpp"
 )
 
 set(SOURCE_LIST 
 	"src/core/simulation.cpp"
+	"src/utils/simulation_template.cpp"
 )
 
 
