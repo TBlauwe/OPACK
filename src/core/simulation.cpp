@@ -37,16 +37,16 @@ opack::Simulation::Simulation(int argc, char* argv[])
 		.build();
 
 	// If an action do not have initiator, delete it.
-	//world.system<Action>()
-	//	.term<Initiator>().obj(flecs::Wildcard).oper(flecs::Not)
-	//	.iter([](flecs::iter& iter)
-	//		{
-	//			for (auto i : iter)
-	//			{
-	//				iter.entity(i).destruct();
-	//			}
-	//		}
-	//);
+	world.system<Action>()
+		.term<Initiator>().obj(flecs::Wildcard).oper(flecs::Not)
+		.iter([](flecs::iter& iter)
+			{
+				for (auto i : iter)
+				{
+					iter.entity(i).destruct();
+				}
+			}
+	);
 }
 
 opack::Simulation::~Simulation()
@@ -94,7 +94,7 @@ void opack::Simulation::stop()
 	executor.wait_for_all();
 }
 
-float opack::Simulation::target_fps()
+float opack::Simulation::target_fps() const
 {
 	return world.get_target_fps();
 }
@@ -104,7 +104,7 @@ void opack::Simulation::target_fps(float value)
 	world.set_target_fps(value);
 }
 
-float opack::Simulation::time_scale()
+float opack::Simulation::time_scale() const
 {
 	return world.get_time_scale();
 }
