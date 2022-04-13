@@ -68,12 +68,11 @@ void opack::Simulation::step_n(size_t n, float elapsed_time) {
 void opack::Simulation::rest_app()
 {
 	std::cout << "See web explorer on : https://www.flecs.dev/explorer/?remote=true\n";
-	std::cout << "Press \'q\' + ENTER to stop the simulation.\n";
-	auto system = world.system().iter([](flecs::iter& iter) { if (std::cin.get() == 'q') iter.world().quit(); });
+	//std::cout << "Press \'q\' + ENTER to stop the simulation.\n";
+
 	world.set<flecs::rest::Rest>({});
 	while (step());
 	world.remove<flecs::rest::Rest>();
-	system.destruct();
 }
 
 void opack::Simulation::stop()
