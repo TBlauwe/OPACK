@@ -37,7 +37,7 @@ struct SimpleSim : opack::SimulationTemplate
 
 		// --- Actions
 		auto help = sim.register_action<Help>();
-		help.add<opack::Action::Continuous>();
+		help.add<opack::Continuous>();
 
 		// --- Senses
 		sim.register_sense<Hearing>();
@@ -57,8 +57,11 @@ struct SimpleSim : opack::SimulationTemplate
 					auto id		= iter.pair(1);
 					auto obj	= id.second();
 					auto entity = iter.entity(0);
-					if(obj.has<AudioMessage>())
+					if (obj.has<AudioMessage>())
+					{
 						std::cout << entity.name() << " is hearing \"" << obj.get<AudioMessage>()->value << "\" from " << obj.name() << std::endl;
+						entity.add<Help>(obj);
+					}
 					else
 						std::cout << entity.name() << " is hearing " << obj.name() << std::endl;
 				}
@@ -77,6 +80,22 @@ struct SimpleSim : opack::SimulationTemplate
 				}
 		);
 
+		sim.world.system<Help>()
+			.term<opack::Initiator>().obj(flecs::Wildcard)
+			.iter(
+				[](flecs::iter& iter )
+				{
+					for (auto i : iter)
+					{ 
+						auto entity = iter.entity(i);
+						auto obj = iter.id(2);
+						std::cout << entity.path() << " is initiating \"help\" with ";
+						entity.each<opack::Initiator>([](flecs::entity obj) { std::cout << obj.path() << ", "; });
+						std::cout << "\n";
+					}
+				}
+		);
+
 		// Step III : Populate world
 		// -------------------------
 		auto arthur		= sim.agent("Arthur");
@@ -87,8 +106,6 @@ struct SimpleSim : opack::SimulationTemplate
 
 		// (Step IV) : Fake a current state
 		// --------------------------------
-		arthur.add<Help>(cyril);
-		beatrice.add<Act>(radio);
 		radio.set<AudioMessage>({ "Hello there !" });
 
 		sim.perceive<Vision, Hearing>(arthur, cyril);
@@ -99,8 +116,9 @@ struct SimpleSim : opack::SimulationTemplate
 		sim.perceive<Vision, Hearing>(beatrice, cyril);
 		sim.perceive<Vision, Hearing>(beatrice, radio);
 
-		sim.step();
-
 		sim.conceal<Hearing>(arthur, radio);
+
+		auto help_inst = sim.action<Help>();
+		sim.act<Act>(arthur, help_inst);
 	}
 };

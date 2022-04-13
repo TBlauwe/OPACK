@@ -9,16 +9,17 @@ std::ostream& operator<<(std::ostream& os, const opack::Percept& p)
 	return os;
 }
 
-opack::Simulation::Simulation(int argc, char* argv[]) 
+opack::Simulation::Simulation(int argc, char* argv[])
 	: world{ argc, argv }
 {
 	world.entity("::opack").add(flecs::Module);
 
-	auto action		= world.prefab<Action>().add<Action>();
-	auto actuator	= world.prefab<Actuator>().add<Actuator>();
-	auto agent		= world.prefab<Agent>().add<Agent>();
-	auto artefact	= world.prefab<Artefact>().add<Artefact>();
-	auto sense		= world.prefab<Sense>().add<Sense>();
+	auto action = world.prefab<Action>().add<Action>();
+	action.add<Arity>();
+	auto actuator = world.prefab<Actuator>().add<Actuator>();
+	auto agent = world.prefab<Agent>().add<Agent>();
+	auto artefact = world.prefab<Artefact>().add<Artefact>();
+	auto sense = world.prefab<Sense>().add<Sense>();
 
 	world.entity<Actuator>()
 		.add(flecs::Exclusive)
@@ -34,6 +35,18 @@ opack::Simulation::Simulation(int argc, char* argv[])
 		.expr("$Sense($Observer, $Subject), $Predicat($Subject, $Object)")
 		.term<Sense>().subj().var("Sense").obj().var("Predicat")
 		.build();
+
+	// If an action do not have initiator, delete it.
+	//world.system<Action>()
+	//	.term<Initiator>().obj(flecs::Wildcard).oper(flecs::Not)
+	//	.iter([](flecs::iter& iter)
+	//		{
+	//			for (auto i : iter)
+	//			{
+	//				iter.entity(i).destruct();
+	//			}
+	//		}
+	//);
 }
 
 opack::Simulation::~Simulation()

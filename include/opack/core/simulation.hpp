@@ -17,13 +17,13 @@ namespace opack {
 	struct Artefact {};
 
 	struct Actuator {};
-	struct Action
-	{
+	struct Action {};
+		struct Initiator {};
+
 		struct Continuous {};
 		struct Ponctual {};
 
 		struct Arity { size_t value{ 1 }; };
-	};
 
 	struct Sense {};
 	/**
@@ -182,7 +182,17 @@ namespace opack {
 		template<std::derived_from<Actuator> T>
 		inline void act(flecs::entity initiator, flecs::entity action)
 		{
-			initiator.add(entity<T>(), action);
+			size_t count{ 0 };
+			flecs::entity last;
+			action.each<Initiator>([&count, &last](flecs::entity object) {count++; last = object; });
+
+			if(count >= action.get<Arity>()->value)
+			{
+				//TODO Should issue warning - Here we replace the last initiator.
+				action.remove<Initiator>(last);
+			}
+			action.add<Initiator>(initiator);
+			initiator.add<T>(action);
 		}
 
 		/**
@@ -348,7 +358,7 @@ namespace opack {
 		template<typename T, typename U>
 		flecs::entity register_t_as()
 		{
-			return world.prefab<T>().template is_a<U>().template add<T>();
+			return world.template prefab<T>().template is_a<U>().template add<T>();
 		}
 
 	public:

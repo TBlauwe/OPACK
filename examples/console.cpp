@@ -4,14 +4,12 @@
 
 using namespace opack;
 
-
-
 int main(int argc, char* argv[])
 {
 	size_t choice{ 0 };
 	std::cout << "========== Menu =========\n";
 	std::cout << "[1] Empty\n";
-	std::cout << "[2] SimpleSim (TestBench)\n";
+	std::cout << "[2] SimpleSim\n";
 	std::cout << "Choose a simulation : ";
 	std::cin >> choice;
 	switch (choice)

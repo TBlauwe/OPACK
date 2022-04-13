@@ -353,7 +353,7 @@ TEST_CASE("Basics")
 		// ===============
 		struct Help : opack::Action {};
 		auto help = sim.register_action<Help>();
-		help.add<opack::Action::Continuous>();
+		help.add<opack::Continuous>();
 		CHECK(help.is_a<opack::Action>());
 
 		// Define actuator
