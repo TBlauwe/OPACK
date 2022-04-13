@@ -2,23 +2,24 @@
 
 #include <iostream>
 
-opack::SimulationTemplate::SimulationTemplate(int argc, char* argv[]) : sim{ argc, argv }
+opack::SimulationTemplate::SimulationTemplate(const char* _name, int argc, char* argv[]) : name{ _name }, sim { argc, argv }
 {
-	std::cout << "Building simulation ...\n";
+	std::cout << "----------------------\n";
+	std::cout << "Building simulation \""<< name << "\" ...\n";
+	std::cout << "---- Build Events ----\n";
 }
 
 opack::SimulationTemplate::~SimulationTemplate()
 {
 	std::cout << "=======================\n";
-	std::cout << "Stopping simulation ...\n";
+	std::cout << "Stopping simulation \""<< name << "\"...\n";
 	sim.stop();
 }
 
 void opack::SimulationTemplate::run()
 {
-	sim.world.set<flecs::rest::Rest>({});
-	std::cout << "Running simulation ...\n";
-	std::cout << "======================\n";
-	std::cout << "See web explorer on : https://www.flecs.dev/explorer/?remote=true\n";
-	while (sim.step());
+	std::cout << "----------------------\n";
+	std::cout << "Running simulation \""<< name << "\"...\n";
+	std::cout << "----Running events----\n";
+	sim.rest_app();
 }

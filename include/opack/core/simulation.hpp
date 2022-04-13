@@ -15,9 +15,17 @@ namespace opack {
 	// Types
 	struct Agent {};
 	struct Artefact {};
+
+	struct Actuator {};
+	struct Action
+	{
+		struct Continuous {};
+		struct Ponctual {};
+
+		struct Arity { size_t value{ 1 }; };
+	};
+
 	struct Sense {};
-
-
 	/**
 	@brief A percept is a small class to tell what can be perceived for a given entity and sense.
 	*/
@@ -102,6 +110,23 @@ namespace opack {
 			return register_t_as<T, Sense>();
 		}
 
+		/** Shorthand to say that T is an actuator.
+		*/
+		template<std::derived_from<Actuator> T>
+		inline flecs::entity register_actuator_type()
+		{
+			return register_t_as<T, Actuator>();
+		}
+
+		/** Shorthand to say that T is an action.
+		*/
+		template<std::derived_from<Action> T>
+		inline flecs::entity register_action()
+		{
+
+			return register_t_as<T, Action>();
+		}
+
 		/**
 		@brief @c T sense is now able to perceive @c U component.
 		@param agent Which agent perceives this
@@ -121,7 +146,7 @@ namespace opack {
 		template<std::derived_from<Agent> T = opack::Agent>
 		inline flecs::entity agent(const char * name = "")
 		{
-			return world.entity(name).add<T>();
+			return world.entity(name).is_a<T>();
 		}
 
 		/**
@@ -130,16 +155,34 @@ namespace opack {
 		template<std::derived_from<Artefact> T = opack::Artefact>
 		inline flecs::entity artefact(const char * name = "")
 		{
-			return world.entity(name).add<T>();
+			return world.entity(name).is_a<T>();
 		}
 
 		/**
-		@brief @c source is now able to perceive @c target through @c T sense.
+		@brief @c observer is now able to perceive @c subject through @c T sense.
 		*/
 		template<std::derived_from<Sense> ... T>
-		inline void perceive(flecs::entity source, flecs::entity target)
+		inline void perceive(flecs::entity observer, flecs::entity subject)
 		{
-			(source.add<T>(target), ...);
+			(observer.add<T>(subject), ...);
+		}
+
+		/**
+		@brief Create an action of type @c T. Compose the action as required, before having entites acting on it.
+		*/
+		template<std::derived_from<Action> T>
+		inline flecs::entity action()
+		{
+			return world.entity().template is_a<T>();
+		}
+
+		/**
+		@brief @c initiator is now acting with actuator @c to accomplish given @c action.
+		*/
+		template<std::derived_from<Actuator> T>
+		inline void act(flecs::entity initiator, flecs::entity action)
+		{
+			initiator.add(entity<T>(), action);
 		}
 
 		/**
@@ -211,6 +254,11 @@ namespace opack {
 			return world.id<T>();
 		}
 
+		template<typename T>
+		flecs::entity entity() const
+		{
+			return world.entity<T>();
+		}
 
 		// Simulation control
 		// ==================
@@ -233,6 +281,11 @@ namespace opack {
 		Automatically called by simulation destructor.
 		*/
 		void stop();
+
+		/**
+		@brief Launch the simulation and also activates rest app. Never returns ! So it is essentially a breakpoint with no continue.
+		*/
+		void rest_app();
 
 		/**
 		@brief Return target fps.
@@ -295,7 +348,7 @@ namespace opack {
 		template<typename T, typename U>
 		flecs::entity register_t_as()
 		{
-			return world.component<T>().template is_a<U>();
+			return world.prefab<T>().template is_a<U>().template add<T>();
 		}
 
 	public:

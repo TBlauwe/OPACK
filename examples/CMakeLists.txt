@@ -6,6 +6,7 @@ set(SOURCE_LIST
 
 set(HEADER_LIST 
 	"simple_sim.hpp"
+	"empty_sim.hpp"
 )
 
 add_executable(console ${SOURCE_LIST} ${HEADER_LIST})

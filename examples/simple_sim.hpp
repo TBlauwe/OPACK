@@ -12,53 +12,82 @@ struct SimpleSim : opack::SimulationTemplate
 
 	// Types : action
 	// ==============
-	struct Act {};
-	struct R {};
+	struct Act : opack::Actuator {};
+
+	struct Help : opack::Action {};
+	struct Move : opack::Action {};
+
 
 	// Types : data
-	// ==============
+	// ============
 	struct AudioMessage { const char* value; };
 
-	SimpleSim(int argc = 0, char * argv[] = nullptr) : opack::SimulationTemplate{argc, argv}
+	// Types : Relation
+	// ================
+	struct R {};
+
+	SimpleSim(int argc = 0, char * argv[] = nullptr) : opack::SimulationTemplate{"SimpleSim", argc, argv}
 	{
 		sim.world.entity("::SimpleSim").add(flecs::Module);
 
 		// Step I : Register types
 		// -----------------------
+		// --- Actuator
+		sim.register_actuator_type<Act>();
+
+		// --- Actions
+		auto help = sim.register_action<Help>();
+		help.add<opack::Action::Continuous>();
+
+		// --- Senses
 		sim.register_sense<Hearing>();
 		sim.perceive<Hearing, AudioMessage>();
 
 		sim.register_sense<Vision>();
 		sim.perceive<Vision, Act>();
 
+		// Step II : Additional dynamism
+		// -----------------------------
 		sim.world.observer()
-			.term<Act>().obj().var("Object")
-			.term<opack::Artefact>().subj().var("Object")
+			.term<Hearing>().obj(flecs::Wildcard)
 			.event(flecs::OnAdd)
 			.iter(
-				[](flecs::iter& iter)
+				[](flecs::iter& iter )
 				{
-					for (auto i : iter)
-					{
-						auto e = iter.entity(i).object();
-						auto obj = iter.id(1).object();
-						std::cout << e.path() << " is acting on " << obj.path() << "\n";
-					}
+					auto id		= iter.pair(1);
+					auto obj	= id.second();
+					auto entity = iter.entity(0);
+					if(obj.has<AudioMessage>())
+						std::cout << entity.name() << " is hearing \"" << obj.get<AudioMessage>()->value << "\" from " << obj.name() << std::endl;
+					else
+						std::cout << entity.name() << " is hearing " << obj.name() << std::endl;
 				}
 		);
 
-		// Step II : Populate world
-		// ------------------------
+		sim.world.observer()
+			.term<Hearing>().obj(flecs::Wildcard)
+			.event(flecs::OnRemove)
+			.iter(
+				[](flecs::iter& iter )
+				{
+					auto id		= iter.pair(1);
+					auto obj	= id.second();
+					auto entity = iter.entity(0);
+					std::cout << entity.name() << " stopped hearing " << obj.name() << std::endl;
+				}
+		);
+
+		// Step III : Populate world
+		// -------------------------
 		auto arthur		= sim.agent("Arthur");
 		auto beatrice	= sim.agent("Beatrice");
 		auto cyril		= sim.agent("Cyril");
 
 		auto radio		= sim.artefact("Radio");
 
-		// Fake a current state
-		// --------------------
-		arthur.add<Act>(cyril);
-		cyril.add<Act>();
+		// (Step IV) : Fake a current state
+		// --------------------------------
+		arthur.add<Help>(cyril);
 		beatrice.add<Act>(radio);
 		radio.set<AudioMessage>({ "Hello there !" });
 
@@ -69,5 +98,9 @@ struct SimpleSim : opack::SimulationTemplate
 
 		sim.perceive<Vision, Hearing>(beatrice, cyril);
 		sim.perceive<Vision, Hearing>(beatrice, radio);
+
+		sim.step();
+
+		sim.conceal<Hearing>(arthur, radio);
 	}
 };

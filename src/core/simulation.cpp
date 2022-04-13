@@ -14,6 +14,17 @@ opack::Simulation::Simulation(int argc, char* argv[])
 {
 	world.entity("::opack").add(flecs::Module);
 
+	auto action		= world.prefab<Action>().add<Action>();
+	auto actuator	= world.prefab<Actuator>().add<Actuator>();
+	auto agent		= world.prefab<Agent>().add<Agent>();
+	auto artefact	= world.prefab<Artefact>().add<Artefact>();
+	auto sense		= world.prefab<Sense>().add<Sense>();
+
+	world.entity<Actuator>()
+		.add(flecs::Exclusive)
+		.add(flecs::OneOf, action)
+		;
+
 	rule_components_perception = world.rule_builder()
 		.expr("$Sense($Observer, $Subject), $Predicat($Subject)")
 		.term<Sense>().subj().var("Sense").obj().var("Predicat")
@@ -52,6 +63,17 @@ void opack::Simulation::step_n(size_t n, float elapsed_time) {
 	for (size_t i = 0; i < n && should_continue; i++) {
 		should_continue = step(elapsed_time);
 	}
+}
+
+void opack::Simulation::rest_app()
+{
+	std::cout << "See web explorer on : https://www.flecs.dev/explorer/?remote=true\n";
+	std::cout << "Press \'q\' + ENTER to stop the simulation.\n";
+	auto system = world.system().iter([](flecs::iter& iter) { if (std::cin.get() == 'q') iter.world().quit(); });
+	world.set<flecs::rest::Rest>({});
+	while (step());
+	world.remove<flecs::rest::Rest>();
+	system.destruct();
 }
 
 void opack::Simulation::stop()
