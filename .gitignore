@@ -1,7 +1,6 @@
 # Project exclude paths
 bin/
 /.idea/
-CMakePresets.json
 /CMakeSettings.json
 
 # Created by https://www.toptal.com/developers/gitignore/api/c++,visualstudio,clion
