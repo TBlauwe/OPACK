@@ -19,11 +19,8 @@ namespace opack {
 	struct Actuator {};
 	struct Action {};
 	struct Initiator {};
-
-	struct Continuous {};
-	struct Ponctual {};
-
 	struct Arity { size_t value{ 1 }; };
+	struct Delay { float value{ 1 }; };
 
 	struct Sense {};
 	/**
@@ -59,7 +56,7 @@ namespace opack {
 		inline bool is_pred(flecs::entity object)
 		{
 			auto world = subject.world();
-			return world.pair<T>(object) == world.pair(component, object);
+			return world.pair<T>(object) == world.pair(predicat, object);
 		}
 
 		/**

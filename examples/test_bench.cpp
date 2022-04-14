@@ -1,17 +1,13 @@
 #include <flecs.h>
 
-struct A
-{
-    struct X {};
+enum class TileStatus {
+    Free,
+    Occupied
 };
 
-struct B {};
-
-
-int main(int argc, char* argv[])
+int main(int, char* [])
 {
-    flecs::world world;
-    world.prefab<A>();
-    world.component<A::X>();    
-    world.prefab<B>().is_a<A>();
+    flecs::world ecs;
+
+    auto tile = ecs.entity().add(TileStatus::Free);
 }

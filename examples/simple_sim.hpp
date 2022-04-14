@@ -38,7 +38,6 @@ struct SimpleSim : opack::SimulationTemplate
 
 		// --- Actions
 		auto help = opack::register_action<Help>(sim);
-		help.add<opack::Continuous>();
 
 		// --- Senses
 		opack::register_sense<Hearing>(sim);
@@ -81,7 +80,8 @@ struct SimpleSim : opack::SimulationTemplate
 				}
 		);
 
-		sim.world.system<Help>()
+		sim.world.system<const Help>()
+			.term<opack::Delay>().oper(flecs::Not)
 			.term<opack::Initiator>().obj(flecs::Wildcard)
 			.iter(
 				[](flecs::iter& iter)
@@ -93,22 +93,7 @@ struct SimpleSim : opack::SimulationTemplate
 						std::cout << entity.path() << " is initiating \"help\" with ";
 						entity.each<opack::Initiator>([](flecs::entity obj) { std::cout << obj.path() << ", "; });
 						std::cout << "\n";
-					}
-				}
-		);
-
-		sim.world.system<Help>()
-			.term<opack::Initiator>().obj(flecs::Wildcard)
-			.iter(
-				[](flecs::iter& iter)
-				{
-					for (auto i : iter)
-					{
-						auto entity = iter.entity(i);
-						auto obj = iter.id(2);
-						std::cout << entity.path() << " is also initiating \"help\" with ";
-						entity.each<opack::Initiator>([](flecs::entity obj) { std::cout << obj.path() << ", "; });
-						std::cout << "\n";
+						entity.destruct();
 					}
 				}
 		);
@@ -141,12 +126,13 @@ struct SimpleSim : opack::SimulationTemplate
 			.iter(
 				[&](flecs::iter& iter)
 				{
+						std::cout << "Actions added\n";
 					for (auto i : iter)
 					{
 						auto entity = iter.entity(i);
 						auto world = entity.world();
 						auto action = opack::action<Help>(world);
-						std::cout << "Action has arity : " << action.has<opack::Arity>() << "\n";
+						action.set<opack::Delay>({ 2.0f });
 						opack::act<Act>(world, entity, action);
 					}
 				}

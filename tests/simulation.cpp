@@ -353,7 +353,6 @@ TEST_CASE("Basics")
 		// ===============
 		struct Help : opack::Action {};
 		auto help = opack::register_action<Help>(sim);
-		help.add<opack::Continuous>();
 		CHECK(help.is_a<opack::Action>());
 
 		// Define actuator
@@ -374,7 +373,16 @@ TEST_CASE("Basics")
 		CHECK(help_inst.has(flecs::IsA, opack::entity<Help>(sim)));
 		CHECK(help_inst.has(flecs::IsA, opack::entity<opack::Action>(sim)));
 
+		//Action without initiator should be deleted
+		CHECK(help_inst.is_alive());
+		sim.step();
+		CHECK(!help_inst.is_alive());
+
+		// So recreate it and use it before next step().
+		help_inst = opack::action<Help>(sim);
+
 		opack::act<LowerBody>(sim, arthur, help_inst);
+		opack::act<LowerBody>(sim, arthur, upper_body_actuator);
 
 		//CHECK(arthur.has<LowerBody>(radio));
 		//arthur.add<UpperBody>(radio);

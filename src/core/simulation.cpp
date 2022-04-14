@@ -37,13 +37,25 @@ opack::Simulation::Simulation(int argc, char* argv[])
 		.build();
 
 	// If an action do not have initiator, delete it.
-	world.system<Action>()
+	world.system<Action>("System_CleanupActionWithoutInitiator")
 		.term<Initiator>().obj(flecs::Wildcard).oper(flecs::Not)
 		.iter([](flecs::iter& iter)
 			{
 				for (auto i : iter)
 				{
 					iter.entity(i).destruct();
+				}
+			}
+	);
+
+	world.system<Delay>("System_DelayUpdate")
+		.iter([](flecs::iter& iter, Delay* delays)
+			{
+				for (auto i : iter)
+				{
+					delays[i].value -= iter.delta_system_time();
+					if (delays[i].value <= 0)
+						iter.entity(i).remove<Delay>();
 				}
 			}
 	);
