@@ -2,6 +2,7 @@
 
 #include <concepts>
 
+#include <fmt/core.h>
 #include <flecs.h>
 #include <taskflow/core/executor.hpp>
 
@@ -18,6 +19,7 @@ namespace opack {
 
 	struct Actuator {};
 	struct Action {};
+	enum ActionType {Ponctual, Continuous};
 	struct Initiator {};
 	struct Arity { size_t value{ 1 }; };
 	struct Delay { float value{ 1 }; };
@@ -171,7 +173,10 @@ namespace opack {
 	template<std::derived_from<Action> T>
 	inline flecs::entity action(flecs::world& world)
 	{
-		return world.entity().template is_a<T>();
+		flecs::entity prefab = world.entity<T>();
+		auto action =  world.entity().template is_a<T>().child_of(prefab);
+		action.set_name(fmt::format("{}_{}", prefab.name(), action.id()).c_str());
+		return action;
 	}
 
 	/**

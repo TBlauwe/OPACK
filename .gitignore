@@ -2,6 +2,7 @@
 bin/
 /.idea/
 /CMakeSettings.json
+.vscode/
 
 # Created by https://www.toptal.com/developers/gitignore/api/c++,visualstudio,clion
 # Edit at https://www.toptal.com/developers/gitignore?templates=c++,visualstudio,clion
