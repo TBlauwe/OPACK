@@ -21,7 +21,7 @@ namespace opack {
 	struct Action {};
 	enum ActionType {Ponctual, Continuous};
 	struct Initiator {};
-	struct Arity { size_t value{ 1 }; };
+	struct Arity { size_t min{ 1 }; size_t max{ 1 };};
 	struct Delay { float value{ 1 }; };
 
 	struct Sense {};
@@ -141,7 +141,7 @@ namespace opack {
 	// Simulation interaction
 	// ======================
 	/**
-	@brief Add an agent.
+	@brief Instantiate an agent named @c name, from prefab @c T.
 	*/
 	template<std::derived_from<Agent> T = opack::Agent>
 	inline flecs::entity agent(flecs::world& world, const char* name = "")
@@ -174,7 +174,7 @@ namespace opack {
 	inline flecs::entity action(flecs::world& world)
 	{
 		flecs::entity prefab = world.entity<T>();
-		auto action =  world.entity().template is_a<T>().child_of(prefab);
+		auto action =  world.entity().template is_a<T>();
 		action.set_name(fmt::format("{}_{}", prefab.name(), action.id()).c_str());
 		return action;
 	}

@@ -1,3 +1,5 @@
+GENERATE_TREEVIEW		= YES 
+HTML_EXTRA_STYLESHEET	= @OPACK_SOURCE_DIR@/docs/doxygen-awesome.css
 OUTPUT_DIRECTORY        = @OPACK_SOURCE_DIR@/bin/docs/
 INPUT                   = @OPACK_SOURCE_DIR@/include/ @OPACK_SOURCE_DIR@/docs/ @OPACK_SOURCE_DIR@/README.md
 RECURSIVE               = YES

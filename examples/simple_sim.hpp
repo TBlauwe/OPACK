@@ -16,7 +16,7 @@ struct SimpleSim : opack::SimulationTemplate
 
 	struct Help : opack::Action {};
 	struct Move : opack::Action {};
-
+	struct Tune : opack::Action {};
 
 	// Types : data
 	// ============
@@ -25,6 +25,7 @@ struct SimpleSim : opack::SimulationTemplate
 	// Types : Relation
 	// ================
 	struct R {};
+	struct On {};
 
 	SimpleSim(int argc = 0, char* argv[] = nullptr) : opack::SimulationTemplate{ "SimpleSim", argc, argv }
 	{
@@ -38,6 +39,8 @@ struct SimpleSim : opack::SimulationTemplate
 
 		// --- Actions
 		auto help = opack::register_action<Help>(sim);
+		auto move = opack::register_action<Move>(sim);
+		auto tune = opack::register_action<Tune>(sim); // TODO Automatic registration ?
 
 		// --- Senses
 		opack::register_sense<Hearing>(sim);
@@ -108,17 +111,17 @@ struct SimpleSim : opack::SimulationTemplate
 
 		// (Step IV) : Fake a current state
 		// --------------------------------
-		radio.set<AudioMessage>({ "Hello there !" });
-
 		opack::perceive<Vision, Hearing>(sim, arthur, cyril);
 		opack::perceive<Hearing>(sim, arthur, radio);
 
 		opack::perceive<Vision>(sim, cyril, beatrice);
+		radio.set<AudioMessage>({ "Hello there !" });
 
 		opack::perceive<Vision, Hearing>(sim, beatrice, cyril);
 		opack::perceive<Vision, Hearing>(sim, beatrice, radio);
 
 		opack::conceal<Hearing>(sim, arthur, radio);
+
 
 
 		sim.world.system<opack::Agent>()
@@ -131,8 +134,25 @@ struct SimpleSim : opack::SimulationTemplate
 					{
 						auto entity = iter.entity(i);
 						auto world = entity.world();
-						auto action = opack::action<Help>(world);
-						action.set<opack::Delay>({ 2.0f });
+						flecs::entity action;
+						switch (rand() % 3)
+						{
+						case 0:
+							action = opack::action<Help>(world);
+							action.set<opack::Delay>({ 6.0f });
+							action.add<On>(cyril);
+							break;
+						case 1:
+							action = opack::action<Move>(world);
+							action.set<opack::Delay>({ 4.0f });
+							action.add<On>(beatrice);
+							break;
+						case 2:
+							action = opack::action<Tune>(world);
+							action.set<opack::Delay>({ 2.0f });
+							action.add<Tune>(radio);
+							break;
+						}
 						opack::act<Act>(world, entity, action);
 					}
 				}

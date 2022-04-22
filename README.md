@@ -2,7 +2,7 @@
 
 # OPACK
 
-__OPACK__ is a C++ library to simulate cognitive agents. The main goal is to allow quick construction of an agent model tailored to your needs. An agent model in OPACK is defined as follow :
+__OPACK__ is a C++ library to simulate a world with cognitive agents. The main goal is to allow quick construction of an agent model tailored to your needs. An agent model in OPACK is defined as follow :
 
 * __O__ : set of operations manipulating __PACK__
 * __PACK__ : set of data specific for an agent
@@ -17,17 +17,27 @@ We provide tools to facilitate the construction of an OPACK that suit your needs
 
 ```cpp
 #include <opack/core.hpp>
+
+struct Vision : opack::Sense {};
+struct Mesh { /*...*/ };
+
 int main()
 {
 	// Step I : Initialize an empty simulation
 	//========================================
-	auto sim = opk::Simulation();       
+	auto sim = opack::Simulation();       
+
+	sim.register_sense<Vision>()	// Define a new sense 
+	sim.perceive<Vision, Mesh>();	// Define what data can be perceived by this sense.
 
 	// Step II : Populate your simulation
 	//	- Can also be done when running the simulation
 	//===================================
-	auto artefact   = sim.artefact("An artefact");  // Create an artefact.
-	auto arthur     = sim.agent("Arthur");          // Create an agent.
+	auto artefact   = opack::artefact(sim, "An artefact");  // Create an artefact.
+	artefact.add<Mesh>();
+
+	auto arthur     = opack::agent(sim, "Arthur");          // Create an agent.
+	arthur.add<Mesh>();
 
 
 	// Step III : Loop
@@ -35,8 +45,7 @@ int main()
 
 	//	- 1. Tell what the agent perceive
 	//-----------------------------------
-	sim.percept<your::senses>(artefact)             // Create a percept coming from artefact, perceived by arthur.
-		.perceived_by(arthur); 
+	opack::perceive<Vision>(sim, arthur, artefact); // Arthur is now seeing the artefact.
 
 	//	- 2. Advance simulation
 	//-------------------------
@@ -101,3 +110,7 @@ error : Problems running epstopdf. Check your TeX installation!
 
 Install a TeX distribution on your systems, see : https://www.latex-project.org/get/ .
 
+## Credits
+
+* **[FLECS](https://github.com/SanderMertens/flecs)**
+* **[Doxygen-awesome](https://github.com/jothepro/doxygen-awesome-css)**
