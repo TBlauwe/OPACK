@@ -1,3 +1,10 @@
+/*********************************************************************
+ * \file   type_map.hpp
+ * \brief  Defines an associative container of type / value.  
+ * 
+ * \author Tristan
+ * \date   April 2022
+ *********************************************************************/
 #pragma once
 
 #include <any>
@@ -5,10 +12,6 @@
 #include <unordered_map>
 #include <optional>
 
-/**
-@file opack/utils/type_map.hpp
-@brief A type map container is used to map a type to a value of this type.
-*/
 
 /**
 @class TypeMap
@@ -27,7 +30,7 @@ class TypeMap
 
 public:
     /**
-    @brief Get const element by type @c T.
+    @brief Return const element of type @c T.
     */
     template<class T>
     const T& get() const
@@ -36,7 +39,7 @@ public:
     }
 
     /**
-    @brief Get mutable element by type @c T.
+    @brief Return mutable element of type @c T.
     */
     template<class T>
     T& get_mut()
@@ -45,7 +48,7 @@ public:
     }
 
     /**
-    @brief Add a new element @c T. Only one element of a specific type can be added.
+    @brief Add a new element of type @c T. If already present, returns associated element.
 
     @tparam Must be @c DefaultConstructible.
     */

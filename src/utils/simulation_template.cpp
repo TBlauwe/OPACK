@@ -2,24 +2,24 @@
 
 #include <iostream>
 
-opack::SimulationTemplate::SimulationTemplate(const char* _name, int argc, char* argv[]) : name{ _name }, sim { argc, argv }
+#include <fmt/format.h>
+
+opack::SimulationTemplate::SimulationTemplate(const char* name, int argc, char* argv[]) : sim { argc, argv }
 {
-	std::cout << "----------------------\n";
 	std::cout << "Building simulation \""<< name << "\" ...\n";
-	std::cout << "---- Build Events ----\n";
+	sim.world.entity(fmt::format("::{}", name).c_str()).add(flecs::Module);
 }
 
 opack::SimulationTemplate::~SimulationTemplate()
 {
 	std::cout << "=======================\n";
-	std::cout << "Stopping simulation \""<< name << "\"...\n";
+	std::cout << "Stopping simulation ...\n";
 	sim.stop();
 }
 
 void opack::SimulationTemplate::run()
 {
-	std::cout << "----------------------\n";
-	std::cout << "Running simulation \""<< name << "\"...\n";
-	std::cout << "----Running events----\n";
+	std::cout << "Running simulation ...\n";
+	std::cout << "=======================\n";
 	sim.rest_app();
 }

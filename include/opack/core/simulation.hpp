@@ -1,3 +1,10 @@
+/*********************************************************************
+ * \file   simulation.hpp
+ * \brief  
+ * 
+ * \author Tristan
+ * \date   April 2022
+ *********************************************************************/
 #pragma once
 
 #include <concepts>
@@ -12,8 +19,9 @@
 @brief Main entry point to use the library.
 */
 namespace opack {
-
 	// Types
+	struct Operation {};
+
 	struct Agent {};
 	struct Artefact {};
 
@@ -125,6 +133,13 @@ namespace opack {
 	{
 
 		return register_t_as_u<T, Action>(world);
+	}
+
+	template<std::derived_from<Operation> T, typename ... Args>
+	inline flecs::entity register_operation(flecs::world& world, std::function<void()> func)
+	{
+		//return world.system<T, Args...>()
+			
 	}
 
 	/**
