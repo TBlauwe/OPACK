@@ -5,7 +5,7 @@
 
 struct EmptySim : opack::SimulationTemplate
 {
-	EmptySim(int argc = 0, char * argv[] = nullptr) : opack::SimulationTemplate{"EmptySim", argc, argv}
+	EmptySim(int argc = 0, char * argv[] = nullptr) : opack::SimulationTemplate{argc, argv}
 	{
 	}
 };

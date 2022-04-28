@@ -86,12 +86,12 @@ if(OPACK_DEVELOPPER_WARNINGS)
     target_set_compile_warnings_cxx(opack)
 endif()
 
-if(OPACK_BUILD_BENCHMARKS)
-    add_subdirectory ("benchmarks")
-endif()
-
 if(OPACK_BUILD_EXAMPLES)
     add_subdirectory ("examples")
+endif()
+
+if(OPACK_BUILD_BENCHMARKS)
+    add_subdirectory ("benchmarks")
 endif()
 
 if(OPACK_BUILD_TESTS)

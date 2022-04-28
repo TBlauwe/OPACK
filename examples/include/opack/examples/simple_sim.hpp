@@ -27,7 +27,7 @@ struct SimpleSim : opack::SimulationTemplate
 	struct R {};
 	struct On {};
 
-	SimpleSim(int argc = 0, char* argv[] = nullptr) : opack::SimulationTemplate{ "SimpleSim", argc, argv }
+	SimpleSim(int argc = 0, char* argv[] = nullptr) : opack::SimulationTemplate{argc, argv }
 	{
 		//sim.target_fps(1);
 		sim.world.entity("::SimpleSim").add(flecs::Module);

@@ -5,13 +5,17 @@ set(SOURCE_LIST
 )
 
 set(HEADER_LIST 
-	"simple_sim.hpp"
-	"empty_sim.hpp"
+	"include/opack/examples/empty_sim.hpp"
+	"include/opack/examples/simple_sim.hpp"
 )
 
-add_executable(console ${SOURCE_LIST} ${HEADER_LIST})
+add_library(opack_examples INTERFACE ${HEADER_LIST})
+target_link_libraries(opack_examples INTERFACE opack)
+target_include_directories(opack_examples INTERFACE "include")
+
+add_executable(console ${SOURCE_LIST})
 target_compile_features(console PRIVATE cxx_std_20)
-target_link_libraries(console PRIVATE opack)
+target_link_libraries(console PRIVATE opack opack_examples)
 set_target_properties(console PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OPACK_SOURCE_DIR}/bin/examples/$<CONFIG>")
 
 add_executable(test_bench "test_bench.cpp")

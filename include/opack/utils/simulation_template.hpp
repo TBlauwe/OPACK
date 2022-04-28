@@ -26,7 +26,7 @@ namespace opack
 		/**
 		 * Name should be similar to class name for consistency.
 		 */
-		SimulationTemplate(const char* _name = "Unspecified", int argc = 0, char* argv[] = nullptr);
+		SimulationTemplate(int argc = 0, char* argv[] = nullptr);
 		~SimulationTemplate();
 
 		void run();
