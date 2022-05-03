@@ -27,6 +27,14 @@ struct SimpleSim : opack::SimulationTemplate
 	struct R {};
 	struct On {};
 
+	// Types : Behaviour
+	// =================
+	struct MyBehaviour {};
+
+	// Types : Stress 
+	// =================
+	struct Stress { float value; };
+
 	SimpleSim(int argc = 0, char* argv[] = nullptr) : opack::SimulationTemplate{argc, argv }
 	{
 		//sim.target_fps(1);
@@ -62,11 +70,8 @@ struct SimpleSim : opack::SimulationTemplate
 					auto entity = iter.entity(0);
 					if (obj.has<AudioMessage>())
 					{
-						std::cout << entity.name() << " is hearing \"" << obj.get<AudioMessage>()->value << "\" from " << obj.name() << std::endl;
 						entity.add<Help>(obj);
 					}
-					else
-						std::cout << entity.name() << " is hearing " << obj.name() << std::endl;
 				}
 		);
 
@@ -122,14 +127,11 @@ struct SimpleSim : opack::SimulationTemplate
 
 		opack::conceal<Hearing>(sim, arthur, radio);
 
-
-
 		sim.world.system<opack::Agent>()
 			.interval(5)
 			.iter(
 				[&](flecs::iter& iter)
 				{
-						std::cout << "Actions added\n";
 					for (auto i : iter)
 					{
 						auto entity = iter.entity(i);

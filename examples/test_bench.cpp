@@ -9,5 +9,5 @@ int main(int, char* [])
 {
     flecs::world ecs;
 
-    auto tile = ecs.entity().add(TileStatus::Free);
+    ///auto tile = ecs.entity().add(TileStatus::Free);
 }
