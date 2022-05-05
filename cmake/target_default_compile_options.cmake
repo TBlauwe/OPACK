@@ -4,7 +4,6 @@ function(target_set_compile_warnings_cxx _TARGET)
 
         target_compile_options(${_TARGET} PRIVATE
                 #$<$<CONFIG:RELEASE>:-Werror>
-                $<$<CONFIG:RELEASE>:-O3>
                 $<$<CONFIG:Debug>:-Wshadow>
                 $<$<CONFIG:Debug>:-Wunused>
                 -Wall -Wextra

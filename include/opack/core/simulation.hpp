@@ -9,7 +9,6 @@
 
 #include <concepts>
 
-#include <fmt/core.h>
 #include <flecs.h>
 #include <taskflow/core/executor.hpp>
 
@@ -188,10 +187,7 @@ namespace opack {
 	template<std::derived_from<Action> T>
 	inline flecs::entity action(flecs::world& world)
 	{
-		flecs::entity prefab = world.entity<T>();
-		auto action =  world.entity().template is_a<T>();
-		action.set_name(fmt::format("{}_{}", prefab.name(), action.id()).c_str());
-		return action;
+		return world.entity().template is_a<T>();
 	}
 
 	/**

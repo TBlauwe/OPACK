@@ -31,14 +31,6 @@ option(OPACK_DEVELOPPER_WARNINGS   "Enable more warnings" OFF)
 # Dependencies
 # ============
 
-#An open-source formatting library providing a fast and safe alternative to C stdio and C++ iostreams. 
-CPMAddPackage(
-        NAME fmt
-        GITHUB_REPOSITORY fmtlib/fmt
-        GIT_TAG 8.1.1
-)
-set_target_properties(fmt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:fmt,INTERFACE_INCLUDE_DIRECTORIES>)
-
 # General-purpose Parallel and Heterogeneous Task Programming System
 CPMAddPackage(
         NAME taskflow
@@ -80,7 +72,7 @@ set(SOURCE_LIST
 # ==============
 add_library (opack STATIC ${SOURCE_LIST} ${HEADER_LIST})
 target_include_directories(opack PUBLIC include)
-target_link_libraries(opack PUBLIC Taskflow flecs_static fmt)
+target_link_libraries(opack PUBLIC Taskflow flecs_static)
 target_compile_features(opack PUBLIC cxx_std_20)
 if(OPACK_DEVELOPPER_WARNINGS)
     target_set_compile_warnings_cxx(opack)
