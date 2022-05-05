@@ -110,7 +110,25 @@ error : Problems running epstopdf. Check your TeX installation!
 
 Install a TeX distribution on your systems, see : https://www.latex-project.org/get/ .
 
+## Benchmarks
+
+The library used for benchmarking is [Google benchmark](https://github.com/google/benchmark).
+After building the target, you can find them in the folder `bin\benchmarks`.
+To run a benchmark, simply launch exe :
+> bin/benchmarks/opack_benchmarks_{$config}_{$compiler}.exe
+
+However, if you want to pass more options to tune the benchmarking, see 
+[Google benchmark usage guide](https://github.com/google/benchmark/blob/main/docs/user_guide.md).
+
+Alternitavely, you can use `bin\benchmarks\run_benchmarks.py` python script, to run benchmarks with a predefined set of options.
+
+> py .\run_benchmarks.py .\opack_benchmarks_{$config}_{$compiler}.exe -n Release
+
+This line will generate a json file with 'Release' in its name. It will also repeat benchmarks 10 times and compute the mean, median, variance, etc.
+
 ## Credits
 
-* **[FLECS](https://github.com/SanderMertens/flecs)**
+* **[Doctest](https://github.com/doctest/doctest)**
 * **[Doxygen-awesome](https://github.com/jothepro/doxygen-awesome-css)**
+* **[Flecs](https://github.com/SanderMertens/flecs)**
+* **[Google Benchmark](https://github.com/google/benchmark)**

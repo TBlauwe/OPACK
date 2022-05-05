@@ -39,7 +39,7 @@ static void BM_create_n_agent(benchmark::State& state) {
 }
 BENCHMARK(BM_create_n_agent)
         ->Unit(benchmark::kMillisecond)
-        ->Range(1<<0, 1<<20)
+        ->Range(1<<10, 1<<20)
 ;
 
 template<std::derived_from<opack::SimulationTemplate> Simulation = opack::SimulationTemplate>
