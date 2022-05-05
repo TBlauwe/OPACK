@@ -21,11 +21,20 @@ endif ()
 add_executable(opack_benchmarks ${SOURCE_LIST})
 target_compile_features(opack_benchmarks PRIVATE cxx_std_20)
 target_link_libraries(opack_benchmarks PRIVATE opack opack_examples benchmark::benchmark)
-set_target_properties(opack_benchmarks PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OPACK_SOURCE_DIR}/bin/$<CONFIG>/benchmark")
+set_target_properties(opack_benchmarks PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OPACK_SOURCE_DIR}/bin/benchmarks/$<CONFIG>")
 
 # Copy compare.py tools and its requirements for ease of use
 add_custom_command(TARGET opack_benchmarks POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:opack_benchmarks>/tools)
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${OPACK_SOURCE_DIR}/bin/benchmarks/tools"
+)
 add_custom_command(TARGET opack_benchmarks POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${benchmark_SOURCE_DIR}/tools $<TARGET_FILE_DIR:opack_benchmarks>/tools)
+        ${benchmark_SOURCE_DIR}/tools "${OPACK_SOURCE_DIR}/bin/benchmarks/tools"
+)
+        
+# Copy run_benchmarks.py to launch benchmark
+add_custom_command(TARGET opack_benchmarks POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy
+		"${OPACK_SOURCE_DIR}/benchmarks/tools/run_benchmarks.py"
+        "${OPACK_SOURCE_DIR}/bin/benchmarks/"
+)

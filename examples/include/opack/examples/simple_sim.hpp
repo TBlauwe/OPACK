@@ -33,7 +33,7 @@ struct SimpleSim : opack::SimulationTemplate
 
 	// Types : Stress 
 	// =================
-	struct Stress { float value; };
+	struct Stress { float value = 10.f; };
 
 	SimpleSim(int argc = 0, char* argv[] = nullptr) : opack::SimulationTemplate{argc, argv }
 	{
@@ -102,6 +102,19 @@ struct SimpleSim : opack::SimulationTemplate
 						entity.each<opack::Initiator>([](flecs::entity obj) { std::cout << obj.path() << ", "; });
 						std::cout << "\n";
 						entity.destruct();
+					}
+				}
+		);
+
+		sim.world.system<Stress>()
+			.iter(
+				[](flecs::iter& iter, Stress* stress)
+				{
+					for (auto i : iter)
+					{
+						stress[i].value -= iter.delta_system_time();
+						if (stress[i].value <= 0)
+							stress[i].value = 10;
 					}
 				}
 		);
