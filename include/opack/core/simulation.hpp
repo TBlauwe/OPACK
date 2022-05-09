@@ -13,13 +13,16 @@
 #include <taskflow/core/executor.hpp>
 
 #include <opack/utils/type_map.hpp>
+#include <opack/utils/type_name.hpp>
 
 /**
 @brief Main entry point to use the library.
 */
 namespace opack {
 	// Types
+	struct Flow {};
 	struct Operation {};
+	struct Impact {};
 
 	struct Agent {};
 	struct Artefact {};
@@ -134,13 +137,6 @@ namespace opack {
 		return register_t_as_u<T, Action>(world);
 	}
 
-	template<std::derived_from<Operation> T, typename ... Args>
-	inline flecs::entity register_operation(flecs::world& world, std::function<void()> func)
-	{
-		//return world.system<T, Args...>()
-			
-	}
-
 	/**
 	@brief @c T sense is now able to perceive @c U component.
 	@param agent Which agent perceives this
@@ -151,6 +147,27 @@ namespace opack {
 	{
 		return world.component<T>().template add<Sense, U>();
 	}
+
+	/**
+	@brief @c T sense is now able to perceive @c U component.
+	@param agent Which agent perceives this
+	@return entity of @c U component;
+	*/
+	template<std::derived_from<Flow> T>
+	inline flecs::entity flow(flecs::world& world)
+	{
+		return world.entity<T>();
+	}
+
+	template<std::derived_from<Flow> T, std::derived_from<Operation> U>
+	inline flecs::entity operation(flecs::world& world, std::function<void(flecs::entity, const U)>&& func)
+	{
+		flecs::entity flow = world.entity<T>();
+		flecs::entity op = world.system<const U>(type_name_cstr<U>()).term<>.each(func);
+		op.child_of(flow);
+		return op;
+	}
+
 
 	// Simulation interaction
 	// ======================
@@ -187,7 +204,7 @@ namespace opack {
 	template<std::derived_from<Action> T>
 	inline flecs::entity action(flecs::world& world)
 	{
-		return world.entity().template is_a<T>();
+		return world.entity().template is_a<T>().set_doc_name(type_name_cstr<T>());
 	}
 
 	/**

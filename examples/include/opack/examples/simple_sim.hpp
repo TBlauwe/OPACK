@@ -29,7 +29,12 @@ struct SimpleSim : opack::SimulationTemplate
 
 	// Types : Behaviour
 	// =================
+	struct Behaviour {};
 	struct MyBehaviour {};
+	struct MyFlow : opack::Flow {};
+	struct Operation_Percept : opack::Operation {};
+	struct Operation_Reason : opack::Operation {};
+	struct Operation_Act : opack::Operation {};
 
 	// Types : Stress 
 	// =================
@@ -106,6 +111,78 @@ struct SimpleSim : opack::SimulationTemplate
 				}
 		);
 
+		opack::flow<MyFlow>(sim);
+		opack::operation<MyFlow, Operation_Percept>(sim, [](flecs::entity agent, const Operation_Percept){});
+		//auto flow = sim.world.system<const opack::Agent>()
+		//	.term<MyFlow>().obj(flecs::Wildcard)
+		//	.term<Operation_Percept>().inout(flecs::Out).set(flecs::Nothing)
+		//	.interval(1.0)
+		//	.iter(
+		//		[](flecs::iter& iter)
+		//		{
+		//			for (auto i : iter)
+		//			{
+		//				iter.entity(i).add<Operation_Percept>();
+		//			}
+		//		}
+		//);
+
+		//sim.world.system<const opack::Agent, Operation_Percept>()
+		//	.term<Operation_Reason>().inout(flecs::Out).set(flecs::Nothing)
+		//	.iter(
+		//		[](flecs::iter& iter)
+		//		{
+		//			for (auto i : iter)
+		//			{
+		//				iter.entity(i).remove<Operation_Percept>();
+		//				std::cout << "Operation percept for agent " << iter.entity(i) << "\n";
+		//				iter.entity(i).add<Operation_Reason>();
+		//			}
+		//		}
+		//);
+
+		//auto op = sim.world.system<const opack::Agent, Operation_Reason>()
+		//	.term<Operation_Act>().inout(flecs::Out).set(flecs::Nothing)
+		//	.iter(
+		//		[](flecs::iter& iter)
+		//		{
+		//			for (auto i : iter)
+		//			{
+		//				iter.entity(i).remove<Operation_Reason>();
+		//				std::cout << "Operation reason for "<< (iter.entity(i).has<Behaviour>(flecs::Wildcard) ? "stressed " : "") << "agent " << iter.entity(i) << "\n";
+		//				iter.entity(i).add<Operation_Act>();
+		//			}
+		//		}
+		//);
+
+		//sim.world.system<const opack::Agent, Operation_Act>()
+		//	.interval(1.0)
+		//	.iter(
+		//		[](flecs::iter& iter)
+		//		{
+		//			for (auto i : iter)
+		//			{
+		//				iter.entity(i).remove<Operation_Act>();
+		//				std::cout << "Operation act for agent " << iter.entity(i) << "\n";
+		//			}
+		//		}
+		//);
+
+		// Behaviour
+		sim.world.system<const opack::Agent, const Stress>()
+			.term<MyBehaviour>().inout(flecs::Out).set(flecs::Nothing)
+			.iter(
+				[](flecs::iter& iter, const opack::Agent* _, const Stress* stress)
+				{
+					for (auto i : iter)
+					{
+						if (stress[i].value >= 5)
+							iter.entity(i).add<Behaviour>(iter.world().entity<MyBehaviour>());
+					}
+				}
+		);
+
+
 		sim.world.system<Stress>()
 			.iter(
 				[](flecs::iter& iter, Stress* stress)
@@ -122,7 +199,11 @@ struct SimpleSim : opack::SimulationTemplate
 		// Step III : Populate world
 		// -------------------------
 		auto arthur		= opack::agent(sim, "Arthur");
+		//arthur.add<MyFlow>(flow);
+		arthur.add<Stress>();
 		auto beatrice	= opack::agent(sim, "Beatrice");
+		//beatrice.add<MyFlow>(flow);
+		beatrice.add<Stress>();
 		auto cyril		= opack::agent(sim, "Cyril");
 
 		auto radio		= opack::artefact(sim, "Radio");

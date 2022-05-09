@@ -60,7 +60,7 @@ set(HEADER_LIST
 	"include/opack/core.hpp"
 	"include/opack/utils/type_map.hpp"
 	"include/opack/utils/simulation_template.hpp"
- )
+  "include/opack/utils/type_name.hpp")
 
 set(SOURCE_LIST 
 	"src/core/simulation.cpp"
