@@ -8,3 +8,4 @@
 #pragma once
 
 #include <opack/core/simulation.hpp>
+#include <opack/core/operation.hpp>

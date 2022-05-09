@@ -148,27 +148,6 @@ namespace opack {
 		return world.component<T>().template add<Sense, U>();
 	}
 
-	/**
-	@brief @c T sense is now able to perceive @c U component.
-	@param agent Which agent perceives this
-	@return entity of @c U component;
-	*/
-	template<std::derived_from<Flow> T>
-	inline flecs::entity flow(flecs::world& world)
-	{
-		return world.entity<T>();
-	}
-
-	template<std::derived_from<Flow> T, std::derived_from<Operation> U>
-	inline flecs::entity operation(flecs::world& world, std::function<void(flecs::entity, const U)>&& func)
-	{
-		flecs::entity flow = world.entity<T>();
-		flecs::entity op = world.system<const U>(type_name_cstr<U>()).term<>.each(func);
-		op.child_of(flow);
-		return op;
-	}
-
-
 	// Simulation interaction
 	// ======================
 	/**

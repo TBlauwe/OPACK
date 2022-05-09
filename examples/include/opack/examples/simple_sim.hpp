@@ -40,7 +40,7 @@ struct SimpleSim : opack::SimulationTemplate
 	// =================
 	struct Stress { float value = 10.f; };
 
-	SimpleSim(int argc = 0, char* argv[] = nullptr) : opack::SimulationTemplate{argc, argv }
+	SimpleSim(int argc = 0, char* argv[] = nullptr) : opack::SimulationTemplate{ argc, argv }
 	{
 		//sim.target_fps(1);
 		sim.world.entity("::SimpleSim").add(flecs::Module);
@@ -64,7 +64,7 @@ struct SimpleSim : opack::SimulationTemplate
 
 		// Step II : Additional dynamism
 		// -----------------------------
-		sim.world.observer()
+		sim.world.observer("OnAdd_Hearing")
 			.term<Hearing>().obj(flecs::Wildcard)
 			.event(flecs::OnAdd)
 			.iter(
@@ -80,7 +80,7 @@ struct SimpleSim : opack::SimulationTemplate
 				}
 		);
 
-		sim.world.observer()
+		sim.world.observer("OnRemove_Hearing")
 			.term<Hearing>().obj(flecs::Wildcard)
 			.event(flecs::OnRemove)
 			.iter(
@@ -93,7 +93,7 @@ struct SimpleSim : opack::SimulationTemplate
 				}
 		);
 
-		sim.world.system<const Help>()
+		sim.world.system<const Help>("ActionHelpEffect")
 			.term<opack::Delay>().oper(flecs::Not)
 			.term<opack::Initiator>().obj(flecs::Wildcard)
 			.iter(
@@ -111,79 +111,10 @@ struct SimpleSim : opack::SimulationTemplate
 				}
 		);
 
-		opack::flow<MyFlow>(sim);
-		opack::operation<MyFlow, Operation_Percept>(sim, [](flecs::entity agent, const Operation_Percept){});
-		//auto flow = sim.world.system<const opack::Agent>()
-		//	.term<MyFlow>().obj(flecs::Wildcard)
-		//	.term<Operation_Percept>().inout(flecs::Out).set(flecs::Nothing)
-		//	.interval(1.0)
-		//	.iter(
-		//		[](flecs::iter& iter)
-		//		{
-		//			for (auto i : iter)
-		//			{
-		//				iter.entity(i).add<Operation_Percept>();
-		//			}
-		//		}
-		//);
+		//opack::flow<MyFlow>(sim);
+		//opack::operation<MyFlow, Operation_Percept>(sim, [](flecs::entity agent, const Operation_Percept){});
 
-		//sim.world.system<const opack::Agent, Operation_Percept>()
-		//	.term<Operation_Reason>().inout(flecs::Out).set(flecs::Nothing)
-		//	.iter(
-		//		[](flecs::iter& iter)
-		//		{
-		//			for (auto i : iter)
-		//			{
-		//				iter.entity(i).remove<Operation_Percept>();
-		//				std::cout << "Operation percept for agent " << iter.entity(i) << "\n";
-		//				iter.entity(i).add<Operation_Reason>();
-		//			}
-		//		}
-		//);
-
-		//auto op = sim.world.system<const opack::Agent, Operation_Reason>()
-		//	.term<Operation_Act>().inout(flecs::Out).set(flecs::Nothing)
-		//	.iter(
-		//		[](flecs::iter& iter)
-		//		{
-		//			for (auto i : iter)
-		//			{
-		//				iter.entity(i).remove<Operation_Reason>();
-		//				std::cout << "Operation reason for "<< (iter.entity(i).has<Behaviour>(flecs::Wildcard) ? "stressed " : "") << "agent " << iter.entity(i) << "\n";
-		//				iter.entity(i).add<Operation_Act>();
-		//			}
-		//		}
-		//);
-
-		//sim.world.system<const opack::Agent, Operation_Act>()
-		//	.interval(1.0)
-		//	.iter(
-		//		[](flecs::iter& iter)
-		//		{
-		//			for (auto i : iter)
-		//			{
-		//				iter.entity(i).remove<Operation_Act>();
-		//				std::cout << "Operation act for agent " << iter.entity(i) << "\n";
-		//			}
-		//		}
-		//);
-
-		// Behaviour
-		sim.world.system<const opack::Agent, const Stress>()
-			.term<MyBehaviour>().inout(flecs::Out).set(flecs::Nothing)
-			.iter(
-				[](flecs::iter& iter, const opack::Agent* _, const Stress* stress)
-				{
-					for (auto i : iter)
-					{
-						if (stress[i].value >= 5)
-							iter.entity(i).add<Behaviour>(iter.world().entity<MyBehaviour>());
-					}
-				}
-		);
-
-
-		sim.world.system<Stress>()
+		sim.world.system<Stress>("UpdateStress")
 			.iter(
 				[](flecs::iter& iter, Stress* stress)
 				{
@@ -198,15 +129,15 @@ struct SimpleSim : opack::SimulationTemplate
 
 		// Step III : Populate world
 		// -------------------------
-		auto arthur		= opack::agent(sim, "Arthur");
+		auto arthur = opack::agent(sim, "Arthur");
 		//arthur.add<MyFlow>(flow);
 		arthur.add<Stress>();
-		auto beatrice	= opack::agent(sim, "Beatrice");
+		auto beatrice = opack::agent(sim, "Beatrice");
 		//beatrice.add<MyFlow>(flow);
 		beatrice.add<Stress>();
-		auto cyril		= opack::agent(sim, "Cyril");
+		auto cyril = opack::agent(sim, "Cyril");
 
-		auto radio		= opack::artefact(sim, "Radio");
+		auto radio = opack::agent(sim, "Radio");
 
 		// (Step IV) : Fake a current state
 		// --------------------------------
@@ -221,37 +152,25 @@ struct SimpleSim : opack::SimulationTemplate
 
 		opack::conceal<Hearing>(sim, arthur, radio);
 
-		sim.world.system<opack::Agent>()
-			.interval(5)
-			.iter(
-				[&](flecs::iter& iter)
-				{
-					for (auto i : iter)
-					{
-						auto entity = iter.entity(i);
-						auto world = entity.world();
-						flecs::entity action;
-						switch (rand() % 3)
-						{
-						case 0:
-							action = opack::action<Help>(world);
-							action.set<opack::Delay>({ 6.0f });
-							action.add<On>(cyril);
-							break;
-						case 1:
-							action = opack::action<Move>(world);
-							action.set<opack::Delay>({ 4.0f });
-							action.add<On>(beatrice);
-							break;
-						case 2:
-							action = opack::action<Tune>(world);
-							action.set<opack::Delay>({ 2.0f });
-							action.add<Tune>(radio);
-							break;
-						}
-						opack::act<Act>(world, entity, action);
-					}
-				}
-		);
+		{
+			auto action = opack::action<Help>(sim);
+			action.set<opack::Delay>({ 6.0f });
+			action.add<On>(cyril);
+			opack::act<Act>(sim, arthur, action);
+		}
+
+		{
+			auto action = opack::action<Move>(sim);
+			action.set<opack::Delay>({ 4.0f });
+			action.add<On>(beatrice);
+			opack::act<Act>(sim, cyril, action);
+		}
+
+		{
+			auto action = opack::action<Tune>(sim);
+			action.set<opack::Delay>({ 2.0f });
+			action.add<On>(radio);
+			opack::act<Act>(sim, beatrice, action);
+		}
 	}
 };

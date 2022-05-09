@@ -64,6 +64,7 @@ opack::Simulation::Simulation(int argc, char* argv[])
 opack::Simulation::~Simulation()
 {
 	rule_components_perception.destruct();
+	rule_relations_perception.destruct();
 	stop();
 }
 

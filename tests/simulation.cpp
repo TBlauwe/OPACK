@@ -153,8 +153,7 @@ TEST_CASE("Basics")
 	SUBCASE("Agents")
 	{
 		size_t nb_agents{ 0 };
-		size_t nb_prefabs{ 0 };
-		auto check_construction = [&nb_agents, &nb_prefabs, &sim]<std::derived_from<opack::Agent> T = opack::Agent>(const char * name = "") -> flecs::entity
+		auto check_construction = [&nb_agents, &sim]<std::derived_from<opack::Agent> T = opack::Agent>(const char * name = "") -> flecs::entity
 		{
 			auto e = agent<T>(sim, name);
 			nb_agents++;
@@ -166,7 +165,7 @@ TEST_CASE("Basics")
 			CHECK(e.template has<T>());
 			CHECK(e.template is_a<T>());
 			CHECK(sim.count(flecs::IsA, opack::id<opack::Agent>(sim)) == nb_agents);
-			CHECK(sim.count<opack::Agent>() == nb_agents + nb_prefabs);
+			CHECK(sim.count<opack::Agent>() == nb_agents);
 			return e;
 		};
 
@@ -183,10 +182,9 @@ TEST_CASE("Basics")
 		// Agent of different types
 		struct AgentA : opack::Agent {};
 		auto a_t = register_agent_type<AgentA>(sim);
-		nb_prefabs++; // Sadly prefab are also counted, except the root "Agent" :thinking:. 
 
 		auto agent_a_1 = check_construction.template operator()<AgentA>();
-		CHECK(sim.count<AgentA>() == 1 + 1); // Plus the prefab so.
+		CHECK(sim.count<AgentA>() == 1);
 
 		// Agent with name
 		auto agent_named_1 = check_construction.template operator()<>("Agent_1");
