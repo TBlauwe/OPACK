@@ -62,7 +62,9 @@ set(HEADER_LIST
 	"include/opack/utils/type_map.hpp"
 	"include/opack/utils/simulation_template.hpp"
     "include/opack/utils/type_name.hpp"
- )
+    "include/opack/core/types.hpp"
+    "include/opack/core/perception.hpp"
+)
 
 set(SOURCE_LIST 
 	"src/core/simulation.cpp"

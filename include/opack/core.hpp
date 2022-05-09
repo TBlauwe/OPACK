@@ -7,5 +7,6 @@
  *********************************************************************/
 #pragma once
 
-#include <opack/core/simulation.hpp>
 #include <opack/core/operation.hpp>
+#include <opack/core/perception.hpp>
+#include <opack/core/simulation.hpp>
