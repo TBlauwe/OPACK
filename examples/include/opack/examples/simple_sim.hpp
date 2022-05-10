@@ -89,7 +89,6 @@ struct SimpleSim : opack::SimulationTemplate
 					auto id = iter.pair(1);
 					auto obj = id.second();
 					auto entity = iter.entity(0);
-					std::cout << entity.name() << " stopped hearing " << obj.name() << std::endl;
 				}
 		);
 
@@ -103,9 +102,7 @@ struct SimpleSim : opack::SimulationTemplate
 					{
 						auto entity = iter.entity(i);
 						auto obj = iter.id(2);
-						std::cout << entity.path() << " is initiating \"help\" with ";
-						entity.each<opack::Initiator>([](flecs::entity obj) { std::cout << obj.path() << ", "; });
-						std::cout << "\n";
+						entity.each<opack::Initiator>([](flecs::entity obj) {});
 						entity.destruct();
 					}
 				}
