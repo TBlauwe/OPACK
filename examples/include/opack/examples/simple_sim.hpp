@@ -58,9 +58,11 @@ struct SimpleSim : opack::SimulationTemplate
 		// --- Senses
 		opack::register_sense<Hearing>(sim);
 		opack::perceive<Hearing, AudioMessage>(sim);
+		opack::perceive<Hearing, opack::Agent>(sim);
 
 		opack::register_sense<Vision>(sim);
 		opack::perceive<Vision, Act>(sim);
+		opack::perceive<Vision, opack::Agent>(sim);
 
 		// Step II : Additional dynamism
 		// -----------------------------
@@ -124,6 +126,25 @@ struct SimpleSim : opack::SimulationTemplate
 				}
 		);
 
+		sim.world.system<opack::Agent>("Perceptions_Output")
+			.interval(5)
+			.iter(
+				[](flecs::iter& iter)
+				{
+					for (auto i : iter)
+					{
+						auto entity = iter.entity(i);
+						std::cout << entity.name() << " perceives : \n";
+						opack::each_perceived<opack::Sense, AudioMessage>(entity,
+							[](flecs::entity subject)
+							{
+								std::cout << " - " << subject.name() << "\n";
+							}
+						);
+					}
+				}
+		);
+
 		// Step III : Populate world
 		// -------------------------
 		auto arthur = opack::agent(sim, "Arthur");
@@ -134,7 +155,7 @@ struct SimpleSim : opack::SimulationTemplate
 		beatrice.add<Stress>();
 		auto cyril = opack::agent(sim, "Cyril");
 
-		auto radio = opack::agent(sim, "Radio");
+		auto radio = opack::artefact(sim, "Radio");
 
 		// (Step IV) : Fake a current state
 		// --------------------------------

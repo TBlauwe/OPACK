@@ -8,6 +8,8 @@
 #pragma once
 
 #include <vector>
+#include <unordered_set>
+#include <functional>
 
 #include <flecs.h>
 #include <opack/core/types.hpp>
@@ -113,6 +115,41 @@ namespace opack
 			int32_t object_var;
 			Relation(flecs::world& world);
 		};
+	}
+	
+	/**
+	 Iterate all currently perceived entities with sense @c T, or any if unspecified, with component @c U. 
+	 @param observer From which perserpective this should be checked.
+	 @param func Signature is : void(flecs::entity subject)
+
+	 TODO For some reasons, it doesn't work with components from a prefab.
+	 */
+	template<std::derived_from<Sense> T = opack::Sense, typename U>
+	void each_perceived(flecs::entity observer, std::function<void(flecs::entity)> func)
+	{
+		auto world = observer.world();
+		auto query = world.get<Query::Perception::Component>();
+		auto rule = query->rule.rule.iter()
+			.set_var(query->observer_var, observer)
+			.set_var(query->predicate_var, world.id<U>());
+			;
+		if constexpr (!std::is_same<T, opack::Sense>::value)
+		{
+			rule.set_var(query->sense_var, world.id<T>());
+		}
+
+		std::unordered_set<flecs::entity_t> hide {};
+		rule.iter(
+			[&](flecs::iter& it)
+			{
+				auto subject = it.get_var(query->subject_var);
+				if (!hide.contains(subject))
+				{
+					func(subject);
+					hide.emplace(subject);
+				}
+			}
+		);
 	}
 
 	/**

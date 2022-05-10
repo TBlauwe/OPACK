@@ -288,6 +288,8 @@ TEST_CASE("Basics")
 			else
 				CHECK_MESSAGE(false, "A percept do not have a correct value ! Check above test.");
 		}
+		opack::each_perceived<opack::Sense, opack::Artefact>(agent_1, [&artefact_1](flecs::entity subject) { CHECK(subject == artefact_1); });
+		opack::each_perceived<MySense, opack::Artefact>(agent_1, [&artefact_1](flecs::entity subject) { CHECK(subject == artefact_1); });
 		CHECK(opack::does_perceive(agent_1, artefact_1));
 		CHECK(opack::does_perceive<MySense>(agent_1, artefact_1));
 		CHECK(opack::does_perceive<MySense, A>(agent_1, artefact_1));
