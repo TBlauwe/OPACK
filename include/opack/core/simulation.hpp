@@ -1,7 +1,7 @@
 /*********************************************************************
  * \file   simulation.hpp
- * \brief  
- * 
+ * \brief
+ *
  * \author Tristan
  * \date   April 2022
  *********************************************************************/
@@ -191,7 +191,7 @@ namespace opack {
 		~Simulation();
 
 		//inline operator flecs::world() { return world.get_world(); }
-		inline operator flecs::world&() { return world; }
+		inline operator flecs::world& () { return world; }
 
 		// Simulation control
 		// ==================
@@ -243,57 +243,6 @@ namespace opack {
 
 		// Simulation queries
 		// ==================
-		/**
-		Retrieve percepts for a specific agent.
-
-		TODO With default type @c opack::Sense no perception are retrieved since there is no percepts retrievable with this Sense.
-		Maybe specialize function to return all percepts ?
-
-		@return A vector of all percepts of this type, perceived by the agent.
-		*/
-		template<std::derived_from<Sense> T = opack::Sense>
-		Percepts query_percepts(flecs::entity source)
-		{
-			Percepts percepts{};
-			{
-				auto observer_var = rule_components_perception.find_var("Observer");
-				auto sense_var = rule_components_perception.find_var("Sense");
-				auto subject_var = rule_components_perception.find_var("Subject");
-				auto predicat_var = rule_components_perception.find_var("Predicat");
-
-				rule_components_perception.iter()
-					.set_var(observer_var, source)
-					.set_var(sense_var, world.id<T>())
-					.iter(
-						[&](flecs::iter& it)
-						{
-							percepts.push_back(Percept{ it.get_var(sense_var), it.get_var(subject_var), it.get_var(predicat_var) });
-						}
-					)
-					;
-			}
-			{
-				auto observer_var = rule_relations_perception.find_var("Observer");
-				auto sense_var = rule_relations_perception.find_var("Sense");
-				auto subject_var = rule_relations_perception.find_var("Subject");
-				auto predicat_var = rule_relations_perception.find_var("Predicat");
-				auto object_var = rule_relations_perception.find_var("Object");
-
-				rule_relations_perception.iter()
-					.set_var(observer_var, source)
-					.set_var(sense_var, world.id<T>())
-					.iter(
-						[&](flecs::iter& it)
-						{
-							percepts.push_back(Percept{ it.get_var(sense_var), it.get_var(subject_var), it.get_var(predicat_var), it.get_var(object_var) });
-						}
-					)
-					;
-			}
-
-			return percepts;
-		}
-
 
 		// Simulation stats
 		// ================
@@ -347,9 +296,6 @@ namespace opack {
 
 	private:
 		tf::Executor	executor;
-
-		flecs::rule<>	rule_components_perception;
-		flecs::rule<>	rule_relations_perception;
 	};
 
 } // namespace opack

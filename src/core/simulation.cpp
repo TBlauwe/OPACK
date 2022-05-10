@@ -3,7 +3,7 @@
 
 std::ostream& operator<<(std::ostream& os, const opack::Percept& p)
 {
-	os << "[" << p.sense.path() << "] - " << p.subject.path() << " has " << p.predicat.path();
+	os << "[" << p.sense.path() << "] - " << p.subject.path() << " has " << p.predicate.path();
 	if (p.type == opack::Percept::Type::Relation)
 		os << " with " << p.object.path();
 	return os;
@@ -16,25 +16,19 @@ opack::Simulation::Simulation(int argc, char* argv[])
 
 	auto action = world.prefab<Action>().add<Action>();
 	action.add<Arity>();
-	auto actuator = world.prefab<Actuator>().add<Actuator>();
-	auto agent = world.prefab<Agent>().add<Agent>();
-	auto artefact = world.prefab<Artefact>().add<Artefact>();
-	auto sense = world.prefab<Sense>().add<Sense>();
+	world.prefab<Actuator>().add<Actuator>();
+	world.prefab<Agent>().add<Agent>();
+	world.prefab<Artefact>().add<Artefact>();
+	world.prefab<Sense>().add<Sense>();
+
 
 	world.entity<Actuator>()
 		.add(flecs::Exclusive)
 		.add(flecs::OneOf, action)
 		;
 
-	rule_components_perception = world.rule_builder()
-		.expr("$Sense($Observer, $Subject), $Predicat($Subject)")
-		.term<Sense>().subj().var("Sense").obj().var("Predicat")
-		.build();
-
-	rule_relations_perception = world.rule_builder()
-		.expr("$Sense($Observer, $Subject), $Predicat($Subject, $Object)")
-		.term<Sense>().subj().var("Sense").obj().var("Predicat")
-		.build();
+	world.emplace<Query::Perception::Component>(world);
+	world.emplace<Query::Perception::Relation>(world);
 
 	// If an action do not have initiator, delete it.
 	world.system<Action>("System_CleanupActionWithoutInitiator")
@@ -63,8 +57,6 @@ opack::Simulation::Simulation(int argc, char* argv[])
 
 opack::Simulation::~Simulation()
 {
-	rule_components_perception.destruct();
-	rule_relations_perception.destruct();
 	stop();
 }
 
