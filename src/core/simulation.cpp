@@ -1,13 +1,6 @@
 #include <opack/core/simulation.hpp>
+#include <opack/core/perception.hpp>
 #include <iostream>
-
-std::ostream& operator<<(std::ostream& os, const opack::Percept& p)
-{
-	os << "[" << p.sense.path() << "] - " << p.subject.path() << " has " << p.predicate.path();
-	if (p.type == opack::Percept::Type::Relation)
-		os << " with " << p.object.path();
-	return os;
-}
 
 opack::Simulation::Simulation(int argc, char* argv[])
 	: world{ argc, argv }
@@ -20,7 +13,6 @@ opack::Simulation::Simulation(int argc, char* argv[])
 	world.prefab<Agent>().add<Agent>();
 	world.prefab<Artefact>().add<Artefact>();
 	world.prefab<Sense>().add<Sense>();
-
 
 	world.entity<Actuator>()
 		.add(flecs::Exclusive)
@@ -95,7 +87,6 @@ void opack::Simulation::rest_app()
 void opack::Simulation::stop()
 {
 	world.quit();
-	executor.wait_for_all();
 }
 
 float opack::Simulation::target_fps() const

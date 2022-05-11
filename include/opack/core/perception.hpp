@@ -118,6 +118,35 @@ namespace opack
 	}
 
 	/**
+	@brief @c T sense is now able to perceive @c U component.
+	@param agent Which agent perceives this
+	@return entity of @c U component;
+	*/
+	template<std::derived_from<Sense> T = Sense, typename U>
+	inline flecs::entity perceive(flecs::world& world)
+	{
+		return world.component<T>().template add<Sense, U>();
+	}
+
+	/**
+	@brief @c observer is now able to perceive @c subject through @c T sense.
+	*/
+	template<std::derived_from<Sense> ... T>
+	inline void perceive(flecs::world& world, flecs::entity observer, flecs::entity subject)
+	{
+		(observer.add<T>(subject), ...);
+	}
+
+	/**
+	@brief @c source is now not able to perceive @c target through @c T sense.
+	*/
+	template<std::derived_from<Sense> ...T>
+	inline void conceal(flecs::world& world, flecs::entity source, flecs::entity target)
+	{
+		(source.remove<T>(target), ...);
+	}
+
+	/**
 	 Iterate all currently perceived entities with sense @c T, or any if unspecified, with component @c U.
 	 @param observer From which perserpective this should be checked.
 	 @param func Signature is : void(flecs::entity subject, flecs::entity value)

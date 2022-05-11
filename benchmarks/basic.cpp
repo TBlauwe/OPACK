@@ -50,12 +50,12 @@ void BM_run_simulation(benchmark::State& state) {
     }
 }
 BENCHMARK(BM_run_simulation<EmptySim>)
-    ->Unit(benchmark::kNanosecond)
-    ->RangeMultiplier(2)->Range(1<<0, 1<<14)
+    ->Unit(benchmark::kMillisecond)
+    ->Arg(1<<14)
     ;
 BENCHMARK(BM_run_simulation<SimpleSim>)
-    ->Unit(benchmark::kNanosecond)
-    ->RangeMultiplier(2)->Range(1<<0, 1<<14)
+    ->Unit(benchmark::kMillisecond)
+    ->Arg(1<<14)
     ;
 
 // Run the benchmark

@@ -1,5 +1,5 @@
 #include <doctest/doctest.h>
-#include <opack/core/simulation.hpp>
+#include <opack/core.hpp>
 #include <string.h> // For const char * comparisons
 
 TEST_SUITE_BEGIN("Simulation");

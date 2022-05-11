@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include <opack/core.hpp>
 #include <opack/utils/simulation_template.hpp>
 

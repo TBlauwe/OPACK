@@ -10,25 +10,15 @@
 #include <concepts>
 
 #include <flecs.h>
-#include <taskflow/core/executor.hpp>
 
 #include <opack/core/types.hpp>
-#include <opack/core/perception.hpp>
 #include <opack/utils/type_map.hpp>
-#include <opack/utils/type_name.hpp>
+#include <opack/utils/flecs_helper.hpp>
 
 /**
 @brief Main entry point to use the library.
 */
 namespace opack {
-
-	// Simulation register 
-	// ===================
-	template<typename T, typename U>
-	flecs::entity register_t_as_u(flecs::world& world)
-	{
-		return world.template prefab<T>().template is_a<U>().template add<T>();
-	}
 
 	/**
 	Create a new agent prefab. You may create agent from this type now.
@@ -36,7 +26,7 @@ namespace opack {
 	template<std::derived_from<Agent> T>
 	inline flecs::entity register_agent_type(flecs::world& world)
 	{
-		return register_t_as_u<T, Agent>(world);
+		return internal::register_t_as_u<T, Agent>(world);
 	}
 
 	/**
@@ -45,7 +35,7 @@ namespace opack {
 	template<std::derived_from<Artefact> T>
 	inline flecs::entity register_artefact_type(flecs::world& world)
 	{
-		return register_t_as_u<T, Artefact>(world);
+		return internal::register_t_as_u<T, Artefact>(world);
 	}
 
 	/**
@@ -55,7 +45,7 @@ namespace opack {
 	template<std::derived_from<Sense> T>
 	inline flecs::entity register_sense(flecs::world& world)
 	{
-		return register_t_as_u<T, Sense>(world);
+		return internal::register_t_as_u<T, Sense>(world);
 	}
 
 	/**
@@ -64,7 +54,7 @@ namespace opack {
 	template<std::derived_from<Actuator> T>
 	inline flecs::entity register_actuator_type(flecs::world& world)
 	{
-		return register_t_as_u<T, Actuator>(world);
+		return internal::register_t_as_u<T, Actuator>(world);
 	}
 
 	/**
@@ -74,18 +64,7 @@ namespace opack {
 	inline flecs::entity register_action(flecs::world& world)
 	{
 
-		return register_t_as_u<T, Action>(world);
-	}
-
-	/**
-	@brief @c T sense is now able to perceive @c U component.
-	@param agent Which agent perceives this
-	@return entity of @c U component;
-	*/
-	template<std::derived_from<Sense> T = Sense, typename U>
-	inline flecs::entity perceive(flecs::world& world)
-	{
-		return world.component<T>().template add<Sense, U>();
+		return internal::register_t_as_u<T, Action>(world);
 	}
 
 	// Simulation interaction
@@ -106,59 +85,6 @@ namespace opack {
 	inline flecs::entity artefact(flecs::world& world, const char* name = "")
 	{
 		return world.entity(name).is_a<T>();
-	}
-
-	/**
-	@brief @c observer is now able to perceive @c subject through @c T sense.
-	*/
-	template<std::derived_from<Sense> ... T>
-	inline void perceive(flecs::world& world, flecs::entity observer, flecs::entity subject)
-	{
-		(observer.add<T>(subject), ...);
-	}
-
-	/**
-	@brief Create an action of type @c T. Compose the action as required, before having entites acting on it.
-	*/
-	template<std::derived_from<Action> T>
-	inline flecs::entity action(flecs::world& world)
-	{
-		return world.entity().template is_a<T>().set_doc_name(type_name_cstr<T>());
-	}
-
-	/**
-	@brief @c initiator is now acting with actuator @c to accomplish given @c action.
-	*/
-	template<std::derived_from<Actuator> T>
-	inline void act(flecs::world& world, flecs::entity initiator, flecs::entity action)
-	{
-		//size_t count{ 0 };
-		//flecs::entity last;
-		//action.each<Initiator>([&count, &last](flecs::entity object) {count++; last = object; });
-
-		//if (count >= action.get<Arity>()->value)
-		//{
-		//	//TODO Should issue warning - Here we replace the last initiator.
-		//	//There will be a bug since we do not remove the relation from the initiator to the action.
-		//	action.remove<Initiator>(last);
-		//}
-
-		// Action without initiator are cleaned up, so we need to remove relation from previous action.
-		auto last_action = initiator.get_object<T>();
-		if (last_action)
-			last_action.mut(world).template remove<Initiator>(initiator);
-
-		action.add<Initiator>(initiator);
-		initiator.add<T>(action);
-	}
-
-	/**
-	@brief @c source is now not able to perceive @c target through @c T sense.
-	*/
-	template<std::derived_from<Sense> ...T>
-	inline void conceal(flecs::world& world, flecs::entity source, flecs::entity target)
-	{
-		(source.remove<T>(target), ...);
 	}
 
 	/**
@@ -293,11 +219,6 @@ namespace opack {
 		@brief Underlying flecs world (an ecs database). Use only if you now what you're doing.
 		*/
 		flecs::world	world;
-
-	private:
-		tf::Executor	executor;
 	};
 
 } // namespace opack
-
-std::ostream& operator<<(std::ostream& os, const opack::Percept& p);

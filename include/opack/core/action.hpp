@@ -1,0 +1,51 @@
+/*********************************************************************
+ * \file   action.hpp
+ * \brief  API for manipulating actions
+ * 
+ * \author Tristan
+ * \date   May 2022
+ *********************************************************************/
+#pragma once
+
+#include <flecs.h>
+
+#include <opack/core/types.hpp>
+#include <opack/utils/type_name.hpp>
+
+namespace opack
+{
+	/**
+	@brief Create an action of type @c T. Compose the action as required, before having entites acting on it.
+	*/
+	template<std::derived_from<Action> T>
+	inline flecs::entity action(flecs::world& world)
+	{
+		return world.entity().template is_a<T>().set_doc_name(type_name_cstr<T>());
+	}
+
+	/**
+	@brief @c initiator is now acting with actuator @c to accomplish given @c action.
+	*/
+	template<std::derived_from<Actuator> T>
+	inline void act(flecs::world& world, flecs::entity initiator, flecs::entity action)
+	{
+		//size_t count{ 0 };
+		//flecs::entity last;
+		//action.each<Initiator>([&count, &last](flecs::entity object) {count++; last = object; });
+
+		//if (count >= action.get<Arity>()->value)
+		//{
+		//	//TODO Should issue warning - Here we replace the last initiator.
+		//	//There will be a bug since we do not remove the relation from the initiator to the action.
+		//	action.remove<Initiator>(last);
+		//}
+
+		// Action without initiator are cleaned up, so we need to remove relation from previous action.
+		auto last_action = initiator.get_object<T>();
+		if (last_action)
+			last_action.mut(world).template remove<Initiator>(initiator);
+
+		action.add<Initiator>(initiator);
+		initiator.add<T>(action);
+	}
+}

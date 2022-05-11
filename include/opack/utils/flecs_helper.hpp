@@ -9,6 +9,12 @@
 
 namespace opack::internal
 {
+	template<typename T, typename U>
+	flecs::entity register_t_as_u(flecs::world& world)
+	{
+		return world.template prefab<T>().template is_a<U>().template add<T>();
+	}
+
 	// TODO Probably, copy should build a new query ? to prevent rule destruction if a copy is destroy ? But not sure how flecs handles it
 	// since tests seems to work anyways.
 	/**
