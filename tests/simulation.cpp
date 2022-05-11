@@ -263,7 +263,7 @@ TEST_CASE("Basics")
 		artefact_1.set<C>({ 3.0 });	// not perceivable
 
 		// Tells that the agent can now perceive the artefact thourgh MySense.
-		opack::perceive<MySense>(sim, agent_1, artefact_1);
+		opack::perceive<MySense>(agent_1, artefact_1);
 
 		// Visualisation
 		// -------------
@@ -299,9 +299,9 @@ TEST_CASE("Basics")
 		CHECK(!opack::does_perceive<MySense, C>(agent_1, artefact_1));
 
 		// Multiple add shouldn't be taken into account
-		opack::perceive<MySense>(sim, agent_1, artefact_1);
-		opack::perceive<MySense>(sim, agent_1, artefact_1);
-		opack::perceive<MySense>(sim, agent_1, artefact_1);
+		opack::perceive<MySense>(agent_1, artefact_1);
+		opack::perceive<MySense>(agent_1, artefact_1);
+		opack::perceive<MySense>(agent_1, artefact_1);
 		CHECK(sim.count<MySense>(flecs::Wildcard) == 1);
 
 		// Retrieve percept only for a specific agent
@@ -309,8 +309,8 @@ TEST_CASE("Basics")
 		auto artefact_2 = opack::agent(sim, "Artefact_2");
 		agent_2.add<R>(artefact_1);
 		agent_2.add<R>(artefact_2);
-		opack::perceive<MySense>(sim, agent_2, agent_1);
-		opack::perceive<MySense>(sim, agent_1, agent_2);
+		opack::perceive<MySense>(agent_2, agent_1);
+		opack::perceive<MySense>(agent_1, agent_2);
 
 		// Visualisation
 		// -------------
@@ -391,8 +391,8 @@ TEST_CASE("Basics")
 		// So recreate it and use it before next step().
 		help_inst = opack::action<Help>(sim);
 
-		opack::act<LowerBody>(sim, arthur, help_inst);
-		opack::act<LowerBody>(sim, arthur, upper_body_actuator);
+		opack::act<LowerBody>(arthur, help_inst);
+		opack::act<LowerBody>(arthur, upper_body_actuator);
 
 		//CHECK(arthur.has<LowerBody>(radio));
 		//arthur.add<UpperBody>(radio);

@@ -132,7 +132,7 @@ namespace opack
 	@brief @c observer is now able to perceive @c subject through @c T sense.
 	*/
 	template<std::derived_from<Sense> ... T>
-	inline void perceive(flecs::world& world, flecs::entity observer, flecs::entity subject)
+	inline void perceive(flecs::entity observer, flecs::entity subject)
 	{
 		(observer.add<T>(subject), ...);
 	}
@@ -141,7 +141,7 @@ namespace opack
 	@brief @c source is now not able to perceive @c target through @c T sense.
 	*/
 	template<std::derived_from<Sense> ...T>
-	inline void conceal(flecs::world& world, flecs::entity source, flecs::entity target)
+	inline void conceal(flecs::entity source, flecs::entity target)
 	{
 		(source.remove<T>(target), ...);
 	}

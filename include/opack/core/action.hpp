@@ -27,7 +27,7 @@ namespace opack
 	@brief @c initiator is now acting with actuator @c to accomplish given @c action.
 	*/
 	template<std::derived_from<Actuator> T>
-	inline void act(flecs::world& world, flecs::entity initiator, flecs::entity action)
+	inline void act(flecs::entity initiator, flecs::entity action)
 	{
 		//size_t count{ 0 };
 		//flecs::entity last;
@@ -43,7 +43,7 @@ namespace opack
 		// Action without initiator are cleaned up, so we need to remove relation from previous action.
 		auto last_action = initiator.get_object<T>();
 		if (last_action)
-			last_action.mut(world).template remove<Initiator>(initiator);
+			last_action.mut(initiator.world()).template remove<Initiator>(initiator);
 
 		action.add<Initiator>(initiator);
 		initiator.add<T>(action);
