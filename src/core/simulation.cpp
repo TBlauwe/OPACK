@@ -7,24 +7,29 @@ opack::Simulation::Simulation(int argc, char* argv[])
 {
 	world.entity("::opack").add(flecs::Module);
 
-	auto action = world.prefab<Action>().add<Action>();
-	action.add<Arity>();
-	world.prefab<Actuator>().add<Actuator>();
-	world.prefab<Agent>().add<Agent>();
-	world.prefab<Artefact>().add<Artefact>();
-	world.prefab<Sense>().add<Sense>();
+	auto action = world.prefab<Action>()
+		.add<Action>()
+		.add<Arity>()
+		;
+	world.component<By>();
+	world.component<On>();
 
-	world.entity<Actuator>()
+	world.prefab<Actuator>()
+		.add<Actuator>()
 		.add(flecs::Exclusive)
 		.add(flecs::OneOf, action)
 		;
 
+	world.prefab<Agent>().add<Agent>();
+	world.prefab<Artefact>().add<Artefact>();
+	world.prefab<Sense>().add<Sense>();
+
 	world.emplace<Query::Perception::Component>(world);
 	world.emplace<Query::Perception::Relation>(world);
 
-	// If an action do not have initiator, delete it.
+	// If no one is performing an action, delete it.
 	world.system<Action>("System_CleanupActionWithoutInitiator")
-		.term<Initiator>().obj(flecs::Wildcard).oper(flecs::Not)
+		.term<By>().obj(flecs::Wildcard).oper(flecs::Not)
 		.iter([](flecs::iter& iter)
 			{
 				for (auto i : iter)

@@ -27,10 +27,13 @@ namespace opack
 
 	// A - Action
 	//-----------
-	struct Actuator {};
+	struct Actuator {};	
 	struct Action {};
 	enum ActionType {Ponctual, Continuous};
-	struct Initiator {};
+	// An action is performed by someones
+	struct By {};
+	// An action is performed on something
+	struct On {};	
 	struct Arity { size_t min{ 1 }; size_t max{ 1 };};
 	struct Delay { float value{ 1 }; };
 

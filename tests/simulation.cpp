@@ -91,24 +91,24 @@ TEST_CASE("Basics")
 
 		{
 			struct Agent1 : opack::Agent {};
-			auto e1 = check.template operator()<opack::Agent, Agent1>(register_agent_type<Agent1>(sim));
+			auto e1 = check.template operator()<opack::Agent, Agent1>(register_agent<Agent1>(sim));
 			struct Agent2 : opack::Agent {};
-			auto e2 = check.template operator()<opack::Agent, Agent2>(register_agent_type<Agent2>(sim));
+			auto e2 = check.template operator()<opack::Agent, Agent2>(register_agent<Agent2>(sim));
 			CHECK(e1 != e2);
 			struct Agent3 : opack::Agent {};
-			auto e3 = check.template operator()<opack::Agent, Agent3>(register_agent_type<Agent3>(sim));
+			auto e3 = check.template operator()<opack::Agent, Agent3>(register_agent<Agent3>(sim));
 			CHECK(e3 != e1);
 			CHECK(e3 != e2);
 		}
 
 		{
 			struct Artefact1 : opack::Artefact {};
-			auto e1 = check.template operator()<opack::Artefact, Artefact1>(register_artefact_type<Artefact1>(sim));
+			auto e1 = check.template operator()<opack::Artefact, Artefact1>(register_artefact<Artefact1>(sim));
 			struct Artefact2 : opack::Artefact {};
-			auto e2 = check.template operator()<opack::Artefact, Artefact2>(register_artefact_type<Artefact2>(sim));
+			auto e2 = check.template operator()<opack::Artefact, Artefact2>(register_artefact<Artefact2>(sim));
 			CHECK(e1 != e2);
 			struct Artefact3 : opack::Artefact {};
-			auto e3 = check.template operator()<opack::Artefact, Artefact3>(register_artefact_type<Artefact3>(sim));
+			auto e3 = check.template operator()<opack::Artefact, Artefact3>(register_artefact<Artefact3>(sim));
 			CHECK(e3 != e1);
 			CHECK(e3 != e2);
 		}
@@ -127,12 +127,12 @@ TEST_CASE("Basics")
 
 		{
 			struct Actuator1 : opack::Actuator {};
-			auto e1 = check.template operator()<opack::Actuator, Actuator1>(register_actuator_type<Actuator1>(sim));
+			auto e1 = check.template operator()<opack::Actuator, Actuator1>(register_actuator<Actuator1>(sim));
 			struct Actuator2 : opack::Actuator {};
-			auto e2 = check.template operator()<opack::Actuator, Actuator2>(register_actuator_type<Actuator2>(sim));
+			auto e2 = check.template operator()<opack::Actuator, Actuator2>(register_actuator<Actuator2>(sim));
 			CHECK(e1 != e2);
 			struct Actuator3 : opack::Actuator {};
-			auto e3 = check.template operator()<opack::Actuator, Actuator3>(register_actuator_type<Actuator3>(sim));
+			auto e3 = check.template operator()<opack::Actuator, Actuator3>(register_actuator<Actuator3>(sim));
 			CHECK(e3 != e1);
 			CHECK(e3 != e2);
 		}
@@ -181,7 +181,7 @@ TEST_CASE("Basics")
 
 		// Agent of different types
 		struct AgentA : opack::Agent {};
-		auto a_t = register_agent_type<AgentA>(sim);
+		auto a_t = register_agent<AgentA>(sim);
 
 		auto agent_a_1 = check_construction.template operator()<AgentA>();
 		CHECK(sim.count<AgentA>() == 1);
@@ -213,7 +213,7 @@ TEST_CASE("Basics")
 
 		// Artefact of different types
 		struct ArtefactA : opack::Artefact {};
-		auto a_t = register_artefact_type<ArtefactA>(sim);
+		auto a_t = register_artefact<ArtefactA>(sim);
 
 		auto artefact_a = artefact<ArtefactA>(sim);
 		CHECK(artefact_a.is_a<ArtefactA>());
@@ -368,12 +368,12 @@ TEST_CASE("Basics")
 		// Define actuator
 		// ===============
 		struct UpperBody : opack::Actuator {};
-		auto upper_body_actuator = opack::register_actuator_type<UpperBody>(sim);
+		auto upper_body_actuator = opack::register_actuator<UpperBody>(sim);
 		CHECK(upper_body_actuator.has(flecs::Exclusive));
 		CHECK(upper_body_actuator.has(flecs::OneOf, opack::entity<opack::Action>(sim)));
 
 		struct LowerBody : opack::Actuator {};
-		auto lower_body_actuator = opack::register_actuator_type<LowerBody>(sim);
+		auto lower_body_actuator = opack::register_actuator<LowerBody>(sim);
 		CHECK(lower_body_actuator.has(flecs::Exclusive));
 		CHECK(lower_body_actuator.has(flecs::OneOf, opack::entity<opack::Action>(sim)));
 

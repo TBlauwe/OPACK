@@ -24,7 +24,7 @@ namespace opack {
 	Create a new agent prefab. You may create agent from this type now.
 	*/
 	template<std::derived_from<Agent> T>
-	inline flecs::entity register_agent_type(flecs::world& world)
+	inline flecs::entity register_agent(flecs::world& world)
 	{
 		return internal::register_t_as_u<T, Agent>(world);
 	}
@@ -33,7 +33,7 @@ namespace opack {
 	Create a new artefact prefab. You may create artefact from this type now.
 	*/
 	template<std::derived_from<Artefact> T>
-	inline flecs::entity register_artefact_type(flecs::world& world)
+	inline flecs::entity register_artefact(flecs::world& world)
 	{
 		return internal::register_t_as_u<T, Artefact>(world);
 	}
@@ -52,7 +52,7 @@ namespace opack {
 	Create a new actuator. You may now use the type to operate actions.
 	*/
 	template<std::derived_from<Actuator> T>
-	inline flecs::entity register_actuator_type(flecs::world& world)
+	inline flecs::entity register_actuator(flecs::world& world)
 	{
 		return internal::register_t_as_u<T, Actuator>(world);
 	}

@@ -50,7 +50,7 @@ struct SimpleSim : opack::SimulationTemplate
 		// Step I : Register types
 		// -----------------------
 		// --- Actuator
-		opack::register_actuator_type<Act>(sim);
+		opack::register_actuator<Act>(sim);
 
 		// --- Actions
 		auto help = opack::register_action<Help>(sim);
@@ -98,7 +98,7 @@ struct SimpleSim : opack::SimulationTemplate
 
 		sim.world.system<const Help>("ActionHelpEffect")
 			.term<opack::Delay>().oper(flecs::Not)
-			.term<opack::Initiator>().obj(flecs::Wildcard)
+			.term<opack::By>().obj(flecs::Wildcard)
 			.iter(
 				[](flecs::iter& iter)
 				{
@@ -106,7 +106,7 @@ struct SimpleSim : opack::SimulationTemplate
 					{
 						auto entity = iter.entity(i);
 						auto obj = iter.id(2);
-						entity.each<opack::Initiator>([](flecs::entity obj) {});
+						entity.each<opack::By>([](flecs::entity obj) {});
 						entity.destruct();
 					}
 				}
@@ -168,14 +168,14 @@ struct SimpleSim : opack::SimulationTemplate
 
 		// (Step IV) : Fake a current state
 		// --------------------------------
-		opack::perceive<Vision, Hearing>(sim, arthur, cyril);
-		opack::perceive<Hearing>(sim, arthur, radio);
+		opack::perceive<Vision, Hearing>(arthur, cyril);
+		opack::perceive<Hearing>(arthur, radio);
 
-		opack::perceive<Vision>(sim, cyril, beatrice);
+		opack::perceive<Vision>(cyril, beatrice);
 		radio.set<AudioMessage>({ "Hello there !" });
 
-		opack::perceive<Vision, Hearing>(sim, beatrice, cyril);
-		opack::perceive<Vision, Hearing>(sim, beatrice, radio);
+		opack::perceive<Vision, Hearing>(beatrice, cyril);
+		opack::perceive<Vision, Hearing>(beatrice, radio);
 
 		//opack::conceal<Hearing>(sim, arthur, radio);
 
@@ -183,21 +183,21 @@ struct SimpleSim : opack::SimulationTemplate
 			auto action = opack::action<Help>(sim);
 			action.set<opack::Delay>({ 6.0f });
 			action.add<On>(cyril);
-			opack::act<Act>(sim, arthur, action);
+			opack::act<Act>(arthur, action);
 		}
 
 		{
 			auto action = opack::action<Move>(sim);
 			action.set<opack::Delay>({ 4.0f });
 			action.add<On>(beatrice);
-			opack::act<Act>(sim, cyril, action);
+			opack::act<Act>(cyril, action);
 		}
 
 		{
 			auto action = opack::action<Tune>(sim);
 			action.set<opack::Delay>({ 2.0f });
 			action.add<On>(radio);
-			opack::act<Act>(sim, beatrice, action);
+			opack::act<Act>(beatrice, action);
 		}
 	}
 };
