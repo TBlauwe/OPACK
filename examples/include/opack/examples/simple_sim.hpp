@@ -136,9 +136,16 @@ struct SimpleSim : opack::SimulationTemplate
 						auto entity = iter.entity(i);
 						std::cout << entity.name() << " perceives : \n";
 						opack::each_perceived<opack::Sense, AudioMessage>(entity,
-							[](flecs::entity subject)
+							[](flecs::entity subject, const AudioMessage& value)
 							{
-								std::cout << " - " << subject.name() << "\n";
+								std::cout << " - " << subject.name() << " has " << value.value << "\n";
+							}
+						);
+
+						opack::each_perceived_relation<opack::Sense, Act>(entity,
+							[](flecs::entity subject, flecs::entity object)
+							{
+								std::cout << " - " << subject.name() << " is acting on " << object.get_object<On>().name() << "\n";
 							}
 						);
 					}
@@ -168,7 +175,7 @@ struct SimpleSim : opack::SimulationTemplate
 		opack::perceive<Vision, Hearing>(sim, beatrice, cyril);
 		opack::perceive<Vision, Hearing>(sim, beatrice, radio);
 
-		opack::conceal<Hearing>(sim, arthur, radio);
+		//opack::conceal<Hearing>(sim, arthur, radio);
 
 		{
 			auto action = opack::action<Help>(sim);

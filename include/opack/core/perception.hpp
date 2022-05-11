@@ -116,36 +116,69 @@ namespace opack
 			Relation(flecs::world& world);
 		};
 	}
-	
+
 	/**
-	 Iterate all currently perceived entities with sense @c T, or any if unspecified, with component @c U. 
+	 Iterate all currently perceived entities with sense @c T, or any if unspecified, with component @c U.
 	 @param observer From which perserpective this should be checked.
-	 @param func Signature is : void(flecs::entity subject)
+	 @param func Signature is : void(flecs::entity subject, flecs::entity value)
 
 	 TODO For some reasons, it doesn't work with components from a prefab.
 	 */
 	template<std::derived_from<Sense> T = opack::Sense, typename U>
-	void each_perceived(flecs::entity observer, std::function<void(flecs::entity)> func)
+	void each_perceived(flecs::entity observer, std::function<void(flecs::entity, const U&)> func)
 	{
 		auto world = observer.world();
 		auto query = world.get<Query::Perception::Component>();
 		auto rule = query->rule.rule.iter()
 			.set_var(query->observer_var, observer)
 			.set_var(query->predicate_var, world.id<U>());
-			;
+		;
 		if constexpr (!std::is_same<T, opack::Sense>::value)
 		{
 			rule.set_var(query->sense_var, world.id<T>());
 		}
 
-		std::unordered_set<flecs::entity_t> hide {};
+		std::unordered_set<flecs::entity_t> hide{};
 		rule.iter(
 			[&](flecs::iter& it)
 			{
 				auto subject = it.get_var(query->subject_var);
 				if (!hide.contains(subject))
 				{
-					func(subject);
+					func(subject, *subject.get<U>());
+					hide.emplace(subject);
+				}
+			}
+		);
+	}
+
+	/**
+	 Iterate all currently perceived entities with sense @c T, or any if unspecified, with relation @c R.
+	 @param observer From which perserpective this should be checked.
+	 @param func Signature is : void(flecs::entity subject, flecs::entity object)
+	 */
+	template<std::derived_from<Sense> T = opack::Sense, typename R>
+	void each_perceived_relation(flecs::entity observer, std::function<void(flecs::entity, flecs::entity)> func)
+	{
+		auto world = observer.world();
+		auto query = world.get<Query::Perception::Relation>();
+		auto rule = query->rule.rule.iter()
+			.set_var(query->observer_var, observer)
+			.set_var(query->predicate_var, world.id<R>());
+		;
+		if constexpr (!std::is_same<T, opack::Sense>::value)
+		{
+			rule.set_var(query->sense_var, world.id<T>());
+		}
+
+		std::unordered_set<flecs::entity_t> hide{};
+		rule.iter(
+			[&](flecs::iter& it)
+			{
+				auto subject = it.get_var(query->subject_var);
+				if (!hide.contains(subject))
+				{
+					func(subject, it.get_var(query->object_var));
 					hide.emplace(subject);
 				}
 			}
@@ -155,7 +188,7 @@ namespace opack
 	/**
 	 * Return true if @c observer is currently perceiving @c subject trough sense @c T, or any sense, if @c T is not specified.
 	 @param observer From which perserpective this should be checked.
-	 @param 
+	 @param
 	 */
 	template<std::derived_from<Sense> T = opack::Sense, typename U = void>
 	bool does_perceive(flecs::entity observer, flecs::entity subject)
