@@ -78,11 +78,10 @@ static void BM_create_n_actions_with_n_agents(benchmark::State& state) {
             {
                 for (auto i : it)
                 {
-                    auto agent = it.entity(i);
                     auto world = it.world();
                     auto action = opack::action<MyAction>(world);
                     action.add<opack::On>(artefact);
-                    opack::act<MyActuator>(agent, action);
+                    opack::act<MyActuator>(it.entity(i), action);
                 }
             }
     );
@@ -91,6 +90,45 @@ static void BM_create_n_actions_with_n_agents(benchmark::State& state) {
     }
 }
 BENCHMARK(BM_create_n_actions_with_n_agents)
+        ->Unit(benchmark::kMillisecond)
+        ->Arg(1<<10)//->Arg(1<<20)
+;
+
+struct MySense : opack::Sense {};
+static void BM_perceive(benchmark::State& state) {
+    auto sim = opack::Simulation();
+    auto agent = opack::agent(sim);
+    auto artefact = opack::artefact(sim);
+    opack::register_sense<MySense>(sim);
+    for ([[maybe_unused]] auto _ : state) {
+        opack::perceive<MySense>(agent, artefact);
+    }
+}
+BENCHMARK(BM_perceive)
+        ->Unit(benchmark::kNanosecond)
+;
+
+static void BM_create_n_percepts_with_n_agents(benchmark::State& state) {
+    auto sim = opack::Simulation();
+    auto artefact = opack::artefact(sim);
+    opack::register_sense<MySense>(sim);
+    create_n_agent(sim, state.range(0));
+    sim.world.system<opack::Agent>()
+        .multi_threaded(true)
+        .iter(
+            [&artefact](flecs::iter& it)
+            {
+                for (auto i : it)
+                {
+                    opack::perceive<MySense>(it.entity(i), artefact);
+                }
+            }
+    );
+    for ([[maybe_unused]] auto _ : state) {
+        sim.step();
+    }
+}
+BENCHMARK(BM_create_n_percepts_with_n_agents)
         ->Unit(benchmark::kMillisecond)
         ->Arg(1<<10)->Arg(1<<20)
 ;

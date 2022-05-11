@@ -11,6 +11,7 @@ opack::Simulation::Simulation(int argc, char* argv[])
 		.add<Action>()
 		.add<Arity>()
 		;
+	
 	world.component<By>();
 	world.component<On>();
 
