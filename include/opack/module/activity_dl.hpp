@@ -12,8 +12,19 @@
 
 #include <flecs.h>
 
+// TODO Maybe action should also be associated with a type. 
+// The upside is the ability to refer to them from anywhere (among other upside)
+// The downside is we would never be able to generate action from a json, but haven't already made this choice
+// e.g sense, actuator, etc.
+// To ponder
+
 struct adl
 {
+	struct Order 
+	{
+		size_t value {0};
+	};
+
 	enum class LogicalConstructor { AND, OR };
 	enum class TemporalConstructor { IND, SEQ_ORD, ORD, SEQ };
 
@@ -47,6 +58,15 @@ struct adl
 
 	template<std::derived_from<Activity> T>
 	static void children_of(flecs::entity task, std::function<void(flecs::entity)>&& func);
+
+	template<std::derived_from<Activity> T>
+	static size_t children_count(flecs::entity task);
+
+	template<std::derived_from<Activity> T>
+	static void remove(flecs::entity task);
+
+	template<std::derived_from<Activity> T>
+	static flecs::entity instantiate(flecs::world& world);
 };
 
 template<std::derived_from<adl::Activity> T>
@@ -67,12 +87,6 @@ void adl::children_of(flecs::entity task, std::function<void(flecs::entity)>&& f
 	auto world = task.world();
 	auto filter = world.filter_builder().term<T>().obj(task).build();
 	filter.each([&func](flecs::iter& it, size_t index) {func(it.entity(index)); });
-	auto relation = world.pair<T>(flecs::Wildcard);
-	task.each(world.id<T>(), task, [&func](flecs::id id)
-		{
-			func(id.second());
-		}
-	);
 }
 
 template<std::derived_from<adl::Activity> T>
@@ -82,6 +96,7 @@ void adl::parent(flecs::entity task, flecs::entity parent)
 		"Parent task is not in the same activity tree. Make sure that you create subtask only in the same activity tree of the parent task.");
 	task.remove<T>();
 	task.add<T>(parent);
+	parent.add<Order>(task);
 }
 
 template<std::derived_from<adl::Activity> T>
@@ -109,5 +124,32 @@ flecs::entity adl::task(flecs::world& world, const char* name, flecs::entity par
 	return task;
 }
 
+template<std::derived_from<adl::Activity> T>
+size_t adl::children_count(flecs::entity task)
+{
+	size_t count {0};
+	adl::children_of<T>(task, [&count](flecs::entity) {count++; });
+	return count;
+}
 
+template<std::derived_from<adl::Activity> T>
+void adl::remove(flecs::entity task)
+{
+	auto world = task.world();
+	world.defer_begin();
+	task.remove<T>();
+	task.remove<T>(flecs::Wildcard);
+	adl::children_of<T>(task, [](flecs::entity subtask) {adl::remove<T>(subtask); });
+	world.defer_end();
+}
 
+template<std::derived_from<adl::Activity> T>
+flecs::entity adl::instantiate(flecs::world& world)
+{
+	flecs::entity root;
+	auto filter = world.filter_builder().term<T>().build();
+	filter.each([&root](flecs::iter& it, size_t index) {root = it.entity(index); });
+	if(root)
+		return root.clone();
+	return root;
+}

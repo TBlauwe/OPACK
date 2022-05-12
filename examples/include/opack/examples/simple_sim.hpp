@@ -50,7 +50,7 @@ struct SimpleSim : opack::SimulationTemplate
 	{
 		//sim.target_fps(1);
 		sim.world.entity("::SimpleSim").add(flecs::Module);
-		sim.world.import<ActivityDL>();
+		sim.world.import<adl>();
 
 		// Step I : Register types
 		// -----------------------
