@@ -9,6 +9,16 @@
 
 namespace opack::internal
 {
+	/**
+	 * Returns the number of children for entity @c e.
+	 */
+	inline size_t children_count(flecs::entity e)
+	{
+		size_t count{ 0 };
+		e.children([&count](flecs::entity) {count++;});
+		return count;
+	}
+
 	template<typename T, typename U>
 	flecs::entity register_t_as_u(flecs::world& world)
 	{
