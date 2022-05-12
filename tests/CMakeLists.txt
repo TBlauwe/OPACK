@@ -3,7 +3,7 @@
 set(SOURCE_LIST 
 	"main.cpp"
     "simulation.cpp"
-)
+ "module/activity_dl.cpp")
 
 # Dependencies
 # ============

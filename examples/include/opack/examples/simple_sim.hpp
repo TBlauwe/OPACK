@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <opack/core.hpp>
+#include <opack/module/activity_dl.hpp>
 #include <opack/utils/simulation_template.hpp>
 
 struct SimpleSim : opack::SimulationTemplate
@@ -42,10 +43,14 @@ struct SimpleSim : opack::SimulationTemplate
 	// =================
 	struct Stress { float value = 10.f; };
 
+	// Types : Activity-model
+	// ======================
+
 	SimpleSim(int argc = 0, char* argv[] = nullptr) : opack::SimulationTemplate{ argc, argv }
 	{
 		//sim.target_fps(1);
 		sim.world.entity("::SimpleSim").add(flecs::Module);
+		sim.world.import<ActivityDL>();
 
 		// Step I : Register types
 		// -----------------------
@@ -163,6 +168,7 @@ struct SimpleSim : opack::SimulationTemplate
 		//beatrice.add<MyFlow>(flow);
 		beatrice.add<Stress>();
 		auto cyril = opack::agent(sim, "Cyril");
+		cyril.set<AudioMessage>({"I'm coming !"});
 
 		auto radio = opack::artefact(sim, "Radio");
 

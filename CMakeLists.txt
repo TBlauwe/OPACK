@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.13...3.23)
 # Project information
 # ===================
 project(OPACK
-        VERSION 0.1.2
+        VERSION 0.1.3
         DESCRIPTION "C++ library to simulate cognitive agents."
         HOMEPAGE_URL "https://github.com/tblauwe/opack"
         LANGUAGES C CXX
@@ -64,12 +64,17 @@ set(HEADER_LIST
     "include/opack/utils/type_name.hpp"
     "include/opack/core/types.hpp"
     "include/opack/core/perception.hpp"
-    "include/opack/utils/flecs_helper.hpp" "include/opack/core/action.hpp")
+    "include/opack/utils/flecs_helper.hpp" 
+    "include/opack/core/action.hpp" 
+    "include/opack/module/activity_dl.hpp"
+)
 
 set(SOURCE_LIST 
 	"src/core/simulation.cpp"
 	"src/utils/simulation_template.cpp"
-  "src/core/perception.cpp")
+    "src/core/perception.cpp" 
+    "src/module/activity_dl.cpp"
+)
 
 
 # Target : opack
@@ -94,7 +99,6 @@ if(OPACK_BUILD_TESTS)
     add_subdirectory ("tests")
 endif()
 
-
 # Documentation
 # =============
 # * Docs only available if this is the main project
@@ -106,4 +110,3 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         message(WARNING "Doxygen not found - skipping docs (link : https://www.doxygen.nl/download.html)")
     endif()
 endif()
-

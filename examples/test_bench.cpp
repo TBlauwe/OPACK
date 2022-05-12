@@ -8,6 +8,6 @@ enum class TileStatus {
 int main(int, char* [])
 {
     flecs::world ecs;
-
-    ///auto tile = ecs.entity().add(TileStatus::Free);
+    ecs.component<TileStatus>();
+    //ecs.entity().add(TileStatus::Free);
 }
