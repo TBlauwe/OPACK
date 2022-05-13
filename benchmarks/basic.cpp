@@ -1,15 +1,14 @@
 #include <concepts>
 #include <benchmark/benchmark.h>
 #include <opack/core.hpp>
-#include <opack/utils/simulation_template.hpp>
 #include <opack/examples/empty_sim.hpp>
 #include <opack/examples/simple_sim.hpp>
 
 	
-template<std::derived_from<opack::SimulationTemplate> Simulation = opack::SimulationTemplate> 
+template<std::derived_from<opack::Simulation> Simulation = opack::Simulation> 
 void BM_create_simulation_empty(benchmark::State& state) {
     for ([[maybe_unused]] auto _ : state) {
-        auto sim = Simulation();
+        Simulation();
     }
 }
 BENCHMARK(BM_create_simulation_empty<EmptySim>)
@@ -133,7 +132,7 @@ BENCHMARK(BM_create_n_percepts_with_n_agents)
         ->Arg(1<<10)->Arg(1<<20)
 ;
 
-template<std::derived_from<opack::SimulationTemplate> Simulation = opack::SimulationTemplate>
+template<std::derived_from<opack::Simulation> Simulation = opack::Simulation>
 void BM_run_simulation(benchmark::State& state) {
     auto sim = opack::Simulation();
     for ([[maybe_unused]] auto _ : state) {

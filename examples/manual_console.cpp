@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 	std::cout << "[2] SimpleSim\n";
 	std::cout << "Choose a simulation : ";
 	std::cin >> choice;
-	std::unique_ptr<SimulationTemplate> sim;
+	std::unique_ptr<Simulation> sim;
 	switch (choice)
 	{
 		case 1:
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 		std::cout << "\n";
 		if (input.empty())
 		{
-			sim->sim.step();
+			sim->run();
 		}
 	}
 

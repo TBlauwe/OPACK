@@ -214,15 +214,21 @@ namespace opack
 		);
 	}
 
+	template<std::derived_from<Sense> T = opack::Sense, typename U = void>
+	bool does_perceive(flecs::entity observer, flecs::entity subject)
+	{
+		auto world = observer.world();
+		return does_perceive<T, U>(world, observer, subject);
+	}
+
 	/**
 	 * Return true if @c observer is currently perceiving @c subject trough sense @c T, or any sense, if @c T is not specified.
 	 @param observer From which perserpective this should be checked.
 	 @param
 	 */
 	template<std::derived_from<Sense> T = opack::Sense, typename U = void>
-	bool does_perceive(flecs::entity observer, flecs::entity subject)
+	bool does_perceive(flecs::world& world, flecs::entity observer, flecs::entity subject)
 	{
-		auto world = observer.world();
 		{
 			auto query = world.get<Query::Perception::Component>();
 			auto rule = query->rule.rule.iter()

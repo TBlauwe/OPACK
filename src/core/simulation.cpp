@@ -2,18 +2,40 @@
 #include <opack/core/perception.hpp>
 #include <iostream>
 
-opack::Simulation::Simulation(int argc, char* argv[])
-	: world{ argc, argv }
+flecs::world opack::internal::world(int argc, char* argv[])
 {
-	world.entity("::opack").add(flecs::Module);
+	flecs::world world{ argc, argv };
+	world.import<opack::concepts>();
+	return world;
+}
+
+opack::Simulation::Simulation(int argc, char* argv[]) : world{ internal::world(argc, argv) }
+{
+	world.import<opack::dynamics>();
+}
+
+opack::concepts::concepts(flecs::world& world)
+{
+	world.module<concepts>();
+
+	// MAS
+	// ---
+	world.prefab<Agent>().add<Agent>();
+	world.prefab<Artefact>().add<Artefact>();
+
+	// Action
+	// ------
+	world.component<Arity>()
+		.member<size_t>("min")
+		.member<size_t>("max")
+		;
+	world.component<By>();
+	world.component<On>();
 
 	auto action = world.prefab<Action>()
 		.add<Action>()
 		.add<Arity>()
 		;
-	
-	world.component<By>();
-	world.component<On>();
 
 	world.prefab<Actuator>()
 		.add<Actuator>()
@@ -21,15 +43,19 @@ opack::Simulation::Simulation(int argc, char* argv[])
 		.add(flecs::OneOf, action)
 		;
 
-	world.prefab<Agent>().add<Agent>();
-	world.prefab<Artefact>().add<Artefact>();
+	// Perception
+	// ----------
 	world.prefab<Sense>().add<Sense>();
 
 	world.emplace<Query::Perception::Component>(world);
 	world.emplace<Query::Perception::Relation>(world);
+}
 
-	// If no one is performing an action, delete it.
-	world.system<Action>("System_CleanupActionWithoutInitiator")
+opack::dynamics::dynamics(flecs::world& world)
+{
+	world.module<dynamics>();
+
+	world.system<Action>("CleanActions")
 		.term<By>().obj(flecs::Wildcard).oper(flecs::Not)
 		.iter([](flecs::iter& iter)
 			{
@@ -40,7 +66,7 @@ opack::Simulation::Simulation(int argc, char* argv[])
 			}
 	);
 
-	world.system<Delay>("System_DelayUpdate")
+	world.system<Delay>("UpdateDelay")
 		.iter([](flecs::iter& iter, Delay* delays)
 			{
 				for (auto i : iter)
@@ -53,79 +79,49 @@ opack::Simulation::Simulation(int argc, char* argv[])
 	);
 }
 
-opack::Simulation::~Simulation()
+float opack::Simulation::target_fps() const { return world.get_target_fps(); }
+
+void opack::Simulation::target_fps(float value) { world.set_target_fps(value); }
+
+float opack::Simulation::time_scale() const { return world.get_time_scale(); }
+
+void opack::Simulation::time_scale(float value) { return world.set_time_scale(value); }
+
+int32_t opack::Simulation::tick()
 {
-	stop();
+	return world.tick();
 }
 
-bool opack::Simulation::step(float elapsed_time) {
-	bool should_continue = world.progress(elapsed_time);
-
-	//executor.wait_for_all();
-	//size_t size = commands_queue.size();    // Since size can be updated between for loop (async),
-	//                                        // we must check only once, not at every loop !
-	//for (int i = 0; i<size; i++)
-	//{
-	//    auto command = commands_queue.pop();
-	//    if(command && command.value()) // BUG : Somehow some commands are empty
-	//        command.value()(_world);
-	//}
-
-	return should_continue;
-}
-
-void opack::Simulation::step_n(size_t n, float elapsed_time) {
-	bool should_continue = true;
-	for (size_t i = 0; i < n && should_continue; i++) {
-		should_continue = step(elapsed_time);
-	}
-}
-
-void opack::Simulation::rest_app()
-{
-	std::cout << "See web explorer on : https://www.flecs.dev/explorer/?remote=true\n";
-
-	world.set<flecs::rest::Rest>({});
-	while (step());
-	world.remove<flecs::rest::Rest>();
-}
-
-void opack::Simulation::stop()
-{
-	world.quit();
-}
-
-float opack::Simulation::target_fps() const
-{
-	return world.get_target_fps();
-}
-
-void opack::Simulation::target_fps(float value)
-{
-	world.set_target_fps(value);
-}
-
-float opack::Simulation::time_scale() const
-{
-	return world.get_time_scale();
-}
-
-void opack::Simulation::time_scale(float value)
-{
-	world.set_time_scale(value);
-}
-
-size_t opack::Simulation::tick() const
-{
-	return static_cast<size_t>(world.tick());
-}
-
-float opack::Simulation::delta_time() const
+float opack::Simulation::delta_time()
 {
 	return world.delta_time();
 }
 
-float opack::Simulation::time() const
+float opack::Simulation::time()
 {
 	return world.time();
+}
+
+bool opack::Simulation::step(float elapsed_time) { return opack::step(world, elapsed_time); }
+
+void opack::Simulation::step_n(size_t n, float elapsed_time) { opack::step_n(world, n, elapsed_time); }
+
+void opack::Simulation::run_with_webapp() { world.app().enable_rest().run(); }
+
+void opack::Simulation::run() { world.app().run(); }
+
+void opack::name(flecs::entity e, const char* name) { e.set_doc_name(name); }
+
+bool opack::step(flecs::world& world, float delta_time) { return world.progress(delta_time); }
+
+void opack::stop(flecs::world& world) { world.quit(); }
+
+size_t opack::count(flecs::world& world, flecs::entity_t rel, flecs::entity_t obj) { return static_cast<size_t>(world.count(rel, obj)); }
+
+void opack::step_n(flecs::world& world, size_t n, float delta_time)
+{
+	bool should_continue = true;
+	for (size_t i{ 0 }; i < n && should_continue; i++) {
+		should_continue = step(world, delta_time);
+	}
 }

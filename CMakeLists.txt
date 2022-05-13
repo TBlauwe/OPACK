@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.13...3.23)
 # Project information
 # ===================
 project(OPACK
-        VERSION 0.1.3
+        VERSION 0.2.0
         DESCRIPTION "C++ library to simulate cognitive agents."
         HOMEPAGE_URL "https://github.com/tblauwe/opack"
         LANGUAGES C CXX
@@ -22,9 +22,9 @@ include(cmake/target_default_compile_options.cmake)
 
 # Build options
 # =============
-option(OPACK_BUILD_BENCHMARKS     "Build benchmarks using google benchmarks." OFF)
-option(OPACK_BUILD_TESTS          "Build tests." OFF)
 option(OPACK_BUILD_EXAMPLES       "Build examples." OFF)
+option(OPACK_BUILD_TESTS          "Build tests." OFF)
+option(OPACK_BUILD_BENCHMARKS     "Build benchmarks using google benchmarks." OFF)
 option(OPACK_DEVELOPPER_WARNINGS   "Enable more warnings" OFF)
 
 
@@ -60,7 +60,7 @@ set(HEADER_LIST
 	"include/opack/core.hpp"
 	"include/opack/core/operation.hpp"
 	"include/opack/utils/type_map.hpp"
-	"include/opack/utils/simulation_template.hpp"
+	
     "include/opack/utils/type_name.hpp"
     "include/opack/core/types.hpp"
     "include/opack/core/perception.hpp"
@@ -71,7 +71,6 @@ set(HEADER_LIST
 
 set(SOURCE_LIST 
 	"src/core/simulation.cpp"
-	"src/utils/simulation_template.cpp"
     "src/core/perception.cpp" 
     "src/module/activity_dl.cpp"
 )

@@ -4,9 +4,8 @@
 
 #include <opack/core.hpp>
 #include <opack/module/activity_dl.hpp>
-#include <opack/utils/simulation_template.hpp>
 
-struct SimpleSim : opack::SimulationTemplate
+struct SimpleSim : opack::Simulation
 {
 	// Types : sense
 	// =============
@@ -46,34 +45,34 @@ struct SimpleSim : opack::SimulationTemplate
 	// Types : Activity-model
 	// ======================
 
-	SimpleSim(int argc = 0, char* argv[] = nullptr) : opack::SimulationTemplate{ argc, argv }
+	SimpleSim(int argc = 0, char* argv[] = nullptr) : opack::Simulation{ argc, argv }
 	{
 		//sim.target_fps(1);
-		sim.world.entity("::SimpleSim").add(flecs::Module);
-		sim.world.import<adl>();
+		world.entity("::SimpleSim").add(flecs::Module);
+		world.import<adl>();
 
 		// Step I : Register types
 		// -----------------------
 		// --- Actuator
-		opack::register_actuator<Act>(sim);
+		opack::register_actuator<Act>(world);
 
 		// --- Actions
-		auto help = opack::register_action<Help>(sim);
-		auto move = opack::register_action<Move>(sim);
-		auto tune = opack::register_action<Tune>(sim); // TODO Automatic registration ?
+		auto help = opack::register_action<Help>(world);
+		auto move = opack::register_action<Move>(world);
+		auto tune = opack::register_action<Tune>(world); // TODO Automatic registration ?
 
 		// --- Senses
-		opack::register_sense<Hearing>(sim);
-		opack::perceive<Hearing, AudioMessage>(sim);
-		opack::perceive<Hearing, opack::Agent>(sim);
+		opack::register_sense<Hearing>(world);
+		opack::perceive<Hearing, AudioMessage>(world);
+		opack::perceive<Hearing, opack::Agent>(world);
 
-		opack::register_sense<Vision>(sim);
-		opack::perceive<Vision, Act>(sim);
-		opack::perceive<Vision, opack::Agent>(sim);
+		opack::register_sense<Vision>(world);
+		opack::perceive<Vision, Act>(world);
+		opack::perceive<Vision, opack::Agent>(world);
 
 		// Step II : Additional dynamism
 		// -----------------------------
-		sim.world.observer("OnAdd_Hearing")
+		world.observer("OnAdd_Hearing")
 			.term<Hearing>().obj(flecs::Wildcard)
 			.event(flecs::OnAdd)
 			.iter(
@@ -89,7 +88,7 @@ struct SimpleSim : opack::SimulationTemplate
 				}
 		);
 
-		sim.world.observer("OnRemove_Hearing")
+		world.observer("OnRemove_Hearing")
 			.term<Hearing>().obj(flecs::Wildcard)
 			.event(flecs::OnRemove)
 			.iter(
@@ -101,7 +100,7 @@ struct SimpleSim : opack::SimulationTemplate
 				}
 		);
 
-		sim.world.system<const Help>("ActionHelpEffect")
+		world.system<const Help>("ActionHelpEffect")
 			.term<opack::Delay>().oper(flecs::Not)
 			.term<opack::By>().obj(flecs::Wildcard)
 			.iter(
@@ -120,7 +119,7 @@ struct SimpleSim : opack::SimulationTemplate
 		//opack::flow<MyFlow>(sim);
 		//opack::operation<MyFlow, Operation_Percept>(sim, [](flecs::entity agent, const Operation_Percept){});
 
-		sim.world.system<Stress>("UpdateStress")
+		world.system<Stress>("UpdateStress")
 			.iter(
 				[](flecs::iter& iter, Stress* stress)
 				{
@@ -133,7 +132,7 @@ struct SimpleSim : opack::SimulationTemplate
 				}
 		);
 
-		sim.world.system<opack::Agent>("Perceptions_Output")
+		world.system<opack::Agent>("Perceptions_Output")
 			.interval(5)
 			.iter(
 				[](flecs::iter& iter)
@@ -161,16 +160,16 @@ struct SimpleSim : opack::SimulationTemplate
 
 		// Step III : Populate world
 		// -------------------------
-		auto arthur = opack::agent(sim, "Arthur");
+		auto arthur = opack::agent(world, "Arthur");
 		//arthur.add<MyFlow>(flow);
 		arthur.add<Stress>();
-		auto beatrice = opack::agent(sim, "Beatrice");
+		auto beatrice = opack::agent(world, "Beatrice");
 		//beatrice.add<MyFlow>(flow);
 		beatrice.add<Stress>();
-		auto cyril = opack::agent(sim, "Cyril");
+		auto cyril = opack::agent(world, "Cyril");
 		cyril.set<AudioMessage>({"I'm coming !"});
 
-		auto radio = opack::artefact(sim, "Radio");
+		auto radio = opack::artefact(world, "Radio");
 
 		// (Step IV) : Fake a current state
 		// --------------------------------
@@ -183,24 +182,24 @@ struct SimpleSim : opack::SimulationTemplate
 		opack::perceive<Vision, Hearing>(beatrice, cyril);
 		opack::perceive<Vision, Hearing>(beatrice, radio);
 
-		//opack::conceal<Hearing>(sim, arthur, radio);
+		//opack::conceal<Hearing>(world, arthur, radio);
 
 		{
-			auto action = opack::action<Help>(sim);
+			auto action = opack::action<Help>(world);
 			action.set<opack::Delay>({ 6.0f });
 			action.add<On>(cyril);
 			opack::act<Act>(arthur, action);
 		}
 
 		{
-			auto action = opack::action<Move>(sim);
+			auto action = opack::action<Move>(world);
 			action.set<opack::Delay>({ 4.0f });
 			action.add<On>(beatrice);
 			opack::act<Act>(cyril, action);
 		}
 
 		{
-			auto action = opack::action<Tune>(sim);
+			auto action = opack::action<Tune>(world);
 			action.set<opack::Delay>({ 2.0f });
 			action.add<On>(radio);
 			opack::act<Act>(beatrice, action);
