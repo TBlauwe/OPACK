@@ -36,3 +36,20 @@ flecs::entity adl::parent_of(flecs::entity task)
 {
 	return task.get_object(flecs::ChildOf);
 }
+
+bool adl::check_satisfaction(flecs::entity task)
+{
+	return true;
+}
+
+bool adl::is_satisfied(flecs::entity task)
+{
+	bool all_satisfied { true };
+	traverse_dfs(task, [&all_satisfied](flecs::entity e) {if (!adl::check_satisfaction(e)) all_satisfied = false;});
+	return all_satisfied;
+}
+
+bool adl::is_potential(flecs::entity task)
+{
+	return true;
+}

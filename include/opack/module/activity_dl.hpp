@@ -1,4 +1,4 @@
-/*****************************************************************//**
+/*********************************************************************
  * \file   activity_dl.hpp
  * \brief  Module to manipulate and reason on a activity model using ACTIVITY-DL
  *
@@ -50,6 +50,10 @@ struct adl
 	static size_t size(flecs::entity task);
 
 	static flecs::entity parent_of(flecs::entity task);
+	
+	static bool is_satisfied(flecs::entity task);
+	static bool check_satisfaction(flecs::entity task);
+	static bool is_potential(flecs::entity task);
 
 	/**
 	 * Iterate an activity using dfs.
