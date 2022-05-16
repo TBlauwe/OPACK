@@ -15,10 +15,10 @@ int main(int argc, char* argv[])
 	switch (choice)
 	{
 		case 1:
-			EmptySim{argc, argv}.run();
+			EmptySim{argc, argv}.run_with_webapp();
 			break;
 		case 2:
-			SimpleSim{argc, argv}.run();
+			SimpleSim{argc, argv}.run_with_webapp();
 			break;
 		default:
 			std::cout << "Closing...\n";

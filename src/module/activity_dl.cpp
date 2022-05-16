@@ -2,7 +2,7 @@
 
 adl::adl(flecs::world& world)
 {
-	world.module<adl>();
+	world.module<adl>("::modules::Activity-DL");
 
 	world.component<adl::Activity>();
 

@@ -1,6 +1,6 @@
 #include <opack/core/perception.hpp>
 
-opack::Query::Perception::Component::Component(flecs::world& world)
+opack::queries::perception::Component::Component(flecs::world& world)
 	: rule
 {
 	world.rule_builder()
@@ -14,7 +14,7 @@ subject_var{ rule.rule.find_var("Subject") },
 predicate_var{ rule.rule.find_var("Predicate") }
 {};
 
-opack::Query::Perception::Relation::Relation(flecs::world& world)
+opack::queries::perception::Relation::Relation(flecs::world& world)
 	: rule
 {
 	world.rule_builder()

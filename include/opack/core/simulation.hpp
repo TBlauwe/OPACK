@@ -26,7 +26,7 @@ namespace opack {
 	template<std::derived_from<Agent> T>
 	inline flecs::entity register_agent(flecs::world& world)
 	{
-		return internal::register_t_as_u<T, Agent>(world);
+		return internal::register_t_as_u<T, Agent>(world).template child_of<world::prefab::Agents>();
 	}
 
 	/**
@@ -35,7 +35,7 @@ namespace opack {
 	template<std::derived_from<Artefact> T>
 	inline flecs::entity register_artefact(flecs::world& world)
 	{
-		return internal::register_t_as_u<T, Artefact>(world);
+		return internal::register_t_as_u<T, Artefact>(world).template child_of<world::prefab::Artefacts>();
 	}
 
 	/**
@@ -45,7 +45,7 @@ namespace opack {
 	template<std::derived_from<Sense> T>
 	inline flecs::entity register_sense(flecs::world& world)
 	{
-		return internal::register_t_as_u<T, Sense>(world);
+		return internal::register_t_as_u<T, Sense>(world).template child_of<world::Senses>();
 	}
 
 	/**
@@ -54,7 +54,7 @@ namespace opack {
 	template<std::derived_from<Actuator> T>
 	inline flecs::entity register_actuator(flecs::world& world)
 	{
-		return internal::register_t_as_u<T, Actuator>(world);
+		return internal::register_t_as_u<T, Actuator>(world).template child_of<world::Actuators>();
 	}
 
 	/**
@@ -63,7 +63,7 @@ namespace opack {
 	template<std::derived_from<Action> T>
 	inline flecs::entity register_action(flecs::world& world)
 	{
-		return internal::register_t_as_u<T, Action>(world);
+		return internal::register_t_as_u<T, Action>(world).template child_of<world::prefab::Actions>();
 	}
 
 	// Simulation interaction
@@ -93,7 +93,7 @@ namespace opack {
 	template<std::derived_from<Agent> T = opack::Agent>
 	inline flecs::entity agent(flecs::world& world, const char* name)
 	{
-		return instantiate<T>(world, name);
+		return instantiate<T>(world, name).template child_of<world::Agents>();
 	}
 
 	/**
@@ -102,7 +102,7 @@ namespace opack {
 	template<std::derived_from<Agent> T = opack::Agent>
 	inline flecs::entity agent(flecs::world& world)
 	{
-		return instantiate<T>(world);
+		return instantiate<T>(world).template child_of<world::Agents>();
 	}
 
 	/**
@@ -111,7 +111,7 @@ namespace opack {
 	template<std::derived_from<Artefact> T = opack::Artefact>
 	inline flecs::entity artefact(flecs::world& world, const char* name)
 	{
-		return instantiate<T>(world, name);
+		return instantiate<T>(world, name).template child_of<world::Artefacts>();
 	}
 
 
@@ -121,7 +121,7 @@ namespace opack {
 	template<std::derived_from<Artefact> T = opack::Artefact>
 	inline flecs::entity artefact(flecs::world& world)
 	{
-		return instantiate<T>(world);
+		return instantiate<T>(world).template child_of<world::Artefacts>();
 	}
 
 	/**
@@ -255,6 +255,15 @@ namespace opack {
 		@brief Return total elapsed simulation time.
 		*/
 		float time();
+
+		/**
+		 * Import a module @c T and return corresponding entity.
+		 */
+		template<typename T>
+		inline flecs::entity import()
+		{
+			return world.import<T>();
+		}
 
 
 		// Controls

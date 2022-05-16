@@ -8,6 +8,22 @@
 
 namespace opack
 {
+	// Used only to structure hierarchy
+	namespace world 
+	{
+		struct Agents {};
+		struct Artefacts {};
+		struct Actuators {};	
+		struct Senses {};
+		struct Actions {};
+		namespace prefab
+		{
+			struct Actions {};
+			struct Agents {};
+			struct Artefacts {};
+		};
+	};
+
 	// MAS - Multi-agent systems
 	//--------------------------
 	struct Agent {};
@@ -44,5 +60,4 @@ namespace opack
 	// K - Knowledge
 	//--------------
 	// TODO
-
 }

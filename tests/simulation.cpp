@@ -32,8 +32,8 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, sim_construction)
 	REQUIRE(sim.world.template has<opack::Actuator>());
 	REQUIRE(sim.world.template has<opack::Sense>());
 
-	REQUIRE(sim.world.template has<opack::Query::Perception::Component>());
-	REQUIRE(sim.world.template has<opack::Query::Perception::Relation>());
+	REQUIRE(sim.world.template has<opack::queries::perception::Component>());
+	REQUIRE(sim.world.template has<opack::queries::perception::Relation>());
 
 	SUBCASE("Configuration")
 	{
@@ -248,8 +248,8 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation entity construction", T, sim_entity_constr
 	REQUIRE(sim.world.template has<opack::Actuator>());
 	REQUIRE(sim.world.template has<opack::Sense>());
 
-	REQUIRE(sim.world.template has<opack::Query::Perception::Component>());
-	REQUIRE(sim.world.template has<opack::Query::Perception::Relation>());
+	REQUIRE(sim.world.template has<opack::queries::perception::Component>());
+	REQUIRE(sim.world.template has<opack::queries::perception::Relation>());
 
 	SUBCASE("Agents")
 	{
@@ -279,8 +279,8 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation manipulation", T, sim_manipulation)
 	REQUIRE(sim.world.template has<opack::Actuator>());
 	REQUIRE(sim.world.template has<opack::Sense>());
 
-	REQUIRE(sim.world.template has<opack::Query::Perception::Component>());
-	REQUIRE(sim.world.template has<opack::Query::Perception::Relation>());
+	REQUIRE(sim.world.template has<opack::queries::perception::Component>());
+	REQUIRE(sim.world.template has<opack::queries::perception::Relation>());
 
 	// Add a sense
 	struct MySense : opack::Sense {};

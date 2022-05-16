@@ -20,7 +20,7 @@ namespace opack
 	template<std::derived_from<Action> T>
 	flecs::entity action(flecs::world& world)
 	{
-		return world.entity().template is_a<T>().set_doc_name(type_name_cstr<T>());
+		return world.entity().template is_a<T>().set_doc_name(type_name_cstr<T>()).template child_of<world::Actions>();
 	}
 
 	/**
@@ -44,7 +44,7 @@ namespace opack
 		auto last_action = initiator.get_object<T>();
 		if (last_action)
 			last_action.mut(initiator.world()).template remove<By>(initiator);
-
+		
 		action.add<By>(initiator);
 		initiator.add<T>(action);
 	}

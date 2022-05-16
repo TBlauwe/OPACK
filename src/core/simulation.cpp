@@ -17,6 +17,24 @@ opack::Simulation::Simulation(int argc, char* argv[]) : world{ internal::world(a
 opack::concepts::concepts(flecs::world& world)
 {
 	world.module<concepts>();
+	world.import<flecs::units>();
+
+	// Organisation
+	// ------------
+	world.entity("::opack::queries").add(flecs::Module);
+	world.entity("::opack::modules").add(flecs::Module);
+	world.entity("::modules").add(flecs::Module);
+
+	world.entity("::world").add(flecs::Module);
+	world.entity("::world::prefab").add(flecs::Module);
+	world.entity<world::prefab::Actions>("::world::prefab::Actions").add(flecs::Module);
+	world.entity<world::prefab::Artefacts>("::world::prefab::Artefacts").add(flecs::Module);
+	world.entity<world::prefab::Agents>("::world::prefab::Agents").add(flecs::Module);
+	world.entity<world::Agents>("::world::Agents").add(flecs::Module);
+	world.entity<world::Artefacts>("::world::Artefacts").add(flecs::Module);
+	world.entity<world::Actions>("::world::Actions").add(flecs::Module);
+	world.entity<world::Actuators>("::world::Actuators").add(flecs::Module);
+	world.entity<world::Senses>("::world::Senses").add(flecs::Module);
 
 	// MAS
 	// ---
@@ -31,6 +49,9 @@ opack::concepts::concepts(flecs::world& world)
 		;
 	world.component<By>();
 	world.component<On>();
+	world.component<Delay>()
+		.member<float, flecs::units::duration::Seconds>("value")
+		;
 
 	auto action = world.prefab<Action>()
 		.add<Action>()
@@ -47,13 +68,15 @@ opack::concepts::concepts(flecs::world& world)
 	// ----------
 	world.prefab<Sense>().add<Sense>();
 
-	world.emplace<Query::Perception::Component>(world);
-	world.emplace<Query::Perception::Relation>(world);
+	world.entity("::opack::queries::perception").add(flecs::Module);
+	world.emplace<queries::perception::Component>(world);
+	world.emplace<queries::perception::Relation>(world);
 }
 
 opack::dynamics::dynamics(flecs::world& world)
 {
 	world.module<dynamics>();
+	world.import<concepts>();
 
 	world.system<Action>("CleanActions")
 		.term<By>().obj(flecs::Wildcard).oper(flecs::Not)

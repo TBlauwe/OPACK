@@ -81,7 +81,7 @@ namespace opack
 	};
 	using Percepts = std::vector<Percept>;
 
-	namespace Query::Perception
+	namespace queries::perception
 	{
 		/**
 		 * Query :
@@ -157,7 +157,7 @@ namespace opack
 	void each_perceived(flecs::entity observer, std::function<void(flecs::entity, const U&)> func)
 	{
 		auto world = observer.world();
-		auto query = world.get<Query::Perception::Component>();
+		auto query = world.get<queries::perception::Component>();
 		auto rule = query->rule.rule.iter()
 			.set_var(query->observer_var, observer)
 			.set_var(query->predicate_var, world.id<U>());
@@ -190,7 +190,7 @@ namespace opack
 	void each_perceived_relation(flecs::entity observer, std::function<void(flecs::entity, flecs::entity)> func)
 	{
 		auto world = observer.world();
-		auto query = world.get<Query::Perception::Relation>();
+		auto query = world.get<queries::perception::Relation>();
 		auto rule = query->rule.rule.iter()
 			.set_var(query->observer_var, observer)
 			.set_var(query->predicate_var, world.id<R>());
@@ -230,7 +230,7 @@ namespace opack
 	bool does_perceive(flecs::world& world, flecs::entity observer, flecs::entity subject)
 	{
 		{
-			auto query = world.get<Query::Perception::Component>();
+			auto query = world.get<queries::perception::Component>();
 			auto rule = query->rule.rule.iter()
 				.set_var(query->observer_var, observer)
 				.set_var(query->subject_var, subject)
@@ -248,7 +248,7 @@ namespace opack
 				return true;
 		}
 		{
-			auto query = world.get<Query::Perception::Relation>();
+			auto query = world.get<queries::perception::Relation>();
 			auto rule = query->rule.rule.iter()
 				.set_var(query->observer_var, observer)
 				.set_var(query->subject_var, subject)
@@ -277,7 +277,7 @@ namespace opack
 			return false;
 
 		{
-			auto query = world.get<Query::Perception::Relation>();
+			auto query = world.get<queries::perception::Relation>();
 			auto rule = query->rule.rule.iter()
 				.set_var(query->observer_var, observer)
 				.set_var(query->subject_var, subject)
@@ -310,7 +310,7 @@ namespace opack
 		auto sense = world.id<T>();
 		Percepts percepts{};
 		{
-			auto query = world.get<Query::Perception::Component>();
+			auto query = world.get<queries::perception::Component>();
 			auto rule = query->rule.rule;
 			{
 				rule.iter()
@@ -326,7 +326,7 @@ namespace opack
 			}
 		}
 		{
-			auto query = world.get<Query::Perception::Relation>();
+			auto query = world.get<queries::perception::Relation>();
 			auto rule = query->rule.rule;
 			rule.iter()
 				.set_var(query->observer_var, observer)
