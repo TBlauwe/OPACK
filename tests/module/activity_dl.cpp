@@ -190,6 +190,96 @@ TEST_CASE("Reasonning")
 			CHECK(actions.size() == 0);
 		}
 	}
+
+	SUBCASE("SEQ OR")
+	{
+		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::OR, adl::TemporalConstructor::SEQ);
+		auto task_1 = adl::task("T1", root);
+		auto task_2 = adl::task("T2", root);
+		auto task_3 = adl::task("T3", root);
+
+		std::vector<flecs::entity> actions{};
+		SUBCASE("All tasks")
+		{
+			adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(std::find(actions.begin(), actions.end(), task_1) != actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), task_2) != actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), task_3) != actions.end());
+		}
+
+		task_1.set<opack::Begin, opack::Timestamp>({ 0.0f });
+		SUBCASE("None")
+		{
+			adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size() == 0);
+		}
+
+		task_1.set<opack::End, opack::Timestamp>({ 0.0f });
+		SUBCASE("None")
+		{
+			adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size() == 0);
+		}
+
+	}	
+	
+	SUBCASE("SEQ AND")
+	{
+		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ_ORD);
+		auto task_1 = adl::task("T1", root);
+		auto task_2 = adl::task("T2", root);
+		auto task_3 = adl::task("T3", root);
+
+		std::vector<flecs::entity> actions{};
+		SUBCASE("Only T1")
+		{
+			adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(std::find(actions.begin(), actions.end(), task_1) != actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), task_2) == actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), task_3) == actions.end());
+		}
+
+		task_1.set<opack::Begin, opack::Timestamp>({ 0.0f });
+		SUBCASE("None")
+		{
+			adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size() == 0);
+		}
+
+		task_1.set<opack::End, opack::Timestamp>({ 0.0f });
+		SUBCASE("Only T2")
+		{
+			adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(std::find(actions.begin(), actions.end(), task_1) == actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), task_2) != actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), task_3) == actions.end());
+		}
+
+		task_2.set<opack::Begin, opack::Timestamp>({ 0.0f });
+		SUBCASE("None")
+		{
+			adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size() == 0);
+		}
+
+		task_2.set<opack::End, opack::Timestamp>({ 0.0f });
+		task_3.set<opack::Begin, opack::Timestamp>({ 0.0f });
+		SUBCASE("Only T3")
+		{
+			adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(std::find(actions.begin(), actions.end(), task_1) == actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), task_2) == actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), task_3) != actions.end());
+		}
+
+		task_3.set<opack::End, opack::Timestamp>({ 0.0f });
+		SUBCASE("None")
+		{
+			adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size() == 0);
+		}
+	}
+
 }
 
 TEST_SUITE_END();
