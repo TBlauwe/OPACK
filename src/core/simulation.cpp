@@ -71,6 +71,17 @@ opack::concepts::concepts(flecs::world& world)
 	world.entity("::opack::queries::perception").add(flecs::Module);
 	world.emplace<queries::perception::Component>(world);
 	world.emplace<queries::perception::Relation>(world);
+
+	// Knowledge
+	// ----------
+	world.component<Knowledge>();
+
+	// Misc
+	// ----
+	world.component<Timestamp>()
+		.member<float>("value");
+	world.component<Begin>();
+	world.component<End>();
 }
 
 opack::dynamics::dynamics(flecs::world& world)
@@ -80,6 +91,7 @@ opack::dynamics::dynamics(flecs::world& world)
 
 	world.system<Action>("CleanActions")
 		.term<By>().obj(flecs::Wildcard).oper(flecs::Not)
+		.term<Knowledge>().oper(flecs::Not)
 		.iter([](flecs::iter& iter)
 			{
 				for (auto i : iter)

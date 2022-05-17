@@ -158,6 +158,7 @@ struct SimpleSim : opack::Simulation
 				}
 		);
 
+
 		// Step III : Populate world
 		// -------------------------
 		auto arthur = opack::agent(world, "Arthur");

@@ -59,5 +59,20 @@ namespace opack
 
 	// K - Knowledge
 	//--------------
+	struct Knowledge {};
 	// TODO
+
+	// MISC
+	//-----
+	struct Timestamp
+	{
+		float value {0.0f};
+	};
+
+	struct Begin 
+	{
+	};
+	struct End 
+	{
+	};
 }

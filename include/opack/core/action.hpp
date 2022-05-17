@@ -41,11 +41,17 @@ namespace opack
 		//}
 
 		// Action without initiator are cleaned up, so we need to remove relation from previous action.
+		auto world = initiator.world();
 		auto last_action = initiator.get_object<T>();
 		if (last_action)
-			last_action.mut(initiator.world()).template remove<By>(initiator);
+		{
+			last_action.mut(world).template set<End, Timestamp>({world.time()});
+			last_action.mut(world).template remove<By>(initiator);
+		}
 		
-		action.add<By>(initiator);
+		action.mut(world).add<By>(initiator);
+		action.mut(world).set<Begin, Timestamp>({world.time()});
+		action.mut(world).remove<End, Timestamp>();
 		initiator.add<T>(action);
 	}
 }

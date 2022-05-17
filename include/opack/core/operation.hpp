@@ -16,11 +16,6 @@
 namespace opack
 {
 	/**
-	@brief Used to form a pair with a flow to indicate when a flow is starting.
-	*/
-	struct Begin {};
-
-	/**
 	@brief @c T sense is now able to perceive @c U component.
 	@param agent Which agent perceives this
 	@return entity of @c U component;
