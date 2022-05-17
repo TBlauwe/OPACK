@@ -9,6 +9,7 @@
 
 #include <concepts>
 #include <functional>
+#include <map>
 
 #include <flecs.h>
 
@@ -39,6 +40,8 @@ struct adl
 	struct NomologicalCondition {};
 	struct RegulatoryCondition {};
 	struct SatisfactionCondition {};
+
+	struct Satisfied {};
 
 	struct Activity {};
 
@@ -92,6 +95,9 @@ struct adl
 
 	static bool is_finished(flecs::entity task);
 	static bool has_started(flecs::entity task);
+	static bool in_progress(flecs::entity task);
+
+	static size_t order(flecs::entity task);
 
 	static size_t children_count(flecs::entity task);
 	static size_t size(flecs::entity task);
@@ -104,6 +110,8 @@ struct adl
 
 	template<typename OutputIterator>
 	static bool potential_actions(flecs::entity task, OutputIterator out);
+
+	static bool has_task_in_progress(flecs::entity task);
 
 	/**
 	 * Iterate an activity using dfs.
@@ -140,6 +148,7 @@ flecs::entity adl::compose(flecs::entity parent)
 	auto world = parent.world();
 	auto instance = adl::instantiate<T>(world);
 	instance.child_of(parent);
+	instance.template set<Order>({ adl::children_count(parent) });
 	return instance;
 }
 
@@ -147,87 +156,87 @@ template<std::derived_from<opack::Action> T>
 flecs::entity adl::action(flecs::entity parent)
 {
 	auto world = parent.world();
-	return opack::action<T>(world).child_of(parent);
+	auto entity = opack::action<T>(world).child_of(parent);
+	entity.template set<Order>({ adl::children_count(parent) });
+	return entity;
 }
 
 template<typename OutputIterator>
 bool adl::potential_actions(flecs::entity task, OutputIterator out)
 {
-	if (adl::is_satisfied(task))
-		return false; // Return early since it is already satisfied
+	if (adl::is_finished(task))
+		return adl::is_satisfied(task);
 
-	bool added{ false };
-	if (adl::has_children(task))
+	if (!adl::has_children(task))
 	{
-		ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a constructor component");
-		bool first{ true };
-		bool has_active_task { false };
+		ecs_assert(task.has<opack::Action>(), ECS_INVALID_PARAMETER, "Leaf task is not an action.");
+		if (!adl::has_started(task))
+			*out++ = task;
+	}
+	else
+	{
+		ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a constructor component.");
+
+		// 1. Retrieve all children and sort them by their orders.
+		std::map<size_t, flecs::entity> subtasks{};
 		task.children
 		(
-			[&out, &has_active_task](flecs::entity e) 
-			{ 
-				has_active_task |= adl::has_started(e) && !adl::is_finished(e);
+			[&subtasks](flecs::entity e)
+			{
+				subtasks.emplace(adl::order(e), e);
 			}
-		); 
+		);
+
+		// 2. Check if a task is in progress
+		bool has_active_task{ false };
+		for (auto [order, subtask] : subtasks)
+		{
+			has_active_task |= adl::has_started(subtask) && !adl::is_finished(subtask);
+		}
+
+		// 3. Determine, based on temporal constructor, which potential actions are added.
+		bool first{ true };
+		bool succeeded{ false };
 		switch (task.get<Constructor>()->temporal)
 		{
 		case TemporalConstructor::PAR: // TODO
 		case TemporalConstructor::IND: // Every potential actions are added, even if another isn't finished.
-			task.children
-			(
-				[&out, &added](flecs::entity e) 
-				{ 
-					added |= potential_actions(e, out); 
-				}
-			); 
+			for (auto [order, subtask] : subtasks)
+			{
+				succeeded |= potential_actions(subtask, out);
+			}
 			break;
 		case TemporalConstructor::SEQ: // Every potential actions are added, if last one is finished
-			task.children
-			(
-				[&out, &added, &has_active_task](flecs::entity e) 
-				{ 
-					if (!has_active_task && !adl::is_satisfied(e) )
-					{
-						added |= potential_actions(e, out); 
-					}
+			for (auto [order, subtask] : subtasks)
+			{
+				if (!has_active_task && !adl::is_satisfied(subtask))
+				{
+					succeeded |= potential_actions(subtask, out);
 				}
-			); 
+			}
 			break;
 		case TemporalConstructor::SEQ_ORD: // First non satisfied task is next, if last one is finished.
-			task.children
-			(
-				[&out, &added, &first, &has_active_task](flecs::entity e) 
-				{ 
-					if (!has_active_task && first && !adl::is_satisfied(e))
-					{
-						added |= potential_actions(e, out); 
-						first = false;
-					}
+			for (auto [order, subtask] : subtasks)
+			{
+				if (!has_active_task && first && !adl::is_satisfied(subtask))
+				{
+					succeeded |= potential_actions(subtask, out);
+					first = false;
 				}
-			); 
+			}
 			break;
 		case TemporalConstructor::ORD: // First non satisfied task is next, even if last one isn't finished.
-			task.children(
-				[&out, &added, &first](flecs::entity e) 
-				{ 
-					if (first && !adl::is_satisfied(e))
-					{
-						added |= potential_actions(e, out); 
-						first = false;
-					}
+			for (auto [order, subtask] : subtasks)
+			{
+				if (first && !adl::is_satisfied(subtask))
+				{
+					succeeded |= potential_actions(subtask, out);
+					first = false;
 				}
-			); 
+			}
 			break;
 		}
+		return succeeded;
 	}
-	else
-	{
-		//TODO Check if action is eligible
-		if (!adl::has_started(task))
-		{
-			*out++ = task;
-			added = true;
-		}
-	}
-	return added;
+	return false;
 }
