@@ -218,7 +218,7 @@ bool adl::potential_actions(flecs::entity task, OutputIterator out)
 		case TemporalConstructor::SEQ_ORD: // First non satisfied task is next, if last one is finished.
 			for (auto [order, subtask] : subtasks)
 			{
-				if (!has_active_task && first && !adl::is_satisfied(subtask))
+				if (!has_active_task && first &&  (!adl::is_satisfied(subtask) && !adl::is_finished(subtask)))
 				{
 					succeeded |= potential_actions(subtask, out);
 					first = false;
@@ -228,7 +228,7 @@ bool adl::potential_actions(flecs::entity task, OutputIterator out)
 		case TemporalConstructor::ORD: // First non satisfied task is next, even if last one isn't finished.
 			for (auto [order, subtask] : subtasks)
 			{
-				if (first && !adl::is_satisfied(subtask))
+				if (first && (!adl::is_satisfied(subtask) && !adl::has_started(subtask)))
 				{
 					succeeded |= potential_actions(subtask, out);
 					first = false;

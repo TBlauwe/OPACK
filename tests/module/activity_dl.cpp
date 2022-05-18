@@ -354,7 +354,7 @@ TEST_CASE("Reasonning")
 			auto success = adl::potential_actions(root, std::back_inserter(actions));
 			CHECK(actions.size()==0);
 			CHECK(success);
-			CHECK(adl::has_task_in_progress(root));
+			CHECK(!adl::has_task_in_progress(root));
 		}
 	}
 
@@ -366,9 +366,9 @@ TEST_CASE("Reasonning")
 		auto a3 = adl::action<Action3>(root);
 
 		std::vector<flecs::entity> actions{};
-		SUBCASE("All tasks")
+		SUBCASE("A1 & A2 & A3")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
 			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
 			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
 			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
@@ -377,30 +377,92 @@ TEST_CASE("Reasonning")
 		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
 		SUBCASE("None")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
 		}
 
 		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-		SUBCASE("None")
+		SUBCASE("Failed")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==2);
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
 		}
 
+		a1.add<adl::Satisfied>();
+		SUBCASE("Success")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		a1.remove<adl::Satisfied>();
+		SUBCASE("A2 & A3")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
+		SUBCASE("None")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
+		}
+
+		a2.set<opack::End, opack::Timestamp>({ 0.0f });
+		SUBCASE("Failed")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==1);
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		SUBCASE("A3")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
+		a3.set<opack::End, opack::Timestamp>({ 0.0f });
+		a3.add<adl::Satisfied>();
+
+		SUBCASE("Success")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
 	}	
 	
 	SUBCASE("SEQ_ORD OR")
 	{
-		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ_ORD);
+		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::OR, adl::TemporalConstructor::SEQ_ORD);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
 
 		std::vector<flecs::entity> actions{};
-		SUBCASE("Only T1")
+		SUBCASE("A1")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
 			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
 			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
 			CHECK(std::find(actions.begin(), actions.end(), a3) == actions.end());
@@ -409,15 +471,70 @@ TEST_CASE("Reasonning")
 		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
 		SUBCASE("None")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
 		}
 
 		a1.set<opack::End, opack::Timestamp>({ 0.0f });
+		SUBCASE("Failed")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==1);
+			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		a1.add<adl::Satisfied>();
+		SUBCASE("Success")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		a1.remove<adl::Satisfied>();
+		SUBCASE("A2")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
+			CHECK(std::find(actions.begin(), actions.end(), a3) == actions.end());
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
 		SUBCASE("None")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
+		}
+
+		a2.set<opack::End, opack::Timestamp>({ 0.0f });
+		SUBCASE("Failed - left only A3")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==1);
+			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
+		a3.set<opack::End, opack::Timestamp>({ 0.0f });
+		a3.add<adl::Satisfied>();
+
+		SUBCASE("Success")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(success);
+			CHECK(!adl::has_task_in_progress(root));
 		}
 	}	
 
@@ -429,9 +546,9 @@ TEST_CASE("Reasonning")
 		auto a3 = adl::action<Action3>(root);
 
 		std::vector<flecs::entity> actions{};
-		SUBCASE("Only T1")
+		SUBCASE("A1")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
 			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
 			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
 			CHECK(std::find(actions.begin(), actions.end(), a3) == actions.end());
@@ -440,41 +557,76 @@ TEST_CASE("Reasonning")
 		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
 		SUBCASE("None")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
 		}
 
 		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-		SUBCASE("Only T2")
+		SUBCASE("Failed")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		a1.add<adl::Satisfied>();
+		SUBCASE("A2")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==1);
 			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-			CHECK(std::find(actions.begin(), actions.end(), a3) == actions.end());
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
 		}
 
 		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
 		SUBCASE("None")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
 		}
 
 		a2.set<opack::End, opack::Timestamp>({ 0.0f });
-		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
-		SUBCASE("Only T3")
+		SUBCASE("Failed")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
-			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
 		}
 
-		a3.set<opack::End, opack::Timestamp>({ 0.0f });
-		SUBCASE("None")
+		a2.add<adl::Satisfied>();
+		SUBCASE("A3")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==1);
+			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
+		a3.set<opack::End, opack::Timestamp>({ 0.0f });
+
+		SUBCASE("Failed")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		a3.add<adl::Satisfied>();
+		SUBCASE("Success")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(success);
+			CHECK(!adl::has_task_in_progress(root));
 		}
 	}
 
@@ -486,50 +638,152 @@ TEST_CASE("Reasonning")
 		auto a3 = adl::action<Action3>(root);
 
 		std::vector<flecs::entity> actions{};
-		SUBCASE("T1")
+		SUBCASE("A1")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==1);
 			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
-			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
-			CHECK(std::find(actions.begin(), actions.end(), a3) == actions.end());
 		}
 
 		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
-		SUBCASE("T2 & T3")
+		SUBCASE("A2")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
-			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==1);
 			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-		}
-
-		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-		SUBCASE("T2 & T3")
-		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
-			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
 		}
 
 		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
-		SUBCASE("T3")
+		a2.set<opack::End, opack::Timestamp>({ 0.0f });
+		SUBCASE("Failed")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
-			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
-			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
 		}
 
-		a2.set<opack::End, opack::Timestamp>({ 0.0f });
+		a1.set<opack::End, opack::Timestamp>({ 0.0f });
+		SUBCASE("Failed")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		a2.add<adl::Satisfied>();
+		SUBCASE("Failed")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		a1.add<adl::Satisfied>();
+		SUBCASE("A3")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==1);
+			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
 		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
 		SUBCASE("None")
 		{
-			adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
+		}
+
+		a3.set<opack::End, opack::Timestamp>({ 0.0f });
+		SUBCASE("Failed")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		a3.add<adl::Satisfied>();
+		SUBCASE("Success")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+	}
+
+	SUBCASE("ORD OR")
+	{
+		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::OR, adl::TemporalConstructor::ORD);
+		auto a1 = adl::action<Action1>(root);
+		auto a2 = adl::action<Action2>(root);
+		auto a3 = adl::action<Action3>(root);
+
+		std::vector<flecs::entity> actions{};
+		SUBCASE("A1")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==1);
+			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
+		}
+
+		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
+		SUBCASE("A2")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==1);
+			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
+		}
+
+		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
+		a2.set<opack::End, opack::Timestamp>({ 0.0f });
+		SUBCASE("Unfinished A3")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==1);
+			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
+		}
+
+		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
+		SUBCASE("Unfinished none")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(adl::has_task_in_progress(root));
+		}
+
+		a1.set<opack::End, opack::Timestamp>({ 0.0f });
+		a2.set<opack::End, opack::Timestamp>({ 0.0f });
+		a3.set<opack::End, opack::Timestamp>({ 0.0f });
+		SUBCASE("Failed")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(!success);
+			CHECK(!adl::has_task_in_progress(root));
+		}
+
+		a3.add<adl::Satisfied>();
+		SUBCASE("Success")
+		{
+			auto success = adl::potential_actions(root, std::back_inserter(actions));
+			CHECK(actions.size()==0);
+			CHECK(success);
+			CHECK(!adl::has_task_in_progress(root));
 		}
 	}
 }

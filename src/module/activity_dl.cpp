@@ -37,14 +37,14 @@ bool adl::is_finished(flecs::entity task)
 	if(adl::has_children(task))
 	{
 		ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a constructor component");
+		task.children([&result](flecs::entity e) {result &= is_finished(e); }); // False if children are not finished 
 		switch (task.get<Constructor>()->logical)
 		{
 			case LogicalConstructor::AND:
-				task.children([&result](flecs::entity e) {result &= is_finished(e); }); // False if one child is not satisfied
+				task.children([&result](flecs::entity e) {result |= is_finished(e) && !is_satisfied(e); }); // But true if one is and is not satisfied
 				break;
 			case LogicalConstructor::OR:
-				result = false; 
-				task.children([&result](flecs::entity e) {result |= is_finished(e); }); // True if one child is satisfied
+				task.children([&result](flecs::entity e) {result |= is_finished(e) && is_satisfied(e); }); // True if one child is finished
 				break;
 		}
 	}
