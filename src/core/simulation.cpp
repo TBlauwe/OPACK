@@ -22,7 +22,6 @@ opack::concepts::concepts(flecs::world& world)
 	// Organisation
 	// ------------
 	world.entity("::opack::queries").add(flecs::Module);
-	world.entity("::opack::modules").add(flecs::Module);
 	world.entity("::modules").add(flecs::Module);
 
 	world.entity("::world").add(flecs::Module);
@@ -35,6 +34,8 @@ opack::concepts::concepts(flecs::world& world)
 	world.entity<world::Actions>("::world::Actions").add(flecs::Module);
 	world.entity<world::Actuators>("::world::Actuators").add(flecs::Module);
 	world.entity<world::Senses>("::world::Senses").add(flecs::Module);
+	world.entity<world::Flows>("::world::Flows").add(flecs::Module);
+	world.entity<world::Operations>("::world::Operations").add(flecs::Module);
 
 	// MAS
 	// ---

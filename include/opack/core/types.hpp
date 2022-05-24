@@ -16,6 +16,8 @@ namespace opack
 		struct Actuators {};	
 		struct Senses {};
 		struct Actions {};
+		struct Flows {};
+		struct Operations {};
 		namespace prefab
 		{
 			struct Actions {};

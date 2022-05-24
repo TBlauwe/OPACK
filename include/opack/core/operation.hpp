@@ -43,6 +43,7 @@ namespace opack
 	flecs::entity flow(flecs::world& world, float rate = 1.0f)
 	{
 		auto flow = world.component<T>();
+		flow.template child_of<world::Flows>();
 
 		auto launcher = world.system<const T>()
 			.template term<T, Begin>().inout(flecs::Out).set(flecs::Nothing)
@@ -59,6 +60,7 @@ namespace opack
 				}
 		);
 		launcher.set_doc_name("System_LaunchFlow");
+		launcher.template child_of<opack::dynamics>();
 
 		auto cleaner = world.system<const T>()
 			.template term<T, Begin>()
@@ -74,6 +76,7 @@ namespace opack
 				}
 		);
 		cleaner.set_doc_name("System_CleanFlowLeftOver");
+		cleaner.template child_of<opack::dynamics>();
 
 		return flow;
 	}
@@ -87,6 +90,7 @@ namespace opack
 			operation {world.entity<TOper>()},
 			system_builder {world.system<TInputs ...>(type_name_cstr<TOper>())}
 		{
+			operation.child_of<world::Operations>();
 			system_builder.kind(flecs::OnUpdate);
 			system_builder.multi_threaded(true);
 		}
@@ -117,7 +121,7 @@ namespace opack
 		template<typename T>
 		flecs::entity build(T&& func)
 		{
-			system_builder.each(func);
+			system_builder.each(func).template child_of<opack::dynamics>();
 			return operation;
 		}
 
