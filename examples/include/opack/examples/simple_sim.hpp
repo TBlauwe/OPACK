@@ -72,33 +72,33 @@ struct SimpleSim : opack::Simulation
 
 		// Step II : Additional dynamism
 		// -----------------------------
-		world.observer("OnAdd_Hearing")
-			.term<Hearing>().obj(flecs::Wildcard)
-			.event(flecs::OnAdd)
-			.iter(
-				[](flecs::iter& iter)
-				{
-					auto id = iter.pair(1);
-					auto obj = id.second();
-					auto entity = iter.entity(0);
-					if (obj.has<AudioMessage>())
-					{
-						entity.add<Help>(obj);
-					}
-				}
-		);
+		//world.observer("OnAdd_Hearing")
+		//	.term<Hearing>().obj(flecs::Wildcard)
+		//	.event(flecs::OnAdd)
+		//	.iter(
+		//		[](flecs::iter& iter)
+		//		{
+		//			auto id = iter.pair(1);
+		//			auto obj = id.second();
+		//			auto entity = iter.entity(0);
+		//			if (obj.has<AudioMessage>())
+		//			{
+		//				entity.add<Help>(obj);
+		//			}
+		//		}
+		//);
 
-		world.observer("OnRemove_Hearing")
-			.term<Hearing>().obj(flecs::Wildcard)
-			.event(flecs::OnRemove)
-			.iter(
-				[](flecs::iter& iter)
-				{
-					auto id = iter.pair(1);
-					auto obj = id.second();
-					auto entity = iter.entity(0);
-				}
-		);
+		//world.observer("OnRemove_Hearing")
+		//	.term<Hearing>().obj(flecs::Wildcard)
+		//	.event(flecs::OnRemove)
+		//	.iter(
+		//		[](flecs::iter& iter)
+		//		{
+		//			auto id = iter.pair(1);
+		//			auto obj = id.second();
+		//			auto entity = iter.entity(0);
+		//		}
+		//);
 
 		world.system<const Help>("ActionHelpEffect")
 			.term<opack::Delay>().oper(flecs::Not)
@@ -116,8 +116,26 @@ struct SimpleSim : opack::Simulation
 				}
 		);
 
-		//opack::flow<MyFlow>(sim);
-		//opack::operation<MyFlow, Operation_Percept>(sim, [](flecs::entity agent, const Operation_Percept){});
+		opack::flow<MyFlow>(world);
+		opack::OperationBuilder<MyFlow, Operation_Reason>(world)
+			.input<AudioMessage>()
+			.build(
+			[](flecs::entity agent) 
+			{
+				std::cout << "Operation_Reason for " << agent.doc_name()  << "\n"; 
+				std::cout << "-- " << agent.doc_name()  << " is emitting " << agent.get<AudioMessage>()->value << "\n";
+
+			}
+		);
+		opack::OperationBuilder<MyFlow, Operation_Percept>(world)
+			.output<AudioMessage>()
+			.build(
+			[](flecs::entity agent) 
+			{
+				std::cout << "Operation_Percept for " << agent.doc_name()  << "\n"; 
+				agent.set<AudioMessage>({ "I'm over there !" });
+			}
+		);
 
 		world.system<Stress>("UpdateStress")
 			.iter(
@@ -132,37 +150,37 @@ struct SimpleSim : opack::Simulation
 				}
 		);
 
-		world.system<opack::Agent>("Perceptions_Output")
-			.interval(5)
-			.iter(
-				[](flecs::iter& iter)
-				{
-					for (auto i : iter)
-					{
-						auto entity = iter.entity(i);
-						std::cout << entity.name() << " perceives : \n";
-						opack::each_perceived<opack::Sense, AudioMessage>(entity,
-							[](flecs::entity subject, const AudioMessage& value)
-							{
-								std::cout << " - " << subject.name() << " has " << value.value << "\n";
-							}
-						);
+		//world.system<opack::Agent>("Perceptions_Output")
+		//	.interval(5)
+		//	.iter(
+		//		[](flecs::iter& iter)
+		//		{
+		//			for (auto i : iter)
+		//			{
+		//				auto entity = iter.entity(i);
+		//				std::cout << entity.name() << " perceives : \n";
+		//				opack::each_perceived<opack::Sense, AudioMessage>(entity,
+		//					[](flecs::entity subject, const AudioMessage& value)
+		//					{
+		//						std::cout << " - " << subject.doc_name() << " has " << value.value << "\n";
+		//					}
+		//				);
 
-						opack::each_perceived_relation<opack::Sense, Act>(entity,
-							[](flecs::entity subject, flecs::entity object)
-							{
-								std::cout << " - " << subject.name() << " is acting on " << object.get_object<On>().name() << "\n";
-							}
-						);
-					}
-				}
-		);
+		//				opack::each_perceived_relation<opack::Sense, Act>(entity,
+		//					[](flecs::entity subject, flecs::entity object)
+		//					{
+		//						std::cout << " - " << subject.doc_name() << " is acting on " << object.get_object<On>().doc_name() << "\n";
+		//					}
+		//				);
+		//			}
+		//		}
+		//);
 
 
 		// Step III : Populate world
 		// -------------------------
 		auto arthur = opack::agent(world, "Arthur");
-		//arthur.add<MyFlow>(flow);
+		arthur.add<MyFlow>();
 		arthur.add<Stress>();
 		auto beatrice = opack::agent(world, "Beatrice");
 		//beatrice.add<MyFlow>(flow);

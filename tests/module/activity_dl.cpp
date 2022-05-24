@@ -39,7 +39,7 @@ TEST_CASE("Composition")
 	sim.import<adl>();
 
 	auto root = adl::activity<Activity_A>(sim);
-	auto task_1 = adl::task("a1", root);
+	auto task_1 = adl::task("task_1", root);
 
 	auto activity_b = adl::activity<Activity_B>(sim);
 	auto instance = adl::compose<Activity_A>(activity_b);
