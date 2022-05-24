@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 		std::cout << "\n";
 		if (input.empty())
 		{
-			sim->run_with_webapp();
+			sim->step();
 		}
 	}
 

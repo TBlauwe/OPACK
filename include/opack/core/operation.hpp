@@ -44,23 +44,9 @@ namespace opack
 	{
 		auto flow = world.component<T>();
 
-		auto cleaner = world.system<const T>()
-			.term(world.pair<T, Begin>())
-			.kind(flecs::PostUpdate)
-			.iter(
-				[](flecs::iter& it)
-				{
-					for (auto i : it)
-					{
-						std::cout << "Cleaning flow for agent : " << it.entity(i).doc_name() << "\n";
-						it.entity(i).remove<T, Begin>();
-					}
-				}
-		);
-		cleaner.set_doc_name("System_CleanFlowLeftOver");
-
 		auto launcher = world.system<const T>()
-			.term(world.pair<T, Begin>()).inout(flecs::Out).set(flecs::Nothing)
+			.template term<T, Begin>().inout(flecs::Out).set(flecs::Nothing)
+			.kind(flecs::OnUpdate)
 			.interval(rate)
 			.iter(
 				[](flecs::iter& it)
@@ -74,65 +60,70 @@ namespace opack
 		);
 		launcher.set_doc_name("System_LaunchFlow");
 
+		auto cleaner = world.system<const T>()
+			.template term<T, Begin>()
+			.kind(flecs::PostUpdate)
+			.iter(
+				[](flecs::iter& it)
+				{
+					for (auto i : it)
+					{
+						std::cout << "Cleaning flow for agent : " << it.entity(i).doc_name() << "\n";
+						it.entity(i).remove<T, Begin>();
+					}
+				}
+		);
+		cleaner.set_doc_name("System_CleanFlowLeftOver");
+
 		return flow;
 	}
 
-	template<std::derived_from<Flow> TFlow, std::derived_from<Operation> TOper>
+	template<std::derived_from<Operation> TOper, typename ... TInputs>
 	class OperationBuilder
 	{
 	public:
 		OperationBuilder(flecs::world& world) : 
 			world{ world },
 			operation {world.entity<TOper>()},
-			system_builder {world.system(type_name_cstr<TOper>())}
+			system_builder {world.system<TInputs ...>(type_name_cstr<TOper>())}
 		{
+			system_builder.kind(flecs::OnUpdate);
+			system_builder.multi_threaded(true);
 		}
 
+		// If using this, then we should add tag (relation) to declare when an operation is finished, 
+		// at the cost of creating tables. So let's try to do without.
 		template<std::derived_from<Operation> T>
 		OperationBuilder& after()
 		{
-			system_builder.term<T, End>().inout(flecs::In);
+			system_builder.template term<T, End>().inout(flecs::In);
 			return *this;
 		}
 
-		template<typename ... Args>
-		OperationBuilder& input()
+		template<std::derived_from<Flow> T>
+		OperationBuilder& flow()
 		{
-			(system_builder.term<Args>().inout(flecs::In), ...);
+			system_builder.template term<T, Begin>().inout(flecs::In);
 			return *this;
 		}
 
 		template<typename ... Args>
 		OperationBuilder& output()
 		{
-			(system_builder.term<Args>().inout(flecs::Out).set(flecs::Nothing), ...);
+			(system_builder.template term<Args>().inout(flecs::Out).set(flecs::Nothing), ...);
 			return *this;
 		}
 
 		template<typename T>
 		flecs::entity build(T&& func)
 		{
-			if (predecessor_count == 0)
-			{
-				system_builder.term<TFlow, Begin>().inout(flecs::In);
-			}
-
-			system_builder.iter(
-				[&func](flecs::iter& it)
-				{
-					for (auto i : it)
-					{
-						func(it.entity(i));
-					}
-				}
-			);
+			system_builder.each(func);
 			return operation;
 		}
 
 	private:
-		size_t predecessor_count{ 0 };
 		flecs::entity operation;
-		flecs::system_builder<> system_builder;
+		flecs::system_builder<TInputs ...> system_builder;
 		flecs::world& world;
 	};
 }

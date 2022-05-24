@@ -37,6 +37,7 @@ struct SimpleSim : opack::Simulation
 	struct Operation_Percept : opack::Operation {};
 	struct Operation_Reason : opack::Operation {};
 	struct Operation_Act : opack::Operation {};
+	struct Operation_UpdateStress : opack::Operation {};
 
 	// Types : Stress 
 	// =================
@@ -55,6 +56,7 @@ struct SimpleSim : opack::Simulation
 		// -----------------------
 		// --- Actuator
 		opack::register_actuator<Act>(world);
+		world.component<Stress>().member<float>("value");
 
 		// --- Actions
 		auto help = opack::register_action<Help>(world);
@@ -117,37 +119,58 @@ struct SimpleSim : opack::Simulation
 		);
 
 		opack::flow<MyFlow>(world);
-		opack::OperationBuilder<MyFlow, Operation_Reason>(world)
-			.input<AudioMessage>()
+
+		opack::OperationBuilder<Operation_Percept>(world)
+			.flow<MyFlow>()
 			.build(
 			[](flecs::entity agent) 
 			{
-				std::cout << "Operation_Reason for " << agent.doc_name()  << "\n"; 
-				std::cout << "-- " << agent.doc_name()  << " is emitting " << agent.get<AudioMessage>()->value << "\n";
+				opack::each_perceived<opack::Sense, AudioMessage>(agent,
+					[](flecs::entity subject, const AudioMessage& value)
+					{
+						std::cout << " - " << subject.doc_name() << " has " << value.value << "\n";
+					}
+				);
 
+				opack::each_perceived_relation<opack::Sense, Act>(agent,
+					[](flecs::entity subject, flecs::entity object)
+					{
+						std::cout << " - " << subject.doc_name() << " is acting on " << object.get_object<On>().doc_name() << "\n";
+					}
+				);
 			}
 		);
-		opack::OperationBuilder<MyFlow, Operation_Percept>(world)
+
+		opack::OperationBuilder<Operation_UpdateStress, Stress>(world)
+			.build(
+				[](flecs::iter& iter, size_t index, Stress& stress)
+				{
+					stress.value -= iter.delta_system_time();
+					if (stress.value <= 0)
+						stress.value = 10;
+				}
+		);
+
+		opack::OperationBuilder<Operation_Reason>(world)
+			.flow<MyFlow>()
 			.output<AudioMessage>()
 			.build(
 			[](flecs::entity agent) 
 			{
-				std::cout << "Operation_Percept for " << agent.doc_name()  << "\n"; 
-				agent.set<AudioMessage>({ "I'm over there !" });
+				std::cout << "Operation_Reason for " << agent.doc_name()  << "\n"; 
+				agent.set<AudioMessage>({ "I'm not over there !" });
 			}
 		);
 
-		world.system<Stress>("UpdateStress")
-			.iter(
-				[](flecs::iter& iter, Stress* stress)
-				{
-					for (auto i : iter)
-					{
-						stress[i].value -= iter.delta_system_time();
-						if (stress[i].value <= 0)
-							stress[i].value = 10;
-					}
-				}
+		opack::OperationBuilder<Operation_Act, AudioMessage>(world)
+			.flow<MyFlow>()
+			.build(
+			[](flecs::entity agent, AudioMessage& message) 
+			{
+				std::cout << "Operation_Act for " << agent.doc_name()  << "\n"; 
+				std::cout << "-- " << agent.doc_name()  << " is emitting " << message.value << "\n";
+				agent.remove<AudioMessage>();
+			}
 		);
 
 		//world.system<opack::Agent>("Perceptions_Output")
@@ -185,8 +208,10 @@ struct SimpleSim : opack::Simulation
 		auto beatrice = opack::agent(world, "Beatrice");
 		//beatrice.add<MyFlow>(flow);
 		beatrice.add<Stress>();
+		beatrice.add<MyFlow>();
 		auto cyril = opack::agent(world, "Cyril");
 		cyril.set<AudioMessage>({"I'm coming !"});
+		cyril.add<MyFlow>();
 
 		auto radio = opack::artefact(world, "Radio");
 
