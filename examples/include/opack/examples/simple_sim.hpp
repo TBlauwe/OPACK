@@ -171,15 +171,17 @@ struct SimpleSim : opack::Simulation
 
 		opack::OperationBuilder<Operation_Act, AudioMessage>(world)
 			.flow<MyFlow>()
-			.strategy(
-			[](flecs::entity agent, AudioMessage& message) 
-			{
-				std::cout << "Operation_Act for " << agent.doc_name()  << "\n"; 
-				agent.remove<AudioMessage>();
-			}
-		);
+			.strategy<const char *>()
+			;
 
 		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
+		opack::impact<MyBehaviour, Operation_Act, const char *, AudioMessage&>(world, 
+			[](flecs::entity e, AudioMessage& msg)
+			{
+				std::cout << e.doc_name() << " has an audio message : " << msg.value << "\n"; 
+				return msg.value;
+			}
+		);
 
 		//world.system<opack::Agent>("Perceptions_Output")
 		//	.interval(5)

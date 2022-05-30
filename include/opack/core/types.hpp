@@ -44,10 +44,10 @@ namespace opack
 	struct Behaviour {};
 	struct Strategy {};
 
-	template<typename TOutput, typename ... TInputs>
+	template<typename TOutput = void, typename ... TInputs>
 	struct Impact 
 	{
-		std::unordered_map<flecs::entity, std::function<TOutput(flecs::entity, TInputs ...)>> funcs;
+		std::function<TOutput(flecs::entity, TInputs ...)> func;
 	};
 
 	// P - Perception

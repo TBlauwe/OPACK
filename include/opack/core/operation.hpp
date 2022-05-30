@@ -74,6 +74,17 @@ namespace opack
 	}
 
 	/**
+	 * Add an impact to a behaviour.
+	 */
+	template<std::derived_from<Behaviour> T, std::derived_from<Operation> TOper, typename TOutput, typename ... TInputs, typename TFunc>
+	//void impact(flecs::world& world, std::function<TOutput(flecs::entity, TInputs...)> func)
+	void impact(flecs::world& world, TFunc&& func)
+	{
+		auto behaviour = world.entity<T>();
+		behaviour.template set<TOper, Impact<TOutput, TInputs ...>>({ std::forward<TFunc>(func) });
+	}
+
+	/**
 	@brief Create a flow named @c T that represents part of the agent model
 	@param @c world 
 	@param @c rate how much time per second
@@ -162,16 +173,33 @@ namespace opack
 			return operation;
 		}
 
-		template<typename T>
-		flecs::entity strategy(T&& func)
+		template<typename TOutput>
+		//flecs::entity strategy(std::function<void(flecs::entity, TInputs...)> strategy)
+		flecs::entity strategy()
 		{
 			system_builder.iter(
-				[](flecs::iter& it)
+				[](flecs::iter& it, TInputs* ... args)
 				{
 					for (auto i : it)
 					{
 						auto e = it.entity(i);
-						each_active_behaviours<TOper>(e, [](flecs::entity e) {std::cout << e.to_json() << "\n"; });
+						//each_active_behaviours<TOper>(e, 
+						//	[&e, i, ... a = std::forward<TInputs*>(args)](flecs::entity beh)
+						//	{
+						//		beh.get_w_object<TOper, Impact<TOutput, TInputs ...>>()->func(e, (a[i], ...));
+						//		std::cout << e.to_json() << "\n"; 
+						//	}
+						//);
+						std::cout << "Iterating for entity " << e.doc_name() << "\n";
+						e.each<Active>(// Revise this
+							[&](flecs::entity object)
+							{
+								auto impact = object.get_w_object<TOper, Impact<TOutput, TInputs...>>();
+								std::cout << "-- has impact : " << impact << "\n";
+								if (impact)
+									impact->func(e, (args[i], ...));
+							}
+						);
 					}
 				}
 			).template child_of<opack::dynamics>();
