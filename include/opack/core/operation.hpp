@@ -19,7 +19,11 @@ namespace opack
 {
 
 	/**
-	 * .
+	 @brief Create a new behaviour @c T.
+	 @param func Activation function with following signature : bool(flecs::entity, (Tinputs&,...))
+
+	 A behaviour is an entity with an associated system that runs every frame for every agent that has this behaviour, 
+	 before the update. Each agent will have the component <Active, T> if the activation function returns @c true.
 	 */
 	template<std::derived_from<Behaviour> T, typename ... TInputs, typename TFunc>
 	flecs::entity behaviour(flecs::world& world, TFunc&& func)
@@ -29,7 +33,7 @@ namespace opack
 
 		auto launcher = world.system<TInputs ...>()
 			.template term<const T>()
-			.template term<T, Active>().inout(flecs::Out).set(flecs::Nothing)
+			.template term<Active, T>().inout(flecs::Out).set(flecs::Nothing)
 			.kind(flecs::PreUpdate)
 			.iter(
 				[f = std::forward<TFunc>(func)](flecs::iter& it, TInputs * ... args)
@@ -38,21 +42,36 @@ namespace opack
 					{
 						auto e = it.entity(i);
 						if(f(e, (args[i], ...)))
-							e.add<T, Active>();
+							e.add<Active, T>();
 						else
-							e.remove<T, Active>();
+							e.remove<Active, T>();
 					}
 				}
 		);
 		launcher.set_doc_name("System_CheckBehaviour");
 		launcher.template child_of<opack::dynamics>();
 
-		world.observer().event(flecs::OnAdd).term<T, Active>().each([](flecs::entity e) {std::cout << "Added\n"; });
-		world.observer().event(flecs::OnRemove).term<T, Active>().each([](flecs::entity e) {std::cout << "Removed\n"; });
+		world.observer().event(flecs::OnAdd).term<Active, T>().each([](flecs::entity e) {std::cout << "Added\n"; });
+		world.observer().event(flecs::OnRemove).term<Active, T>().each([](flecs::entity e) {std::cout << "Removed\n"; });
 
 		return behaviour;
 	}
 
+	/**
+	 * .
+	 */
+	template<std::derived_from<Operation> T, typename TFunc>
+	void each_active_behaviours(flecs::entity e, TFunc&& func)
+	{
+		e.each<Active>(
+			[f = std::forward<TFunc>(func)](flecs::entity object)
+			{
+				auto impact = object.get_object<T>();
+				if (impact)
+					f(impact);
+			}
+		);
+	}
 
 	/**
 	@brief Create a flow named @c T that represents part of the agent model
@@ -140,6 +159,22 @@ namespace opack
 		flecs::entity build(T&& func)
 		{
 			system_builder.each(func).template child_of<opack::dynamics>();
+			return operation;
+		}
+
+		template<typename T>
+		flecs::entity strategy(T&& func)
+		{
+			system_builder.iter(
+				[](flecs::iter& it)
+				{
+					for (auto i : it)
+					{
+						auto e = it.entity(i);
+						each_active_behaviours<TOper>(e, [](flecs::entity e) {std::cout << e.to_json() << "\n"; });
+					}
+				}
+			).template child_of<opack::dynamics>();
 			return operation;
 		}
 

@@ -6,6 +6,10 @@
  *********************************************************************/
 #pragma once
 
+#include <functional>
+#include <unordered_map>
+#include <flecs.h>
+
 namespace opack
 {
 	// Used only to structure hierarchy
@@ -39,7 +43,12 @@ namespace opack
 	struct Active {};
 	struct Behaviour {};
 	struct Strategy {};
-	struct Impact {};
+
+	template<typename TOutput, typename ... TInputs>
+	struct Impact 
+	{
+		std::unordered_map<flecs::entity, std::function<TOutput(flecs::entity, TInputs ...)>> funcs;
+	};
 
 	// P - Perception
 	//--------------

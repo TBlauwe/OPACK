@@ -171,7 +171,7 @@ struct SimpleSim : opack::Simulation
 
 		opack::OperationBuilder<Operation_Act, AudioMessage>(world)
 			.flow<MyFlow>()
-			.build(
+			.strategy(
 			[](flecs::entity agent, AudioMessage& message) 
 			{
 				std::cout << "Operation_Act for " << agent.doc_name()  << "\n"; 

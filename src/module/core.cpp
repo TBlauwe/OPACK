@@ -37,7 +37,6 @@ opack::concepts::concepts(flecs::world& world)
 	world.component<Behaviour>();
 	world.component<Active>();
 	world.component<Strategy>();
-	world.component<Impact>();
 
 	// Action
 	// ------
