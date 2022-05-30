@@ -12,6 +12,7 @@
 #include <flecs.h>
 
 #include <opack/core/types.hpp>
+#include <opack/module/core.hpp>
 #include <opack/utils/type_map.hpp>
 #include <opack/utils/flecs_helper.hpp>
 
@@ -78,6 +79,12 @@ namespace opack {
 	}
 
 	/**
+	Set a name for entity @c e - used for debugging purposes.
+	You may want to add a specific component for more complex name.
+	*/
+	void name(flecs::entity e, const char* name);
+
+	/**
 	@brief Instantiate an entity named @c name (for debugging/visualization) purposes, from prefab @c T.
 	*/
 	template<typename T>
@@ -142,11 +149,6 @@ namespace opack {
 		return world.entity<T>();
 	}
 
-	/**
-	Set a name for entity @c e - used for debugging purposes.
-	You may want to add a specific component for more complex name.
-	*/
-	void name(flecs::entity e, const char* name);
 
 	// Simulation control
 	// ==================
@@ -193,22 +195,6 @@ namespace opack {
 	@brief Count number of entities matching the pattern.
 	*/
 	size_t count(flecs::world& world, flecs::entity_t rel, flecs::entity_t obj);
-
-	/**
-	 * Core module to add necessary components for OPACK.
-	 */
-	struct concepts
-	{
-		concepts(flecs::world& world);
-	};
-
-	/**
-	 * Core module to add necessary systems for OPACK.
-	 */
-	struct dynamics 
-	{
-		dynamics(flecs::world& world);
-	};
 
 	struct Simulation
 	{

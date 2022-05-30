@@ -12,6 +12,7 @@
 #include <flecs.h>
 
 #include <opack/core/types.hpp>
+#include <opack/module/core.hpp>
 
 namespace opack
 {

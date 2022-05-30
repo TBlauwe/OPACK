@@ -67,7 +67,7 @@ namespace opack
 		inline bool is_relation(flecs::entity object)
 		{
 			auto world = subject.world();
-			return world.pair<R>(object) == world.pair(predicat, object);
+			return world.pair<R>(object) == world.pair(predicate, object);
 		}
 
 		/**
@@ -214,13 +214,6 @@ namespace opack
 		);
 	}
 
-	template<std::derived_from<Sense> T = opack::Sense, typename U = void>
-	bool does_perceive(flecs::entity observer, flecs::entity subject)
-	{
-		auto world = observer.world();
-		return does_perceive<T, U>(world, observer, subject);
-	}
-
 	/**
 	 * Return true if @c observer is currently perceiving @c subject trough sense @c T, or any sense, if @c T is not specified.
 	 @param observer From which perserpective this should be checked.
@@ -263,6 +256,13 @@ namespace opack
 			}
 			return rule.is_true();
 		}
+	}
+
+	template<std::derived_from<Sense> T = opack::Sense, typename U = void>
+	bool does_perceive(flecs::entity observer, flecs::entity subject)
+	{
+		auto world = observer.world();
+		return does_perceive<T, U>(world, observer, subject);
 	}
 
 	/**
