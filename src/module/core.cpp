@@ -23,11 +23,21 @@ opack::concepts::concepts(flecs::world& world)
 	world.entity<world::Senses>("::world::Senses").add(flecs::Module);
 	world.entity<world::Flows>("::world::Flows").add(flecs::Module);
 	world.entity<world::Operations>("::world::Operations").add(flecs::Module);
+	world.entity<world::Behaviours>("::world::Behaviours").add(flecs::Module);
 
 	// MAS
 	// ---
 	world.prefab<Agent>().add<Agent>();
 	world.prefab<Artefact>().add<Artefact>();
+
+	// Operation
+	// ---------
+	world.component<Flow>();
+	world.component<Operation>();
+	world.component<Behaviour>();
+	world.component<Active>();
+	world.component<Strategy>();
+	world.component<Impact>();
 
 	// Action
 	// ------

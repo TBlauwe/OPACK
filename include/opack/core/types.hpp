@@ -18,6 +18,7 @@ namespace opack
 		struct Actions {};
 		struct Flows {};
 		struct Operations {};
+		struct Behaviours {};
 		namespace prefab
 		{
 			struct Actions {};
@@ -35,6 +36,9 @@ namespace opack
 	//--------------
 	struct Flow {};
 	struct Operation {};
+	struct Active {};
+	struct Behaviour {};
+	struct Strategy {};
 	struct Impact {};
 
 	// P - Perception

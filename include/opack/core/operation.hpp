@@ -8,6 +8,7 @@
 #pragma once
 
 #include <concepts>
+#include <functional>
 
 #include <flecs.h>
 
@@ -17,28 +18,46 @@
 namespace opack
 {
 
-	struct OperationBegin
+	/**
+	 * .
+	 */
+	template<std::derived_from<Behaviour> T, typename ... TInputs, typename TFunc>
+	flecs::entity behaviour(flecs::world& world, TFunc&& func)
 	{
-		flecs::entity_view entity;
-	};
-	struct OperationEnd
-	{
-		flecs::entity_view entity;
-	};
+		auto behaviour = world.component<T>();
+		behaviour.template child_of<world::Behaviours>();
 
-	template<std::derived_from<Operation> T>
-	flecs::entity manipulation(flecs::world& world)
-	{
-		auto operation = world.entity<T>();
-		operation.set<OperationBegin>({ world.entity() });
-		operation.set<OperationEnd>({ world.entity() });
-		return operation;
+		auto launcher = world.system<TInputs ...>()
+			.template term<const T>()
+			.template term<T, Active>().inout(flecs::Out).set(flecs::Nothing)
+			.kind(flecs::PreUpdate)
+			.iter(
+				[f = std::forward<TFunc>(func)](flecs::iter& it, TInputs * ... args)
+				{
+					for (auto i : it)
+					{
+						auto e = it.entity(i);
+						if(f(e, (args[i], ...)))
+							e.add<T, Active>();
+						else
+							e.remove<T, Active>();
+					}
+				}
+		);
+		launcher.set_doc_name("System_CheckBehaviour");
+		launcher.template child_of<opack::dynamics>();
+
+		world.observer().event(flecs::OnAdd).term<T, Active>().each([](flecs::entity e) {std::cout << "Added\n"; });
+		world.observer().event(flecs::OnRemove).term<T, Active>().each([](flecs::entity e) {std::cout << "Removed\n"; });
+
+		return behaviour;
 	}
 
+
 	/**
-	@brief @c T sense is now able to perceive @c U component.
-	@param agent Which agent perceives this
-	@return entity of @c U component;
+	@brief Create a flow named @c T that represents part of the agent model
+	@param @c world 
+	@param @c rate how much time per second
 	*/
 	template<std::derived_from<Flow> T>
 	flecs::entity flow(flecs::world& world, float rate = 1.0f)
@@ -48,7 +67,7 @@ namespace opack
 
 		auto launcher = world.system<const T>()
 			.template term<T, Begin>().inout(flecs::Out).set(flecs::Nothing)
-			.kind(flecs::OnUpdate)
+			.kind(flecs::PreUpdate)
 			.interval(rate)
 			.iter(
 				[](flecs::iter& it)
