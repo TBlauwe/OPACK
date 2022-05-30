@@ -54,7 +54,6 @@ namespace opack
 				{
 					for (auto i : it)
 					{
-						std::cout << "Launching flow for agent : " << it.entity(i).doc_name() << "\n";
 						it.entity(i).add<T, Begin>();
 					}
 				}
@@ -70,7 +69,6 @@ namespace opack
 				{
 					for (auto i : it)
 					{
-						std::cout << "Cleaning flow for agent : " << it.entity(i).doc_name() << "\n";
 						it.entity(i).remove<T, Begin>();
 					}
 				}

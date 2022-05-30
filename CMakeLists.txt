@@ -32,15 +32,15 @@ option(OPACK_DEVELOPPER_WARNINGS  "Enable more warnings" OFF)
 # ============
 
 # General-purpose Parallel and Heterogeneous Task Programming System
-CPMAddPackage(
-        NAME taskflow
-        GITHUB_REPOSITORY taskflow/taskflow
-        GIT_TAG v3.3.0
-        OPTIONS
-        "TF_BUILD_TESTS OFF"
-        "TF_BUILD_EXAMPLES OFF"
-)
-set_target_properties(Taskflow PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:Taskflow,INTERFACE_INCLUDE_DIRECTORIES>)
+#CPMAddPackage(
+#        NAME taskflow
+#        GITHUB_REPOSITORY taskflow/taskflow
+#        GIT_TAG v3.3.0
+#        OPTIONS
+#        "TF_BUILD_TESTS OFF"
+#        "TF_BUILD_EXAMPLES OFF"
+#)
+#set_target_properties(Taskflow PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:Taskflow,INTERFACE_INCLUDE_DIRECTORIES>)
 
 # A fast entity component system (ECS) for C & C++
 CPMAddPackage(
@@ -80,7 +80,7 @@ set(SOURCE_LIST
 # ==============
 add_library (opack STATIC ${SOURCE_LIST} ${HEADER_LIST})
 target_include_directories(opack PUBLIC include)
-target_link_libraries(opack PUBLIC flecs_static Taskflow)
+target_link_libraries(opack PUBLIC flecs_static)
 target_compile_features(opack PUBLIC cxx_std_20)
 if(OPACK_DEVELOPPER_WARNINGS)
     target_set_compile_warnings_cxx(opack)

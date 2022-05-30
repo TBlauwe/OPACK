@@ -119,6 +119,9 @@ struct SimpleSim : opack::Simulation
 		);
 
 		opack::flow<MyFlow>(world);
+		// Percept -> Reason -> Act
+		// UpdateStress
+		
 
 		opack::OperationBuilder<Operation_Percept>(world)
 			.flow<MyFlow>()
@@ -206,7 +209,6 @@ struct SimpleSim : opack::Simulation
 		arthur.add<MyFlow>();
 		arthur.add<Stress>();
 		auto beatrice = opack::agent(world, "Beatrice");
-		//beatrice.add<MyFlow>(flow);
 		beatrice.add<Stress>();
 		beatrice.add<MyFlow>();
 		auto cyril = opack::agent(world, "Cyril");
