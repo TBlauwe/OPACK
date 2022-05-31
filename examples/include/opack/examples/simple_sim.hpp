@@ -123,16 +123,13 @@ struct SimpleSim : opack::Simulation
 		);
 
 		opack::flow<MyFlow>(world);
-		// Percept -> Reason -> Act
-		// UpdateStress
-		
 
 		opack::OperationBuilder<Operation_Percept>(world)
 			.flow<MyFlow>()
 			.build(
 			[](flecs::entity agent) 
 			{
-				std::cout << "Operation_Percept for " << agent.doc_name()  << "\n"; 
+				//std::cout << "Operation_Percept for " << agent.doc_name()  << "\n"; 
 				//opack::each_perceived<opack::Sense, AudioMessage>(agent,
 				//	[](flecs::entity subject, const AudioMessage& value)
 				//	{
@@ -165,51 +162,23 @@ struct SimpleSim : opack::Simulation
 			.build(
 			[](flecs::entity agent) 
 			{
-				std::cout << "Operation_Reason for " << agent.doc_name()  << "\n"; 
+				//std::cout << "Operation_Reason for " << agent.doc_name()  << "\n"; 
 				agent.set<AudioMessage>({ "I'm not over there !" });
 			}
 		);
 
 		opack::OperationBuilder<Operation_Act, AudioMessage>(world)
 			.flow<MyFlow>()
-			.strategy<const char *>(&opack::strat::every<const char *, AudioMessage>)
+			.strategy<void>(&opack::strat::every<void, AudioMessage>)
 			;
 
 		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
-		opack::impact<MyBehaviour, Operation_Act, const char *, AudioMessage>(world, 
+		opack::impact<MyBehaviour, Operation_Act, void, AudioMessage>(world, 
 			[](flecs::entity e, AudioMessage& msg)
 			{
-				std::cout << e.doc_name() << " has an audio message : " << msg.value << "\n"; 
-				return msg.value;
+				//std::cout << e.doc_name() << " has an audio message : " << msg.value << "\n"; 
 			}
 		);
-
-		//world.system<opack::Agent>("Perceptions_Output")
-		//	.interval(5)
-		//	.iter(
-		//		[](flecs::iter& iter)
-		//		{
-		//			for (auto i : iter)
-		//			{
-		//				auto entity = iter.entity(i);
-		//				std::cout << entity.name() << " perceives : \n";
-		//				opack::each_perceived<opack::Sense, AudioMessage>(entity,
-		//					[](flecs::entity subject, const AudioMessage& value)
-		//					{
-		//						std::cout << " - " << subject.doc_name() << " has " << value.value << "\n";
-		//					}
-		//				);
-
-		//				opack::each_perceived_relation<opack::Sense, Act>(entity,
-		//					[](flecs::entity subject, flecs::entity object)
-		//					{
-		//						std::cout << " - " << subject.doc_name() << " is acting on " << object.get_object<On>().doc_name() << "\n";
-		//					}
-		//				);
-		//			}
-		//		}
-		//);
-
 
 		// Step III : Populate world
 		// -------------------------

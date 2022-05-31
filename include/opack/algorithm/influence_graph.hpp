@@ -1,21 +1,20 @@
 #pragma once
 
-#include <functional>
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
 
-namespace dynamo
+namespace opack 
 {
     /**
-    An influence is either a positive or negative influence between a behaviour to an object @c T.
+    An influence is either a positive or negative influence towards an object @c T.
     @tparam T Type of the object influenced.
     */
     template<typename T>
     struct Influence
     {
         const T *   object;
-        bool        positive;
+        bool        is_positive;
     };
 
     /**
@@ -25,8 +24,8 @@ namespace dynamo
     template<typename T>
     struct Score
     {
-        size_t  index;
-        int     value;
+        const T *   key;
+        int         value;
     };
 
     /**
@@ -34,67 +33,26 @@ namespace dynamo
 
     @brief InfluenceGraph
     */
-    template<typename T>
+    template<typename U, typename V>
     class InfluenceGraph
     {
-        using Behaviour_t   = Behaviour<std::vector<Influence<T>>, std::vector<T>>;
-        using Influences    = std::unordered_multimap<size_t, size_t>;
-        using Scores        = std::unordered_map<size_t, int>;
+        using Influences    = std::unordered_multimap<const U *, const V *>;
+        using Scores        = std::unordered_map<const V *, int>;
 
     public:
         InfluenceGraph() = default;
-        //InfluenceGraph(const InfluenceGraph& that)
-        //    :_behaviours{that._behaviours}, _values { that._values },
-        //    _positive_influences{that._positive_influences},
-        //    _negative_influences{that._negative_influences},
-        //    highest_scores{that.highest_scores}
-        //{}
 
-        //InfluenceGraph& operator=(const InfluenceGraph& that)
-        //{
-        //    _behaviours = that._behaviours ;
-        //    _values = that._values ;
-        //    _positive_influences = that._positive_influences;
-        //    _negative_influences = that._negative_influences;
-        //    highest_scores = that.highest_scores;
-        //    return *this;
-        //}
-
-        InfluenceGraph(AgentHandle agent, const std::vector<const Behaviour_t *>& behaviours, std::vector<T> args)
-            :_behaviours{behaviours}, _values { args }
-        {
-            for (size_t i = 0; i < _values.size(); i++)
+		const V * compute()
+		{
+            highest_scores.clear();
+            std::vector<Score<V>>  sorted_scores {};
+            for (const auto& pair : scores)
             {
-                scores.emplace(std::make_pair(i, 0));
+                sorted_scores.push_back({ pair.first, pair.second });
             }
 
-            size_t behaviour_index = 0;
-            for (Behaviour_t const* const behaviour : _behaviours)
-            {
-                for (const auto& influence : (*behaviour)(agent, _values))
-                {
-                    size_t object_index = index(*influence.object);
-                    if (influence.positive)
-                    {
-                        _positive_influences.emplace(behaviour_index, object_index);
-                        scores[object_index] += 1;
-                    }
-                    else
-                    {
-                        _negative_influences.emplace(behaviour_index, object_index);
-                        scores[object_index] -= 1;
-                    }
-                }
-                behaviour_index++;
-            }
-
-            std::vector<Score<T>>   sorted_scores {};
-            for (const auto [index, score] : scores)
-            {
-                sorted_scores.emplace_back(index, score);
-            }
             std::sort(sorted_scores.begin(), sorted_scores.end(),
-                [](const Score<T>& a, const Score<T>& b)
+                [](const Score<V>& a, const Score<V>& b)
                 {
                     return a.value > b.value;
                 }
@@ -105,11 +63,33 @@ namespace dynamo
                 for (const auto& score : sorted_scores)
                 {
                     if (score.value == max_value)
-                        highest_scores.push_back(score.index);
+                        highest_scores.push_back(score.key);
                 }
             }
 
-            selected = highest_scores[rand() % (num_eligibles())];
+            if(highest_scores.size())
+                return highest_scores[rand() % (num_eligibles())];
+
+            return nullptr;
+		}
+
+
+        void positive_influence(const U& u, const V& v)
+        {
+            _positive_influences.emplace(&u, &v);
+            if(scores.find(&v) != scores.end())
+                scores[&v] += 1;
+            else
+                scores.emplace(&v, 1);
+        }
+
+        void negative_influence(const U& u, const V& v)
+        {
+            _negative_influences.emplace(&u, &v);
+            if(scores.find(&v) != scores.end())
+                scores[&v] -= 1;
+            else
+                scores.emplace(&v, -1);
         }
 
         Influences& positive_influences()
@@ -122,29 +102,14 @@ namespace dynamo
             return _negative_influences;
         }
 
-        const Behaviour_t * behaviour(const size_t idx)
+        int score(const V& v) const
         {
-            return _behaviours.at(idx);
+            return scores.at(&v);
         }
 
-        std::vector<const Behaviour_t *>& behaviours()
+        bool is_highest(const V* v) const
         {
-            return _behaviours;
-        }
-
-        T& value(const size_t idx)
-        {
-            return _values.at(idx);
-        }
-
-        std::vector<T>& values()
-        {
-            return _values;
-        }
-
-        bool is_highest(const size_t index) const
-        {
-            return std::find(highest_scores.begin(), highest_scores.end(), index) != highest_scores.end();
+            return std::find(highest_scores.begin(), highest_scores.end(), v) != highest_scores.end();
         }
 
         size_t num_eligibles() const
@@ -152,41 +117,16 @@ namespace dynamo
             return highest_scores.size();
         }
 
-        std::vector<size_t>& eligibles()
+        std::vector<const V *>& eligibles()
         {
             return highest_scores;
-        }
-
-        size_t result_index() const
-        {
-            return selected;
-        }
-
-        T result()
-        {
-            return value(selected);
-        }
-
-        size_t index(const T& object)
-        {
-            auto it = std::find(_values.begin(), _values.end(), object);
-            if (it != _values.end())
-            {
-                return it - _values.begin();
-            }
-            else {
-                return -1;
-            }
         }
 
     private:
         Influences      _positive_influences {};
         Influences      _negative_influences {};
         Scores          scores {};
-        size_t          selected { 0 };
 
-        std::vector<const Behaviour_t *>    _behaviours {};
-        std::vector<T>                      _values {};
-        std::vector<size_t>                 highest_scores {};
+        std::vector<const V *>                 highest_scores {};
     };
 }
