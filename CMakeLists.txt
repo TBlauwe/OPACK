@@ -67,7 +67,7 @@ set(HEADER_LIST
     "include/opack/utils/flecs_helper.hpp" 
     "include/opack/core/action.hpp" 
     "include/opack/module/activity_dl.hpp"
- "include/opack/module/core.hpp")
+ "include/opack/module/core.hpp" "include/opack/strategy/basic.hpp")
 
 set(SOURCE_LIST 
 	"src/core/simulation.cpp"
