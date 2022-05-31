@@ -46,6 +46,15 @@ struct SimpleSim : opack::Simulation
 	// =================
 	struct Stress { float value = 10.f; };
 
+	template<typename TOutput, typename ... TInputs>
+	static void my_strat(flecs::entity agent, const opack::Impacts<TOutput, TInputs ...>& impacts, TInputs& ... args)
+	{
+		std::cout << " Called\n";
+		for (auto impact : impacts)
+		{
+			impact->func(agent, args ...);
+		}
+	}
 	// Types : Activity-model
 	// ======================
 
@@ -171,11 +180,11 @@ struct SimpleSim : opack::Simulation
 
 		opack::OperationBuilder<Operation_Act, AudioMessage>(world)
 			.flow<MyFlow>()
-			.strategy<const char *>()
+			.strategy<const char *>(&my_strat<const char *, AudioMessage>)
 			;
 
 		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
-		opack::impact<MyBehaviour, Operation_Act, const char *, AudioMessage&>(world, 
+		opack::impact<MyBehaviour, Operation_Act, const char *, AudioMessage>(world, 
 			[](flecs::entity e, AudioMessage& msg)
 			{
 				std::cout << e.doc_name() << " has an audio message : " << msg.value << "\n"; 

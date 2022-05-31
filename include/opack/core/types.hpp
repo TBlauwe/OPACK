@@ -47,8 +47,11 @@ namespace opack
 	template<typename TOutput = void, typename ... TInputs>
 	struct Impact 
 	{
-		std::function<TOutput(flecs::entity, TInputs ...)> func;
+		std::function<TOutput(flecs::entity, TInputs& ...)> func;
 	};
+
+	template<typename TOutput = void, typename ... TInputs>
+	using Impacts = std::vector<const Impact<TOutput, TInputs ...>*>;
 
 	// P - Perception
 	//--------------

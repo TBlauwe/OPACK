@@ -173,33 +173,29 @@ namespace opack
 			return operation;
 		}
 
-		template<typename TOutput>
+		template<typename TOutput = void>
 		//flecs::entity strategy(std::function<void(flecs::entity, TInputs...)> strategy)
-		flecs::entity strategy()
+		flecs::entity strategy(std::function<void(flecs::entity, const Impacts<TOutput, TInputs ...>&, TInputs& ...)> strat)
 		{
 			system_builder.iter(
-				[](flecs::iter& it, TInputs* ... args)
+				[strat](flecs::iter& it, TInputs* ... args)
 				{
 					for (auto i : it)
 					{
 						auto e = it.entity(i);
-						//each_active_behaviours<TOper>(e, 
-						//	[&e, i, ... a = std::forward<TInputs*>(args)](flecs::entity beh)
-						//	{
-						//		beh.get_w_object<TOper, Impact<TOutput, TInputs ...>>()->func(e, (a[i], ...));
-						//		std::cout << e.to_json() << "\n"; 
-						//	}
-						//);
-						std::cout << "Iterating for entity " << e.doc_name() << "\n";
-						e.each<Active>(// Revise this
+						// For each entity, we retrieve every active behaviours and store those whom have an impact for this operation
+						// Then we called the passed strategy.
+						std::vector<const Impact<TOutput, TInputs ...>*> impacts{};
+						e.each<Active>(
 							[&](flecs::entity object)
 							{
 								auto impact = object.get_w_object<TOper, Impact<TOutput, TInputs...>>();
-								std::cout << "-- has impact : " << impact << "\n";
 								if (impact)
-									impact->func(e, (args[i], ...));
+									impacts.push_back(impact);
+									//impact->func(e, (args[i], ...));
 							}
 						);
+						strat(e, impacts, (args[i], ...));
 					}
 				}
 			).template child_of<opack::dynamics>();
