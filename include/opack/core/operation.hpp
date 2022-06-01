@@ -50,10 +50,6 @@ namespace opack
 		);
 		launcher.set_doc_name("System_CheckBehaviour");
 		launcher.template child_of<opack::dynamics>();
-
-		world.observer().event(flecs::OnAdd).term<Active, T>().each([](flecs::entity e) {std::cout << "Added\n"; });
-		world.observer().event(flecs::OnRemove).term<Active, T>().each([](flecs::entity e) {std::cout << "Removed\n"; });
-
 		return behaviour;
 	}
 
@@ -109,6 +105,7 @@ namespace opack
 				}
 		);
 		launcher.set_doc_name("System_LaunchFlow");
+		launcher.set_doc_brief(type_name_cstr<T>());
 		launcher.template child_of<opack::dynamics>();
 
 		auto cleaner = world.system<const T>()
@@ -124,7 +121,52 @@ namespace opack
 				}
 		);
 		cleaner.set_doc_name("System_CleanFlowLeftOver");
+		cleaner.set_doc_brief(type_name_cstr<T>());
 		cleaner.template child_of<opack::dynamics>();
+
+		auto add_dataflow = world.observer<const T>()
+			.event(flecs::OnAdd)
+			.iter(
+				[](flecs::iter& it)
+				{
+					auto flow = opack::entity<T>(it.world());
+					for (auto i : it)
+					{
+						//flow.template each<Operation>(
+						//	[&](flecs::entity oper)
+						//	{
+						//		it.entity(i).set<Dataflow>(oper, {});
+						//	}
+						//);
+						it.entity(i).add<Dataflow>();
+					}
+				}
+		);
+		add_dataflow.set_doc_name("Observer_OnAddFlow_AddDataFlow");
+		add_dataflow.set_doc_brief(type_name_cstr<T>());
+		add_dataflow.template child_of<opack::dynamics>();
+
+		auto remove_dataflow = world.observer<const T>()
+			.event(flecs::OnRemove)
+			.iter(
+				[](flecs::iter& it)
+				{
+					auto flow = opack::entity<T>(it.world());
+					for (auto i : it)
+					{
+						//flow.template each<Operation>(
+						//	[&](flecs::entity oper)
+						//	{
+						//		it.entity(i).remove<Dataflow>(oper);
+						//	}
+						//);
+						it.entity(i).remove<Dataflow>();
+					}
+				}
+		);
+		remove_dataflow.set_doc_name("Observer_OnRemoveFlow_RemoveDataFlow");
+		remove_dataflow.set_doc_brief(type_name_cstr<T>());
+		remove_dataflow.template child_of<opack::dynamics>();
 
 		return flow;
 	}
@@ -136,7 +178,7 @@ namespace opack
 		OperationBuilder(flecs::world& world) : 
 			world{ world },
 			operation {world.entity<TOper>()},
-			system_builder {world.system<TInputs ...>(type_name_cstr<TOper>())}
+			system_builder {world.system<Dataflow, TInputs ...>(type_name_cstr<TOper>())}
 		{
 			operation.child_of<world::Operations>();
 			system_builder.kind(flecs::OnUpdate);
@@ -156,6 +198,7 @@ namespace opack
 		OperationBuilder& flow()
 		{
 			system_builder.template term<T, Begin>().inout(flecs::In);
+			opack::entity<T>(world).template add<Operation, TOper>();
 			return *this;
 		}
 
@@ -175,10 +218,10 @@ namespace opack
 
 		template<typename TOutput = void>
 		//flecs::entity strategy(std::function<void(flecs::entity, TInputs...)> strategy)
-		flecs::entity strategy(std::function<void(flecs::entity, const Impacts<TOutput, TInputs ...>&, TInputs& ...)> strat)
+		flecs::entity strategy(std::function<void(flecs::entity, Dataflow&, const Impacts<TOutput, TInputs ...>&, TInputs& ...)> strat)
 		{
 			system_builder.iter(
-				[strat](flecs::iter& it, TInputs* ... args)
+				[strat](flecs::iter& it, Dataflow* data, TInputs* ... args)
 				{
 					for (auto i : it)
 					{
@@ -195,7 +238,7 @@ namespace opack
 									//impact->func(e, (args[i], ...));
 							}
 						);
-						strat(e, impacts, (args[i], ...));
+						strat(e, data[i], impacts, (args[i], ...));
 					}
 				}
 			).template child_of<opack::dynamics>();
@@ -204,7 +247,7 @@ namespace opack
 
 	private:
 		flecs::entity operation;
-		flecs::system_builder<TInputs ...> system_builder;
+		flecs::system_builder<Dataflow, TInputs ...> system_builder;
 		flecs::world& world;
 	};
 }

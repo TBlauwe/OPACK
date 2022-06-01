@@ -127,7 +127,7 @@ struct SimpleSim : opack::Simulation
 		opack::OperationBuilder<Operation_Percept>(world)
 			.flow<MyFlow>()
 			.build(
-			[](flecs::entity agent) 
+			[](flecs::entity agent, opack::Dataflow&) 
 			{
 				//std::cout << "Operation_Percept for " << agent.doc_name()  << "\n"; 
 				//opack::each_perceived<opack::Sense, AudioMessage>(agent,
@@ -148,7 +148,7 @@ struct SimpleSim : opack::Simulation
 
 		opack::OperationBuilder<Operation_UpdateStress, Stress>(world)
 			.build(
-				[](flecs::iter& iter, size_t index, Stress& stress)
+				[](flecs::iter& iter, size_t index, opack::Dataflow&, Stress& stress)
 				{
 					stress.value -= iter.delta_system_time();
 					if (stress.value <= 0)
@@ -160,10 +160,14 @@ struct SimpleSim : opack::Simulation
 			.flow<MyFlow>()
 			.output<AudioMessage>()
 			.build(
-			[](flecs::entity agent) 
+			[](flecs::entity agent, opack::Dataflow& df) 
 			{
 				//std::cout << "Operation_Reason for " << agent.doc_name()  << "\n"; 
 				agent.set<AudioMessage>({ "I'm not over there !" });
+
+				auto world = agent.world();
+				df.data.set<AudioMessage>("Bonjour");
+				std::cout << " " << agent.doc_name() << " has set dataflow " << df.data.size() << "\n";
 			}
 		);
 
@@ -174,9 +178,10 @@ struct SimpleSim : opack::Simulation
 
 		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
 		opack::impact<MyBehaviour, Operation_Act, void, AudioMessage>(world, 
-			[](flecs::entity e, AudioMessage& msg)
+			[](flecs::entity e, opack::Dataflow& df, AudioMessage& msg)
 			{
-				//std::cout << e.doc_name() << " has an audio message : " << msg.value << "\n"; 
+				auto world = e.world();
+				std::cout << e << " " << e.doc_name() << " has dataflow "<< df.data.size() << " with audiomessage " << df.data.get<AudioMessage>().value << "\n";
 			}
 		);
 

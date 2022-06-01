@@ -8,7 +8,10 @@
 
 #include <functional>
 #include <unordered_map>
+
 #include <flecs.h>
+
+#include <opack/utils/type_map.hpp>
 
 namespace opack
 {
@@ -44,10 +47,16 @@ namespace opack
 	struct Behaviour {};
 	struct Strategy {};
 
+	struct Dataflow 
+	{
+		TypeMap data;
+		//std::unordered_map<std::type_index, TypeMap> data;
+	};
+
 	template<typename TOutput = void, typename ... TInputs>
 	struct Impact 
 	{
-		std::function<TOutput(flecs::entity, TInputs& ...)> func;
+		std::function<TOutput(flecs::entity, Dataflow&, TInputs& ...)> func;
 	};
 
 	template<typename TOutput = void, typename ... TInputs>

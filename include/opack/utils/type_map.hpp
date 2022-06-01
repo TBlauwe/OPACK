@@ -62,6 +62,17 @@ public:
     }
 
     /**
+    @brief Set a new element of type @c T. If already present, returns overrided element.
+
+    @tparam Must be @c DefaultConstructible.
+    */
+    template<class T, typename ... Args>
+    T& set(Args&& ... args)
+    {
+        return std::any_cast<T&>(container[typeid(T)] = T{std::forward<Args>(args)...});
+    }
+
+    /**
     @brief Return number of elements.
     */
     size_t size() const
