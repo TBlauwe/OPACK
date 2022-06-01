@@ -50,7 +50,6 @@ namespace opack
 	struct Dataflow 
 	{
 		TypeMap data;
-		//std::unordered_map<std::type_index, TypeMap> data;
 	};
 
 	template<typename TOutput = void, typename ... TInputs>

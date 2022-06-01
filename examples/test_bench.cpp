@@ -1,8 +1,3 @@
-#include <functional>
-#include <iostream>
-
-#include <flecs.h>
-
 //enum class TileStatus {
 //    Free,
 //    Occupied
@@ -12,25 +7,36 @@
 //    //flecs::world ecs;
 //    ////ecs.component<TileStatus>();
 //}
+#include <iostream>
 
-struct R {};
 
-template<typename TOutput = void, typename ... TInputs>
-struct Impact
+template<typename T>
+struct Input
 {
-    std::function<TOutput(flecs::entity, TInputs...)> func;
+	using type = T;
 };
 
-template<typename TOper, typename TOutput, typename ... TInputs, typename TFunc>
-//void impact(flecs::world& world, std::function<TOutput(flecs::entity, TInputs...)> func)
-void impact(flecs::world& world, TFunc&& func)
+template<typename T>
+struct Output
 {
-	auto behaviour = world.entity<TOper>();
-	behaviour.template set<TOper, Impact<TOutput, TInputs ...>>({ std::forward<TFunc>(func) });
-}
+	using type = T;
+};
 
-int main(int, char* [])
-{
-    flecs::world world;
-	impact<R, int, const char*>(world, [](flecs::entity, const char*) {return 0; });
-}
+template <typename T, typename... TDependencies, typename ...TArgs>
+void foo (TArgs...args)
+ {
+   std::cout << "T:" << typeid(T).name() << std::endl;
+
+   std::cout << "TDependecies list:" << std::endl;
+
+   ((std::cout << "- " << typeid(TDependencies).name() << std::endl), ...);
+
+   std::cout << "TArgs list:" << std::endl;
+
+   ((std::cout << "- " << typeid(TArgs).name() << std::endl), ...);
+ }
+
+int main()
+ {
+   foo<short, int, long, long long>(0, 1l, 2ll);   
+ }

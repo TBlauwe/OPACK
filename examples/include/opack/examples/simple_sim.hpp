@@ -158,16 +158,9 @@ struct SimpleSim : opack::Simulation
 
 		opack::OperationBuilder<Operation_Reason>(world)
 			.flow<MyFlow>()
-			.output<AudioMessage>()
 			.build(
 			[](flecs::entity agent, opack::Dataflow& df) 
 			{
-				//std::cout << "Operation_Reason for " << agent.doc_name()  << "\n"; 
-				agent.set<AudioMessage>({ "I'm not over there !" });
-
-				auto world = agent.world();
-				df.data.set<AudioMessage>("Bonjour");
-				std::cout << " " << agent.doc_name() << " has set dataflow " << df.data.size() << "\n";
 			}
 		);
 
@@ -180,8 +173,6 @@ struct SimpleSim : opack::Simulation
 		opack::impact<MyBehaviour, Operation_Act, void, AudioMessage>(world, 
 			[](flecs::entity e, opack::Dataflow& df, AudioMessage& msg)
 			{
-				auto world = e.world();
-				std::cout << e << " " << e.doc_name() << " has dataflow "<< df.data.size() << " with audiomessage " << df.data.get<AudioMessage>().value << "\n";
 			}
 		);
 
