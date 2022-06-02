@@ -173,12 +173,12 @@ namespace opack
 			return operation;
 		}
 
-		template<typename TOutput = void>
+		template<template<typename, typename ...> typename T, typename TOutput = void>
 		//flecs::entity strategy(std::function<void(flecs::entity, TInputs...)> strategy)
-		flecs::entity strategy(std::function<void(flecs::entity, const Impacts<TOutput, TInputs ...>&, TInputs& ...)> strat)
+		flecs::entity strategy()
 		{
 			system_builder.iter(
-				[strat](flecs::iter& it, TInputs* ... args)
+				[](flecs::iter& it, TInputs* ... args)
 				{
 					for (auto i : it)
 					{
@@ -196,7 +196,7 @@ namespace opack
 							}
 						);
 						e.add<Dataflow<TOper>>();
-						strat(e, impacts, args[i]...);
+						T<TOutput, TInputs...>()(e, impacts, args[i]...);
 					}
 				}
 			).template child_of<opack::dynamics>();

@@ -45,7 +45,6 @@ namespace opack
 	struct Operation {};
 	struct Active {};
 	struct Behaviour {};
-	struct Strategy {};
 
 	template<std::derived_from<Operation> T>
 	struct Dataflow 
@@ -61,6 +60,12 @@ namespace opack
 
 	template<typename TOutput = void, typename ... TInputs>
 	using Impacts = std::vector<const Impact<TOutput, TInputs ...>*>;
+
+	template<typename TOutput, typename... TInputs>
+	struct Strategy 
+	{
+		virtual TOutput operator()(flecs::entity agent, const opack::Impacts<TOutput, TInputs ...>& impacts, TInputs& ... args) const = 0;
+	};
 
 	// P - Perception
 	//--------------

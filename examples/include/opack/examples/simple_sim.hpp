@@ -168,7 +168,7 @@ struct SimpleSim : opack::Simulation
 		// use typedef for operation and store input
 		opack::OperationBuilder<Operation_Act, opack::Dataflow<Operation_Reason>, AudioMessage>(world)
 			.flow<MyFlow>()
-			.strategy<void>(&opack::strat::every<void, opack::Dataflow<Operation_Reason>, AudioMessage>)
+			.strategy<opack::strat::every>()
 			;
 
 		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
