@@ -47,6 +47,7 @@ namespace opack
 	struct Behaviour {};
 	struct Strategy {};
 
+	template<std::derived_from<Operation> T>
 	struct Dataflow 
 	{
 		TypeMap data;
@@ -55,7 +56,7 @@ namespace opack
 	template<typename TOutput = void, typename ... TInputs>
 	struct Impact 
 	{
-		std::function<TOutput(flecs::entity, Dataflow&, TInputs& ...)> func;
+		std::function<TOutput(flecs::entity, TInputs& ...)> func;
 	};
 
 	template<typename TOutput = void, typename ... TInputs>

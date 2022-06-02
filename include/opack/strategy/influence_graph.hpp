@@ -17,13 +17,13 @@ namespace opack::strat
 	 * Strategy with no output that will trigger every impact with adequate inputs.
 	 */
 	template<typename ... TInputs>
-	void influence_graph(flecs::entity agent, Dataflow& dataflow, const opack::Impacts<void, TInputs ...>& impacts, TInputs& ... args)
+	void influence_graph(flecs::entity agent, const opack::Impacts<void, TInputs ...>& impacts, TInputs& ... args)
 	{
 		opack::InfluenceGraph<opack::Impact<void, TInputs ...>, flecs::entity> ig { };
 
 		for (auto impact : impacts)
 		{
-			impact->func(agent, dataflow, args ...);
+			impact->func(agent, args ...);
 		}
 	}
 }

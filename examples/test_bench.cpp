@@ -9,7 +9,6 @@
 //}
 #include <iostream>
 
-
 template<typename T>
 struct Input
 {
