@@ -17,13 +17,13 @@ namespace opack::strat
 	 * Strategy with no output that will trigger every impact with adequate inputs.
 	 */
 	template<typename TOutput, typename ... TInputs>
-	struct every : Strategy<TOutput, TInputs...>
+	struct every
 	{
-		TOutput operator()(flecs::entity agent, const opack::Impacts<TOutput, TInputs ...>& impacts, TInputs& ... args) const override
+		TOutput operator()(flecs::entity agent, const opack::Impacts<TOutput, TInputs ...>& impacts, TInputs& ... args) const
 		{
 			for (auto impact : impacts)
 			{
-				impact->func(agent, args ...);
+				impact->operator()(agent, args ...);
 			}
 		}
 	};
@@ -31,9 +31,12 @@ namespace opack::strat
 	/**
 	 * Strategy with no output that will trigger every impact with adequate inputs.
 	 */
-	//template<typename TOutput, typename ... TInputs>
-	//void random(flecs::entity agent, const opack::Impacts<TOutput, TInputs ...>& impacts, TInputs& ... args)
-	//{
-	//	impacts[rand() % impacts.size()]->func(agent, args ...);
-	//}
+	template<typename TOutput, typename ... TInputs>
+	struct random 
+	{
+		TOutput operator()(flecs::entity agent, const opack::Impacts<TOutput, TInputs ...>& impacts, TInputs& ... args) const
+		{
+			impacts[rand() % impacts.size()]->operator()(agent, args ...);
+		}
+	};
 }

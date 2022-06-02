@@ -46,20 +46,32 @@ namespace opack
 	struct Active {};
 	struct Behaviour {};
 
-	template<std::derived_from<Operation> T>
+	template<typename T>
+	struct Input {};
+
+	template<typename... T>
+	using Inputs = std::tuple<T...>;
+
+	template<typename... T>
+	using Outputs = std::tuple<T...>;
+
+	template<std::derived_from<Operation> TOper, typename T>
 	struct Dataflow 
 	{
-		TypeMap data;
+		T value;
 	};
+
+	template<typename TOutput = void, typename ... TInputs>
+	using Impact_t = std::function<TOutput(flecs::entity, TInputs& ...)>;
 
 	template<typename TOutput = void, typename ... TInputs>
 	struct Impact 
 	{
-		std::function<TOutput(flecs::entity, TInputs& ...)> func;
+		Impact_t<TOutput, TInputs...> func;
 	};
 
 	template<typename TOutput = void, typename ... TInputs>
-	using Impacts = std::vector<const Impact<TOutput, TInputs ...>*>;
+	using Impacts = std::vector<const Impact_t<TOutput, TInputs...>*>;
 
 	template<typename TOutput, typename... TInputs>
 	struct Strategy 

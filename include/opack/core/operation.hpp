@@ -72,12 +72,11 @@ namespace opack
 	/**
 	 * Add an impact to a behaviour.
 	 */
-	template<std::derived_from<Behaviour> T, std::derived_from<Operation> TOper, typename TOutput, typename ... TInputs, typename TFunc>
-	//void impact(flecs::world& world, std::function<TOutput(flecs::entity, TInputs...)> func)
-	void impact(flecs::world& world, TFunc&& func)
+	template<std::derived_from<Behaviour> T, std::derived_from<Operation> TOper, typename TOutput = void, typename... TInputs>
+	void impact(flecs::world& world, Impact_t<TOutput, TInputs...>&& func)
 	{
 		auto behaviour = world.entity<T>();
-		behaviour.template set<TOper, Impact<TOutput, TInputs ...>>({ std::forward<TFunc>(func) });
+		behaviour.template set<TOper, Impact>({func});
 	}
 
 	/**
@@ -127,18 +126,27 @@ namespace opack
 		return flow;
 	}
 
-	template<std::derived_from<Operation> TOper, typename ... TInputs>
-	class OperationBuilder
+	// Primary template
+	template<std::derived_from<Operation> TOper, typename TInputs, typename TOutputs>
+	class OperationBuilder;                     
+ 
+	// Partial specialization
+	template<std::derived_from<Operation> TOper, template<typename...> typename TInputs, typename... TInput, template<typename ...> typename TOutputs, typename... TOutput>
+	class OperationBuilder<TOper, TInputs<TInput...>, TOutputs<TOutput...>> 
 	{
 	public:
+		using inputs = std::tuple<TInput...> ;
+		using outputs = std::tuple<TOutput...> ;
+
 		OperationBuilder(flecs::world& world) : 
 			world{ world },
 			operation {world.entity<TOper>()},
-			system_builder {world.system<TInputs ...>(type_name_cstr<TOper>())}
+			system_builder {world.system<TInput...>(type_name_cstr<TOper>())}
 		{
+			//(world.template component<Dataflow<TOper, TInput>>().member<TInput>("value"), ...); // Doesn't work with templated class ?
 			operation.child_of<world::Operations>();
 			system_builder.kind(flecs::OnUpdate);
-			system_builder.template term<Dataflow<TOper>>().inout(flecs::Out).set(flecs::Nothing);
+			(system_builder.template term<Dataflow<TOper, TInput>>().inout(flecs::Out).set(flecs::Nothing),...);
 			system_builder.multi_threaded(true);
 		}
 
@@ -173,30 +181,29 @@ namespace opack
 			return operation;
 		}
 
-		template<template<typename, typename ...> typename T, typename TOutput = void>
+		template<template<typename, typename ..., typename ...> typename T, typename TBehaviourOutput = void, typename... TAdditionalInputs>
 		//flecs::entity strategy(std::function<void(flecs::entity, TInputs...)> strategy)
 		flecs::entity strategy()
 		{
 			system_builder.iter(
-				[](flecs::iter& it, TInputs* ... args)
+				[](flecs::iter& it, TInput* ... args)
 				{
 					for (auto i : it)
 					{
 						auto e = it.entity(i);
 						// For each entity, we retrieve every active behaviours and store those whom have an impact for this operation
 						// Then we called the passed strategy.
-						std::vector<const Impact<TOutput, TInputs ...>*> impacts{};
+						Impacts<TBehaviourOutput, TInput ...> impacts{};
 						e.each<Active>(
 							[&](flecs::entity object)
 							{
-								auto impact = object.get_w_object<TOper, Impact<TOutput, TInputs...>>();
+								auto impact = object.get_w_object<TOper, Impact<TBehaviourOutput, TInput...>>();
 								if (impact)
-									impacts.push_back(impact);
-									//impact->func(e, (args[i], ...));
+									impacts.push_back(&impact->func);
 							}
 						);
-						e.add<Dataflow<TOper>>();
-						T<TOutput, TInputs...>()(e, impacts, args[i]...);
+						(e.set<Dataflow<TOper, TInput>>({}), ...);
+						T<TOutput, TInput..., TAdditionalInputs...>()(e, impacts, args[i]...);
 					}
 				}
 			).template child_of<opack::dynamics>();
@@ -205,7 +212,7 @@ namespace opack
 
 	private:
 		flecs::entity operation;
-		flecs::system_builder<TInputs ...> system_builder;
+		flecs::system_builder<TInput...> system_builder;
 		flecs::world& world;
 	};
 }

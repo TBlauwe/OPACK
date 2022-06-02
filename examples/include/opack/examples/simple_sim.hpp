@@ -124,7 +124,7 @@ struct SimpleSim : opack::Simulation
 
 		opack::flow<MyFlow>(world);
 
-		opack::OperationBuilder<Operation_Percept>(world)
+		opack::OperationBuilder<Operation_Percept, opack::Inputs<>, opack::Outputs<>>(world)
 			.flow<MyFlow>()
 			.build(
 			[](flecs::entity agent) 
@@ -146,7 +146,7 @@ struct SimpleSim : opack::Simulation
 			}
 		);
 
-		opack::OperationBuilder<Operation_UpdateStress, Stress>(world)
+		opack::OperationBuilder<Operation_UpdateStress, opack::Inputs<Stress>, opack::Outputs<>>(world)
 			.build(
 				[](flecs::iter& iter, size_t index, Stress& stress)
 				{
@@ -156,28 +156,28 @@ struct SimpleSim : opack::Simulation
 				}
 		);
 
-		opack::OperationBuilder<Operation_Reason>(world)
+		opack::OperationBuilder<Operation_Reason, opack::Inputs<>, opack::Outputs<>>(world)
 			.flow<MyFlow>()
 			.build(
 			[](flecs::entity agent) 
 			{
-					agent.add<opack::Dataflow<Operation_Reason>>();
+					agent.add<opack::Dataflow<Operation_Reason, int>>();
 			}
 		);
 
 		// use typedef for operation and store input
-		opack::OperationBuilder<Operation_Act, opack::Dataflow<Operation_Reason>, AudioMessage>(world)
+		opack::OperationBuilder<Operation_Act, opack::Inputs<>, opack::Outputs<>>(world)
 			.flow<MyFlow>()
 			.strategy<opack::strat::every>()
 			;
 
 		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
-		opack::impact<MyBehaviour, Operation_Act, void, opack::Dataflow<Operation_Reason>, AudioMessage>(world, 
-			[](flecs::entity e, opack::Dataflow<Operation_Reason>& df, AudioMessage& msg)
-			{
-				std::cout << e.doc_name() << " has a dataflow of size : " << df.data.size() << "\n";
-			}
-		);
+		//opack::impact<MyBehaviour, Operation_Act>(world, 
+		//	[](flecs::entity e)
+		//	{
+		//		//std::cout << e.doc_name() << " has a dataflow of size : " << df.data.size() << "\n";
+		//	}
+		//);
 
 		// Step III : Populate world
 		// -------------------------
