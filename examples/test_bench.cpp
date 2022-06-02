@@ -17,5 +17,5 @@ struct some_struct
 int main(int, char* [])
 {
     flecs::world ecs;
-    ecs.component<some_struct<some_type, int>().member<int>("value");
+    //ecs.component<some_struct<some_type, int>().member<int>("value");
 }

@@ -34,18 +34,18 @@ struct SimpleSim : opack::Simulation
 	struct R {};
 	struct On {};
 
+	// Types : Stress 
+	// =================
+	struct Stress { float value = 10.f; };
+
 	// Types : Behaviour
 	// =================
 	struct MyBehaviour : opack::Behaviour {};
 	struct MyFlow : opack::Flow {};
-	struct Operation_Percept : opack::Operation {};
-	struct Operation_Reason : opack::Operation {};
-	struct Operation_Act : opack::Operation {};
-	struct Operation_UpdateStress : opack::Operation {};
-
-	// Types : Stress 
-	// =================
-	struct Stress { float value = 10.f; };
+	struct Operation_Percept : opack::O<opack::Inputs<>, opack::Outputs<>> {};
+	struct Operation_Reason : opack::O<opack::Inputs<>, opack::Outputs<>> {};
+	struct Operation_Act : opack::O<opack::Inputs<>, opack::Outputs<>> {};
+	struct Operation_UpdateStress : opack::O<opack::Inputs<Stress>, opack::Outputs<>> {};
 
 	// Types : Activity-model
 	// ======================
@@ -124,7 +124,7 @@ struct SimpleSim : opack::Simulation
 
 		opack::flow<MyFlow>(world);
 
-		opack::OperationBuilder<Operation_Percept, opack::Inputs<>, opack::Outputs<>>(world)
+		opack::OperationBuilder<Operation_Percept, Operation_Percept::inputs, Operation_Percept::outputs>(world)
 			.flow<MyFlow>()
 			.build(
 			[](flecs::entity agent) 
@@ -146,7 +146,7 @@ struct SimpleSim : opack::Simulation
 			}
 		);
 
-		opack::OperationBuilder<Operation_UpdateStress, opack::Inputs<Stress>, opack::Outputs<>>(world)
+		opack::OperationBuilder<Operation_UpdateStress, Operation_UpdateStress::inputs, Operation_UpdateStress::outputs>(world)
 			.build(
 				[](flecs::iter& iter, size_t index, Stress& stress)
 				{
@@ -156,7 +156,7 @@ struct SimpleSim : opack::Simulation
 				}
 		);
 
-		opack::OperationBuilder<Operation_Reason, opack::Inputs<>, opack::Outputs<>>(world)
+		opack::OperationBuilder<Operation_Reason, Operation_Reason::inputs, Operation_Reason::outputs>(world)
 			.flow<MyFlow>()
 			.build(
 			[](flecs::entity agent) 
@@ -166,18 +166,20 @@ struct SimpleSim : opack::Simulation
 		);
 
 		// use typedef for operation and store input
-		opack::OperationBuilder<Operation_Act, opack::Inputs<>, opack::Outputs<>>(world)
+		opack::OperationBuilder<Operation_Act, Operation_Act::inputs, Operation_Act::outputs>(world)
 			.flow<MyFlow>()
 			.strategy<opack::strat::every>()
 			;
 
 		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
-		//opack::impact<MyBehaviour, Operation_Act>(world, 
-		//	[](flecs::entity e)
-		//	{
-		//		//std::cout << e.doc_name() << " has a dataflow of size : " << df.data.size() << "\n";
-		//	}
-		//);
+		opack::impact<MyBehaviour, Operation_Act, Operation_Act::inputs, Operation_Act::outputs, Operation_Act::inputs>::make(world,
+			[](flecs::entity e)
+			{
+				//std::cout << e.doc_name() << " has a dataflow of size : " << df.data.size() << "\n";
+				std::cout << "---- impact\n";
+				return std::make_tuple();
+			}
+		);
 
 		// Step III : Populate world
 		// -------------------------

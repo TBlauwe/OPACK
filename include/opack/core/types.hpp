@@ -55,28 +55,38 @@ namespace opack
 	template<typename... T>
 	using Outputs = std::tuple<T...>;
 
-	template<std::derived_from<Operation> TOper, typename T>
+	template<typename TInputs, typename TOutputs>
+	struct O;                     
+ 
+	template
+	<
+		template<typename...> typename TInputs, typename... TInput, 
+		template<typename ...> typename TOutputs, typename... TOutput
+	>
+	struct O<TInputs<TInput...>, TOutputs<TOutput...>> 
+	{
+		using inputs = std::tuple<TInput...>;
+		using outputs = std::tuple<TOutput...>;
+	};
+
+	template<typename TOper, typename T>
 	struct Dataflow 
 	{
 		T value;
 	};
 
-	template<typename TOutput = void, typename ... TInputs>
-	using Impact_t = std::function<TOutput(flecs::entity, TInputs& ...)>;
+	template<typename TInputs, typename TOutputs, typename TOtherInputs>
+	struct Impact;                     
 
-	template<typename TOutput = void, typename ... TInputs>
-	struct Impact 
+	template
+	<
+		template<typename...> typename TInputs, typename... TInput, 
+		template<typename...> typename TOutputs, typename... TOutput,
+		template<typename...> typename TOtherInputs, typename... TOtherInput
+	>
+	struct Impact<TInputs<TInput...>, TOutputs<TOutput...>, TOtherInputs<TOtherInput...>>
 	{
-		Impact_t<TOutput, TInputs...> func;
-	};
-
-	template<typename TOutput = void, typename ... TInputs>
-	using Impacts = std::vector<const Impact_t<TOutput, TInputs...>*>;
-
-	template<typename TOutput, typename... TInputs>
-	struct Strategy 
-	{
-		virtual TOutput operator()(flecs::entity agent, const opack::Impacts<TOutput, TInputs ...>& impacts, TInputs& ... args) const = 0;
+		std::function<std::tuple<TOutput...>(flecs::entity, TInput&..., TOtherInput&...)> func;
 	};
 
 	// P - Perception
