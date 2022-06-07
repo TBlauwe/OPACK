@@ -40,7 +40,8 @@ struct SimpleSim : opack::Simulation
 
 	// Types : Behaviour
 	// =================
-	struct MyBehaviour : opack::Behaviour {};
+	struct MyBehaviour	: opack::Behaviour {};
+	struct MyBehaviour2 : opack::Behaviour {};
 	struct MyFlow : opack::Flow {};
 	struct Operation_Percept : opack::O<opack::Inputs<>, opack::Outputs<>> {};
 	struct Operation_Reason : opack::O<opack::Inputs<>, opack::Outputs<int>> {};
@@ -165,15 +166,24 @@ struct SimpleSim : opack::Simulation
 			}
 		);
 
-		// use typedef for operation and store input
 		opack::operation<MyFlow, Operation_Act>::make<opack::strat::every>(world);
 
 		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
-		opack::impact<MyBehaviour, Operation_Act, Operation_Act::inputs, Operation_Act::outputs, std::tuple<>>::make(world,
+		opack::impact<MyBehaviour, Operation_Act>::make(world,
 			[](flecs::entity e, opack::df<Operation_Reason, int>& df)
 			{
 				//std::cout << e.doc_name() << " has a dataflow of size : " << df.data.size() << "\n";
 				std::cout << "---- df : " << df.value << "\n";
+				return std::make_tuple();
+			}
+		);
+
+		opack::behaviour<MyBehaviour2, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value <= 5; });
+		opack::impact<MyBehaviour2, Operation_Act>::make(world,
+			[](flecs::entity e, opack::df<Operation_Reason, int>& df)
+			{
+				//std::cout << e.doc_name() << " has a dataflow of size : " << df.data.size() << "\n";
+				std::cout << "---- also df : " << df.value << "\n";
 				return std::make_tuple();
 			}
 		);
@@ -189,11 +199,13 @@ struct SimpleSim : opack::Simulation
 		arthur
 			.add<MyFlow>()
 			.add<MyBehaviour>()
+			.add<MyBehaviour2>()
 			.add<Stress>();
 		auto beatrice = opack::agent(world, "Beatrice");
 		beatrice
 			.add<MyFlow>()
 			.add<MyBehaviour>()
+			.add<MyBehaviour2>()
 			.add<Stress>();
 		auto cyril = opack::agent(world, "Cyril");
 		cyril

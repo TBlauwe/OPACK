@@ -69,35 +69,21 @@ namespace opack
 		);
 	}
 
-	template
-		<
-		std::derived_from<Behaviour> T, typename TOper,
-		typename TInputs,
-		typename TOutputs,
-		typename TOtherInputs
-		>
-	struct impact;
-
 	/**
 	 * Add an impact to a behaviour.
 	 */
 	template
 		<
-		std::derived_from<Behaviour> T, typename TOper,
-		template<typename...> typename TInputs, typename... TInput,
-		template<typename...> typename TOutputs, typename... TOutput,
-		template<typename...> typename TOtherInputs, typename... TOtherInput
+		std::derived_from<Behaviour> T, typename TOper
 		>
-		//template<std::derived_from<Behaviour> T, typename TOper, typename TOutput = void, typename... TInputs>
-		//void impact(flecs::world& world, Impact<TInputs<TInput...>, TOutputs<TOutput...>, TOtherInputs<TOtherInput...>>, T && func)
-	struct impact<T, TOper, TInputs<TInput...>, TOutputs<TOutput...>, TOtherInputs<TOtherInput...>>
+	struct impact
 	{
-		template<typename TFunc>
+		template<typename TFunc, typename... TOtherInputs>
 		static void make(flecs::world& world, TFunc&& func)
 		{
 			auto behaviour = world.entity<T>();
-			behaviour.template set<TOper, Impact<TInputs<TInput...>, TOutputs<TOutput...>, TOtherInputs<TOtherInput...>>>({ func });
-		}
+			behaviour.template set<TOper, Impact<typename TOper::inputs, typename TOper::outputs, std::tuple<TOtherInputs...>>> ({ func });
+		};
 	};
 
 	/**
@@ -245,7 +231,7 @@ namespace opack
 									impacts.push_back(impact);
 							}
 						);
-						(e.set<df<TOper, TInput>>({}), ...); // Should be set from strategy result
+						(e.set<df<TOper, TOutput>>({}), ...); // Should be set from strategy result
 						T<inputs, outputs, std::tuple<TAdditionalInputs...>>::run(e, impacts, args[i]...);
 					}
 				}
