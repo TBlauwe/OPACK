@@ -70,7 +70,7 @@ namespace opack
 	};
 
 	template<typename TOper, typename T>
-	struct Dataflow 
+	struct df 
 	{
 		T value;
 	};

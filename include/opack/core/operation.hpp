@@ -183,10 +183,10 @@ namespace opack
 			operation {world.entity<TOper>()},
 			system_builder {world.system<TInput...>(type_name_cstr<TOper>())}
 		{
-			//(world.template component<Dataflow<TOper, TInput>>().template member<TInput>("value"), ...); // BUG Doesn't work with templated class ?
+			//(world.template component<df<TOper, TInput>>().template member<TInput>("value"), ...); // BUG Doesn't work with templated class ?
 			operation.child_of<world::Operations>();
 			system_builder.kind(flecs::OnUpdate);
-			(system_builder.template term<Dataflow<TOper, TOutput>>().inout(flecs::Out).set(flecs::Nothing),...);
+			(system_builder.template term<df<TOper, TOutput>>().inout(flecs::Out).set(flecs::Nothing),...);
 			//system_builder.multi_threaded(true); // BUG doesn't seem to work with monitor
 		}
 
@@ -245,7 +245,7 @@ namespace opack
 									impacts.push_back(impact);
 							}
 						);
-						(e.set<Dataflow<TOper, TInput>>({}), ...); // Should be set from strategy result
+						(e.set<df<TOper, TInput>>({}), ...); // Should be set from strategy result
 						T<inputs, outputs, std::tuple<TAdditionalInputs...>>::run(e, impacts, args[i]...);
 					}
 				}
