@@ -28,7 +28,7 @@ namespace opack::strat
 		using other_inputs = std::tuple<TOtherInput...>;
 		using outputs = std::tuple<TOutput...>;
 
-		outputs operator()(flecs::entity agent, const std::vector<const Impact<inputs, outputs, other_inputs>*>& impacts, TInput& ... args)
+		static outputs run(flecs::entity agent, const std::vector<const Impact<inputs, outputs, other_inputs>*>& impacts, TInput& ... args)
 		{
 			std::cout << "-- every\n";
 			for (const auto impact : impacts)

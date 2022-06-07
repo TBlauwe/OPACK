@@ -43,8 +43,8 @@ struct SimpleSim : opack::Simulation
 	struct MyBehaviour : opack::Behaviour {};
 	struct MyFlow : opack::Flow {};
 	struct Operation_Percept : opack::O<opack::Inputs<>, opack::Outputs<>> {};
-	struct Operation_Reason : opack::O<opack::Inputs<>, opack::Outputs<>> {};
-	struct Operation_Act : opack::O<opack::Inputs<>, opack::Outputs<>> {};
+	struct Operation_Reason : opack::O<opack::Inputs<>, opack::Outputs<int>> {};
+	struct Operation_Act : opack::O<opack::Inputs<opack::Dataflow<Operation_Reason, int>>, opack::Outputs<>> {};
 	struct Operation_UpdateStress : opack::O<opack::Inputs<Stress>, opack::Outputs<>> {};
 
 	// Types : Activity-model
@@ -122,7 +122,7 @@ struct SimpleSim : opack::Simulation
 				}
 		);
 
-		opack::flow<MyFlow>(world);
+		opack::flow<MyFlow>(world, 1.0);
 
 		opack::OperationBuilder<Operation_Percept, Operation_Percept::inputs, Operation_Percept::outputs>(world)
 			.flow<MyFlow>()
@@ -161,7 +161,7 @@ struct SimpleSim : opack::Simulation
 			.build(
 			[](flecs::entity agent) 
 			{
-					agent.add<opack::Dataflow<Operation_Reason, int>>();
+					agent.set<opack::Dataflow<Operation_Reason, int>>({1});
 			}
 		);
 
@@ -172,11 +172,11 @@ struct SimpleSim : opack::Simulation
 			;
 
 		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
-		opack::impact<MyBehaviour, Operation_Act, Operation_Act::inputs, Operation_Act::outputs, Operation_Act::inputs>::make(world,
-			[](flecs::entity e)
+		opack::impact<MyBehaviour, Operation_Act, Operation_Act::inputs, Operation_Act::outputs, std::tuple<>>::make(world,
+			[](flecs::entity e, opack::Dataflow<Operation_Reason, int>& df)
 			{
 				//std::cout << e.doc_name() << " has a dataflow of size : " << df.data.size() << "\n";
-				std::cout << "---- impact\n";
+				std::cout << "---- df : " << df.value << "\n";
 				return std::make_tuple();
 			}
 		);

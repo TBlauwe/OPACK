@@ -41,7 +41,7 @@ bool opack::Simulation::step(float elapsed_time) { return opack::step(world, ela
 
 void opack::Simulation::step_n(size_t n, float elapsed_time) { opack::step_n(world, n, elapsed_time); }
 
-void opack::Simulation::run_with_webapp() { world.app().enable_rest().run(); }
+void opack::Simulation::run_with_webapp() {world.app().enable_rest().enable_monitor().run(); }
 
 void opack::Simulation::run() { world.app().run(); }
 

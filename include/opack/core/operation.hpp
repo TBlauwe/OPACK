@@ -183,11 +183,11 @@ namespace opack
 			operation {world.entity<TOper>()},
 			system_builder {world.system<TInput...>(type_name_cstr<TOper>())}
 		{
-			//(world.template component<Dataflow<TOper, TInput>>().member<TInput>("value"), ...); // Doesn't work with templated class ?
+			//(world.template component<Dataflow<TOper, TInput>>().template member<TInput>("value"), ...); // BUG Doesn't work with templated class ?
 			operation.child_of<world::Operations>();
 			system_builder.kind(flecs::OnUpdate);
-			(system_builder.template term<Dataflow<TOper, TInput>>().inout(flecs::Out).set(flecs::Nothing),...);
-			system_builder.multi_threaded(true);
+			(system_builder.template term<Dataflow<TOper, TOutput>>().inout(flecs::Out).set(flecs::Nothing),...);
+			//system_builder.multi_threaded(true); // BUG doesn't seem to work with monitor
 		}
 
 		// If using this, then we should add tag (relation) to declare when an operation is finished, 
@@ -234,7 +234,6 @@ namespace opack
 					for (auto i : it)
 					{
 						auto e = it.entity(i);
-						std::cout << type_name_cstr<TOper>() << " for " << e.doc_name() << "\n";
 						// For each entity, we retrieve every active behaviours and store those whom have an impact for this operation
 						// Then we called the passed strategy.
 						Impacts_t impacts{};
@@ -247,9 +246,7 @@ namespace opack
 							}
 						);
 						(e.set<Dataflow<TOper, TInput>>({}), ...); // Should be set from strategy result
-						auto strat = T<inputs, outputs, std::tuple<TAdditionalInputs...>>();
-						strat(e, impacts, args[i]...);
-						std::cout << "-------------------------\n";
+						T<inputs, outputs, std::tuple<TAdditionalInputs...>>::run(e, impacts, args[i]...);
 					}
 				}
 			).template child_of<opack::dynamics>();
