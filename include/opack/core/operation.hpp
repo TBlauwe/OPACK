@@ -258,5 +258,15 @@ namespace opack
 		flecs::system_builder<TInput...> system_builder;
 		flecs::world& world;
 	};
+
+	template<typename TFlow, typename TOper>
+	struct operation
+	{
+		template<template<typename, typename, typename> typename TStrat, typename... TAdditionalInputs>
+		static void make(flecs::world& world)
+		{
+			OperationBuilder<TOper, typename TOper::inputs, typename TOper::outputs>(world).template flow<TFlow>().template strategy<TStrat>();
+		};
+	};
 }
 

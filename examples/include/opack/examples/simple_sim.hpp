@@ -166,10 +166,7 @@ struct SimpleSim : opack::Simulation
 		);
 
 		// use typedef for operation and store input
-		opack::OperationBuilder<Operation_Act, Operation_Act::inputs, Operation_Act::outputs>(world)
-			.flow<MyFlow>()
-			.strategy<opack::strat::every>()
-			;
+		opack::operation<MyFlow, Operation_Act>::make<opack::strat::every>(world);
 
 		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
 		opack::impact<MyBehaviour, Operation_Act, Operation_Act::inputs, Operation_Act::outputs, std::tuple<>>::make(world,

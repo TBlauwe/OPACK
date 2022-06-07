@@ -61,7 +61,7 @@ namespace opack
 	template
 	<
 		template<typename...> typename TInputs, typename... TInput, 
-		template<typename ...> typename TOutputs, typename... TOutput
+		template<typename...> typename TOutputs, typename... TOutput
 	>
 	struct O<TInputs<TInput...>, TOutputs<TOutput...>> 
 	{

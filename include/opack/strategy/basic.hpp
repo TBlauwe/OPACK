@@ -30,7 +30,6 @@ namespace opack::strat
 
 		static outputs run(flecs::entity agent, const std::vector<const Impact<inputs, outputs, other_inputs>*>& impacts, TInput& ... args)
 		{
-			std::cout << "-- every\n";
 			for (const auto impact : impacts)
 			{
 				impact->func(agent, args...);
