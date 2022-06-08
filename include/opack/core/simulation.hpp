@@ -102,6 +102,40 @@ namespace opack {
 		return entity.has(flecs::IsA, prefab<Category, Key>(world));
 	}
 
+	/**
+	Automatically register type based on its inheritance.
+	*/
+	template<typename T, typename TDerived = T>
+	inline flecs::entity reg(flecs::world& world)
+	{
+		if constexpr (std::derived_from<T, Agent>)
+		{
+			if constexpr (std::same_as<T, TDerived>)
+				return register_agent<T>(world);
+			else
+				return register_agent<T, TDerived>(world);
+		}
+		else if constexpr (std::derived_from<T, Artefact>)
+		{
+			if constexpr (std::same_as<T, TDerived>)
+				return register_artefact<T>(world);
+			else
+				return register_artefact<T, TDerived>(world);
+		}
+		else if constexpr (std::derived_from<T, Action>)
+		{
+			if constexpr (std::same_as<T, TDerived>)
+				return register_action<T>(world);
+			else
+				return register_action<T, TDerived>(world);
+		}
+		else if constexpr (std::derived_from<T, Sense>)
+			return register_sense<T>(world);
+		else if constexpr (std::derived_from<T, Actuator>)
+			return register_actuator<T>(world);
+		return flecs::entity{};
+	}
+
 	// Simulation interaction
 	// ======================
 	/**

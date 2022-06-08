@@ -3,7 +3,7 @@
 set(HEADER_LIST 
 	"include/opack/examples/empty_sim.hpp"
 	"include/opack/examples/simple_sim.hpp"
- "include/opack/examples/all.hpp")
+ "include/opack/examples/all.hpp" "include/opack/examples/medical_sim.hpp")
 
 add_library(opack_examples INTERFACE ${HEADER_LIST})
 target_link_libraries(opack_examples INTERFACE opack)

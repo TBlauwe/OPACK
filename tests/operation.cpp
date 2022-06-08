@@ -31,16 +31,16 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		);
 		sim.step(1.0f);
 		sim.step();
-		CHECK(a1.get<Data>()->i == 1);
-		CHECK(a2.get<Data>()->i == 1);
+		CHECK(a1.template get<Data>()->i == 1);
+		CHECK(a2.template get<Data>()->i == 1);
 		sim.step(1.0f);
 		sim.step();
-		CHECK(a1.get<Data>()->i == 2);
-		CHECK(a2.get<Data>()->i == 2);
+		CHECK(a1.template get<Data>()->i == 2);
+		CHECK(a2.template get<Data>()->i == 2);
 		sim.step(10.0f);
 		sim.step();
-		CHECK(a1.get<Data>()->i == 3);
-		CHECK(a2.get<Data>()->i == 3);
+		CHECK(a1.template get<Data>()->i == 3);
+		CHECK(a2.template get<Data>()->i == 3);
 	}
 }
 
