@@ -6,8 +6,12 @@
 struct MedicalSim : opack::Simulation
 {
 	struct Patient : opack::Artefact {};
+	struct Nurse : opack::Agent {};
 
 	struct Base {};
+
+	struct Qualification { size_t value{ 0 }; };
+
 	struct FC { size_t value { 70 }; };
 	struct FCBase { size_t value { 70 }; };
 
@@ -22,6 +26,9 @@ struct MedicalSim : opack::Simulation
 			;
 
 		opack::reg<Patient>(world);
+		opack::reg<Nurse>(world)
+			.override<Qualification>()
+			;
 
 		world.system<const FCBase, FC>()
 			.iter(
@@ -41,5 +48,8 @@ struct MedicalSim : opack::Simulation
 		opack::artefact<Patient>(world, "Patient 4");
 		opack::artefact<Patient>(world, "Patient 5");
 		opack::artefact<Patient>(world, "Patient 6");
+
+		opack::agent<Nurse>(world, "Nurse 1");
+		opack::agent<Nurse>(world, "Nurse 2");
 	}
 };
