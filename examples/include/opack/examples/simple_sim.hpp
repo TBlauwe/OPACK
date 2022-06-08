@@ -194,26 +194,26 @@ struct SimpleSim : opack::Simulation
 
 		// Step III : Populate world
 		// -------------------------
-		//auto prefab = opack::register_agent<MyCustomAgent>(world);
-		//prefab.add<MyFlow>();
-		//prefab.add<Stress>().override<Stress>();
-		//auto arthur = opack::agent<MyCustomAgent>(world, "Arthur");
-		//auto beatrice = opack::agent<MyCustomAgent>(world, "Beatrice");
-		//auto cyril = opack::agent<MyCustomAgent>(world, "Cyril");
-
-		auto arthur = opack::agent(world, "Arthur");
-		arthur
-			.add<MyFlow>()
-			.add<Stress>();
-		auto beatrice = opack::agent(world, "Beatrice");
-		beatrice
-			.add<MyFlow>()
-			.add<Stress>();
-		auto cyril = opack::agent(world, "Cyril");
-		cyril
-			.add<MyFlow>()
-			.add<Stress>();
+		auto prefab = opack::register_agent<MyCustomAgent>(world);
+		prefab.add<MyFlow>();
+		prefab.override<Stress>();
+		auto arthur = opack::agent<MyCustomAgent>(world, "Arthur");
+		auto beatrice = opack::agent<MyCustomAgent>(world, "Beatrice");
+		auto cyril = opack::agent<MyCustomAgent>(world, "Cyril");
 		cyril.set<AudioMessage>({"I'm coming !"});
+
+		//auto arthur = opack::agent(world, "Arthur");
+		//arthur
+		//	.add<MyFlow>()
+		//	.add<Stress>();
+		//auto beatrice = opack::agent(world, "Beatrice");
+		//beatrice
+		//	.add<MyFlow>()
+		//	.add<Stress>();
+		//auto cyril = opack::agent(world, "Cyril");
+		//cyril
+		//	.add<MyFlow>()
+		//	.add<Stress>();
 
 		auto radio = opack::artefact(world, "Radio");
 
