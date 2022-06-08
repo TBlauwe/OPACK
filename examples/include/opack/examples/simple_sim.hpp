@@ -157,32 +157,36 @@ struct SimpleSim : opack::Simulation
 				}
 		);
 
-		opack::OperationBuilder<Operation_Reason, Operation_Reason::inputs, Operation_Reason::outputs>(world)
-			.flow<MyFlow>()
-			.build(
-			[](flecs::entity agent) 
+		opack::operation<MyFlow, Operation_Reason>::make<opack::strat::every>(world);
+		opack::impact<Operation_Reason>::make(world,
+			[](flecs::entity e)
 			{
-					agent.set<opack::df<Operation_Reason, int>>({1});
+				return opack::make_output<Operation_Reason>();
 			}
 		);
 
 		opack::operation<MyFlow, Operation_Act>::make<opack::strat::every>(world);
 
 		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
-		opack::impact<MyBehaviour, Operation_Act>::make(world,
+		opack::impact<Operation_Act>::make(world,
 			[](flecs::entity e, opack::df<Operation_Reason, int>& df)
 			{
-				//std::cout << e.doc_name() << " has a dataflow of size : " << df.data.size() << "\n";
+				std::cout << "---- always df : " << df.value << "\n";
+				return std::make_tuple();
+			}
+		);
+		opack::impact<Operation_Act, MyBehaviour>::make(world,
+			[](flecs::entity e, opack::df<Operation_Reason, int>& df)
+			{
 				std::cout << "---- df : " << df.value << "\n";
 				return std::make_tuple();
 			}
 		);
 
 		opack::behaviour<MyBehaviour2, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value <= 5; });
-		opack::impact<MyBehaviour2, Operation_Act>::make(world,
+		opack::impact<Operation_Act, MyBehaviour2>::make(world,
 			[](flecs::entity e, opack::df<Operation_Reason, int>& df)
 			{
-				//std::cout << e.doc_name() << " has a dataflow of size : " << df.data.size() << "\n";
 				std::cout << "---- also df : " << df.value << "\n";
 				return std::make_tuple();
 			}
@@ -192,25 +196,22 @@ struct SimpleSim : opack::Simulation
 		// -------------------------
 		//auto prefab = opack::register_agent<MyCustomAgent>(world);
 		//prefab.add<MyFlow>();
-		//prefab.add<MyBehaviour>();
 		//prefab.add<Stress>().override<Stress>();
+		//auto arthur = opack::agent<MyCustomAgent>(world, "Arthur");
+		//auto beatrice = opack::agent<MyCustomAgent>(world, "Beatrice");
+		//auto cyril = opack::agent<MyCustomAgent>(world, "Cyril");
 
 		auto arthur = opack::agent(world, "Arthur");
 		arthur
 			.add<MyFlow>()
-			.add<MyBehaviour>()
-			.add<MyBehaviour2>()
 			.add<Stress>();
 		auto beatrice = opack::agent(world, "Beatrice");
 		beatrice
 			.add<MyFlow>()
-			.add<MyBehaviour>()
-			.add<MyBehaviour2>()
 			.add<Stress>();
 		auto cyril = opack::agent(world, "Cyril");
 		cyril
 			.add<MyFlow>()
-			.add<MyBehaviour>()
 			.add<Stress>();
 		cyril.set<AudioMessage>({"I'm coming !"});
 

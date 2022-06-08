@@ -17,23 +17,24 @@
 
 namespace opack
 {
-
 	/**
 	 @brief Create a new behaviour @c T.
 	 @param func Activation function with following signature : bool(flecs::entity, (Tinputs&,...))
 
 	 A behaviour is an entity with an associated system that runs every frame for every agent that has this behaviour, 
 	 before the update. Each agent will have the component <Active, T> if the activation function returns @c true.
+
+	 TODO update only behaviour that are needed, e.g when a flow will be launched.
 	 */
-	template<std::derived_from<Behaviour> T, typename ... TInputs, typename TFunc>
+	template<std::derived_from<Behaviour> TBeh, typename ... TInputs, typename TFunc>
 	flecs::entity behaviour(flecs::world& world, TFunc&& func)
 	{
-		auto behaviour = world.component<T>();
+		auto behaviour = world.entity<TBeh>();
 		behaviour.template child_of<world::Behaviours>();
 
 		auto launcher = world.system<TInputs ...>()
-			.template term<const T>()
-			.template term<Active, T>().inout(flecs::Out).set(flecs::Nothing)
+			.template term<const opack::Agent>()
+			.template term<Active, TBeh>().inout(flecs::Out).set(flecs::Nothing)
 			.kind(flecs::PreUpdate)
 			.iter(
 				[f = std::forward<TFunc>(func)](flecs::iter& it, TInputs * ... args)
@@ -42,9 +43,9 @@ namespace opack
 					{
 						auto e = it.entity(i);
 						if(f(e, (args[i], ...)))
-							e.add<Active, T>();
+							e.add<Active, TBeh>();
 						else
-							e.remove<Active, T>();
+							e.remove<Active, TBeh>();
 					}
 				}
 		);
@@ -54,27 +55,12 @@ namespace opack
 	}
 
 	/**
-	 * .
-	 */
-	template<std::derived_from<Operation> T, typename TFunc>
-	void each_active_behaviours(flecs::entity e, TFunc&& func)
-	{
-		e.each<Active>(
-			[f = std::forward<TFunc>(func)](flecs::entity object)
-			{
-				auto impact = object.get_object<T>();
-				if (impact)
-					f(impact);
-			}
-		);
-	}
-
-	/**
 	 * Add an impact to a behaviour.
 	 */
 	template
 		<
-		std::derived_from<Behaviour> T, typename TOper
+		typename TOper,
+		std::derived_from<Behaviour> T = Behaviour
 		>
 	struct impact
 	{
@@ -138,21 +124,6 @@ namespace opack
 	class OperationBuilder;                     
  
 	// Partial specialization
-	//template<template<template<typename...> typename, template<typename...> typename>typename TOper, template<typename...> typename TInputs, typename... TInput, template<typename ...> typename TOutputs, typename... TOutput>
-	//template<template<template<typename...> typename TInputs, template<typename...> typename TOutputs>typename TOper, typename... TInput, typename... TOutput>
-	//template
-	//	<
-	//		template
-	//		<
-	//			template<typename...> typename, 
-	//			template<typename...> typename
-	//		>
-	//		typename TOper,
-	//		template<typename...> typename TInputs, 
-	//		typename... TInput, 
-	//		template<typename ...> typename TOutputs,
-	//		typename... TOutput
-	//	>
 	template<
 		typename TOper, 
 		template<typename...> typename TInputs, typename... TInput, 
@@ -231,8 +202,8 @@ namespace opack
 									impacts.push_back(impact);
 							}
 						);
-						(e.set<df<TOper, TOutput>>({}), ...); // Should be set from strategy result
-						T<inputs, outputs, std::tuple<TAdditionalInputs...>>::run(e, impacts, args[i]...);
+						auto result = T<inputs, outputs, std::tuple<TAdditionalInputs...>>::run(e, impacts, args[i]...);
+						(e.set<df<TOper, TOutput>>({std::get<TOutput>(result)}), ...); // Should be set from strategy result
 					}
 				}
 			).template child_of<opack::dynamics>();
@@ -254,5 +225,11 @@ namespace opack
 			OperationBuilder<TOper, typename TOper::inputs, typename TOper::outputs>(world).template flow<TFlow>().template strategy<TStrat>();
 		};
 	};
+
+	template<typename TOper, typename... Args>
+	typename TOper::outputs make_output(Args&&... args)
+	{
+		return typename TOper::outputs{args...};
+	}
 }
 

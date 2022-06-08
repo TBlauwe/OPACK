@@ -30,11 +30,12 @@ namespace opack::strat
 
 		static outputs run(flecs::entity agent, const std::vector<const Impact<inputs, outputs, other_inputs>*>& impacts, TInput& ... args)
 		{
+			auto result = std::tuple<TOutput...>();
 			for (const auto impact : impacts)
 			{
-				impact->func(agent, args...);
+				result = impact->func(agent, args...);
 			}
-			return std::make_tuple<TOutput...>();
+			return result;
 		};
 	};
 

@@ -96,11 +96,13 @@ namespace opack {
 	}
 	/**
 	@brief Instantiate an agent named @c name (for debugging/visualization) purposes, from prefab @c T.
+
+	BUG rework prefab without using component (with a type so)
 	*/
 	template<std::derived_from<Agent> T = opack::Agent>
 	inline flecs::entity agent(flecs::world& world, const char* name)
 	{
-		return instantiate<T>(world, name).template child_of<world::Agents>();
+		return instantiate<T>(world, name).template child_of<world::Agents>().template add<Active, Behaviour>();
 	}
 
 	/**
@@ -109,7 +111,7 @@ namespace opack {
 	template<std::derived_from<Agent> T = opack::Agent>
 	inline flecs::entity agent(flecs::world& world)
 	{
-		return instantiate<T>(world).template child_of<world::Agents>();
+		return instantiate<T>(world).template child_of<world::Agents>().template add<Active, Behaviour>();
 	}
 
 	/**
