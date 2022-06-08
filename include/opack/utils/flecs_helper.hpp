@@ -25,8 +25,8 @@ namespace opack::internal
 		return world.template prefab<T>().template is_a<U>().template add<T>();
 	}
 
-	// TODO Probably, copy should build a new query ? to prevent rule destruction if a copy is destroy ? But not sure how flecs handles it
-	// since tests seems to work anyways.
+	// TODO Probably, copy should build a new query ? to prevent rule destruction if a copy is destroy ?
+	// But not sure how flecs handles it since tests seems to work anyways.
 	/**
 	 * Holds a flecs rule and handles destruction.
 	 */

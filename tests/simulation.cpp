@@ -28,13 +28,6 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, sim_construction)
 	REQUIRE(sim.world.template has<opack::concepts>());
 	REQUIRE(sim.world.template has<opack::dynamics>());
 
-	REQUIRE(sim.world.template has<opack::Action>());
-	REQUIRE(sim.world.template has<opack::Actuator>());
-	REQUIRE(sim.world.template has<opack::Sense>());
-
-	REQUIRE(sim.world.template has<opack::queries::perception::Component>());
-	REQUIRE(sim.world.template has<opack::queries::perception::Relation>());
-
 	SUBCASE("Configuration")
 	{
 		{
@@ -104,7 +97,7 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, sim_construction)
 		}
 	}
 
-	SUBCASE("Entity equality")
+	SUBCASE("Entity id equality")
 	{
 		struct Test {};
 		auto e_1 = sim.world.template entity<Test>();
@@ -120,7 +113,7 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, sim_construction)
 		CHECK(e_2 == opack::id<Test>(sim));
 	}
 
-	SUBCASE("Type register")
+	SUBCASE("Prefab register")
 	{
 		auto check = []<typename Base, std::derived_from<Base> Derived>(flecs::entity e) -> flecs::entity
 		{
@@ -165,6 +158,15 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, sim_construction)
 			CHECK(e3 != e1);
 			CHECK(e3 != e2);
 		}
+	}
+
+	SUBCASE("Type register")
+	{
+		auto check = []<typename Base, std::derived_from<Base> Derived>(flecs::entity e) -> flecs::entity
+		{
+			CHECK(e.template is_a<Base>());
+			return e;
+		};
 
 		{
 			struct Actuator1 : opack::Actuator {};
@@ -198,18 +200,18 @@ flecs::entity test_entity_creation(flecs::world& world, const char* name = "")
 	size_t counter{ opack::count<Base>(world) };
 	size_t second_counter{ opack::count<Derived>(world) };
 
-	auto e = opack::instantiate<Derived>(world, name);
+	auto e = opack::instantiate<Base, Derived>(world, name);
 	counter++;
 	second_counter++;
 	if (name)
 		CHECK(strcmp(e.doc_name(), name) == 0);
 
-	CHECK(e.template is_a<Base>());
+	CHECK(e.is_a(opack::prefab<Base, Base>(world)));
 	CHECK(e.template has<Base>());
-	CHECK(e.template is_a<Derived>());
+	CHECK(e.is_a(opack::prefab<Base, Derived>(world)));
 	CHECK(e.template has<Derived>());
-	CHECK(opack::count(world, flecs::IsA, opack::id<Base>(world)) == counter);
-	CHECK(opack::count(world, flecs::IsA, opack::id<Derived>(world)) == second_counter);
+	CHECK(opack::count(world, flecs::IsA, opack::prefab<Base, Base>(world)) == counter);
+	CHECK(opack::count(world, flecs::IsA, opack::prefab<Base, Derived>(world)) == second_counter);
 	CHECK(opack::count<Base>(world) == counter);
 	CHECK(opack::count<Derived>(world) == second_counter);
 	return e;
@@ -244,10 +246,6 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation entity construction", T, sim_entity_constr
 	REQUIRE(sim.world.template has<opack::concepts>());
 	REQUIRE(sim.world.template has<opack::dynamics>());
 
-	REQUIRE(sim.world.template has<opack::Action>());
-	REQUIRE(sim.world.template has<opack::Actuator>());
-	REQUIRE(sim.world.template has<opack::Sense>());
-
 	REQUIRE(sim.world.template has<opack::queries::perception::Component>());
 	REQUIRE(sim.world.template has<opack::queries::perception::Relation>());
 
@@ -274,10 +272,6 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation manipulation", T, sim_manipulation)
 
 	REQUIRE(sim.world.template has<opack::concepts>());
 	REQUIRE(sim.world.template has<opack::dynamics>());
-
-	REQUIRE(sim.world.template has<opack::Action>());
-	REQUIRE(sim.world.template has<opack::Actuator>());
-	REQUIRE(sim.world.template has<opack::Sense>());
 
 	REQUIRE(sim.world.template has<opack::queries::perception::Component>());
 	REQUIRE(sim.world.template has<opack::queries::perception::Relation>());
@@ -414,25 +408,23 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation manipulation", T, sim_manipulation)
 		// ===============
 		struct Help : opack::Action {};
 		auto help = opack::register_action<Help>(sim);
-		CHECK(help.template is_a<opack::Action>());
+		CHECK(opack::is_a<opack::Action>(help));
 
 		// Define actuator
 		// ===============
 		struct UpperBody : opack::Actuator {};
 		auto upper_body_actuator = opack::register_actuator<UpperBody>(sim);
 		CHECK(upper_body_actuator.has(flecs::Exclusive));
-		CHECK(upper_body_actuator.has(flecs::OneOf, opack::entity<opack::Action>(sim)));
 
 		struct LowerBody : opack::Actuator {};
 		auto lower_body_actuator = opack::register_actuator<LowerBody>(sim);
 		CHECK(lower_body_actuator.has(flecs::Exclusive));
-		CHECK(lower_body_actuator.has(flecs::OneOf, opack::entity<opack::Action>(sim)));
 
 		// Launch actions
 		// ==============
 		auto help_inst = opack::action<Help>(sim);
-		CHECK(help_inst.has(flecs::IsA, opack::entity<Help>(sim)));
-		CHECK(help_inst.has(flecs::IsA, opack::entity<opack::Action>(sim)));
+		CHECK(opack::is_a<opack::Action>(help_inst));
+		CHECK(opack::is_a<opack::Action, Help>(help_inst));
 
 		//Action without initiator should be deleted
 		CHECK(help_inst.is_alive());

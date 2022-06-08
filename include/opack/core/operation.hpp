@@ -191,6 +191,7 @@ namespace opack
 					for (auto i : it)
 					{
 						auto e = it.entity(i);
+
 						// For each entity, we retrieve every active behaviours and store those whom have an impact for this operation
 						// Then we called the passed strategy.
 						Impacts_t impacts{};

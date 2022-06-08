@@ -8,6 +8,8 @@
 
 #include <functional>
 #include <unordered_map>
+#include <map>
+#include <typeindex>
 
 #include <flecs.h>
 
@@ -15,6 +17,41 @@
 
 namespace opack
 {
+	namespace internal
+	{
+		template<typename T>
+		struct PrefabDict
+		{
+			std::map<std::type_index, flecs::entity> container;
+		};
+
+		template<typename Category, typename Key>
+		flecs::entity add_prefab(flecs::world& world)
+		{
+			auto dict = world.get_mut<opack::internal::PrefabDict<Category>>();
+			auto entity = world.prefab().add<Key>();
+			dict->container.emplace(typeid(Key), entity );
+			return entity;
+		}
+
+		template<typename Category, typename Key>
+		bool has_prefab(flecs::world& world)
+		{
+			auto dict = world.get<opack::internal::PrefabDict<Category>>();
+			return dict->container.contains(typeid(Key));
+		}
+	}
+
+	/**
+	 * Returns entity (prefab) associated with @c Key in the category @c Category.
+	 */
+	template<typename Category, typename Key = Category>
+	flecs::entity prefab(flecs::world& world)
+	{
+		auto dict = world.get<opack::internal::PrefabDict<Category>>();
+		return dict->container.at(typeid(Key));
+	}
+
 	// Used only to structure hierarchy
 	namespace world 
 	{
@@ -45,6 +82,7 @@ namespace opack
 	struct Operation {};
 	struct Active {};
 	struct Behaviour {};
+	using DefaultBehaviour = flecs::pair<Active, Behaviour>;
 
 	template<typename T>
 	struct Input {};

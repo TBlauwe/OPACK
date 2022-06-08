@@ -1,3 +1,4 @@
+#include <iostream>
 #include <opack/module/core.hpp>
 #include <opack/core/perception.hpp>
 
@@ -25,10 +26,11 @@ opack::concepts::concepts(flecs::world& world)
 	world.entity<world::Operations>("::world::Operations").add(flecs::Module);
 	world.entity<world::Behaviours>("::world::Behaviours").add(flecs::Module);
 
-	// MAS
-	// ---
-	world.prefab<Agent>().add<Agent>();
-	world.prefab<Artefact>().add<Artefact>();
+	world.add<opack::internal::PrefabDict<Agent>>();
+	world.add<opack::internal::PrefabDict<Artefact>>();
+	world.add<opack::internal::PrefabDict<Action>>();
+	world.add<opack::internal::PrefabDict<Actuator>>();
+	world.add<opack::internal::PrefabDict<Sense>>();
 
 	// Operation
 	// ---------
@@ -36,6 +38,20 @@ opack::concepts::concepts(flecs::world& world)
 	world.component<Operation>();
 	world.component<Behaviour>();
 	world.component<Active>();
+
+	// MAS
+	// ---
+	world.component<Agent>();
+	world.component<Artefact>();
+	world.component<Action>();
+	world.component<Actuator>();
+	world.component<Sense>();
+
+	opack::internal::add_prefab<Agent, Agent>(world)
+		.child_of<world::prefab::Agents>();
+
+	opack::internal::add_prefab<Artefact, Artefact>(world)
+		.child_of<world::prefab::Artefacts>();
 
 	// Action
 	// ------
@@ -49,20 +65,19 @@ opack::concepts::concepts(flecs::world& world)
 		.member<float, flecs::units::duration::Seconds>("value")
 		;
 
-	auto action = world.prefab<Action>()
-		.add<Action>()
+	auto action = opack::internal::add_prefab<Action, Action>(world)
 		.add<Arity>()
-		;
+		.child_of<world::prefab::Actions>();
 
-	world.prefab<Actuator>()
-		.add<Actuator>()
+	world.component<Actuator>()
 		.add(flecs::Exclusive)
 		.add(flecs::OneOf, action)
 		;
 
 	// Perception
 	// ----------
-	world.prefab<Sense>().add<Sense>();
+	world.component<Sense>()
+		;
 
 	world.entity("::opack::queries::perception").add(flecs::Module);
 	world.emplace<queries::perception::Component>(world);

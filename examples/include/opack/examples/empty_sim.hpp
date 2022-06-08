@@ -1,6 +1,7 @@
 #pragma once
 
 #include <opack/core.hpp>
+#include <iostream>
 
 struct EmptySim : opack::Simulation
 {
