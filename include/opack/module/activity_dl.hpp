@@ -18,6 +18,15 @@
 #include <opack/utils/flecs_helper.hpp>
 #include <opack/utils/type_name.hpp>
 
+namespace adl_::world
+{
+	struct Activities {};
+	namespace prefab
+	{
+		struct Activities {};
+	}
+}
+
 struct adl
 {
 	struct Order
@@ -80,9 +89,10 @@ struct adl
 		size_t arity_min = 1
 	)
 	{
-		return world.prefab<T>()
+		return opack::internal::add_prefab<Activity, T>(world)
 			.template set<Constructor>({ logical, temporal })
-			.template set<opack::Arity>({ arity_min, arity_max });
+			.template set<opack::Arity>({ arity_min, arity_max })
+			.template child_of<adl_::world::prefab::Activities>();
 	}
 
 	/**
@@ -91,7 +101,11 @@ struct adl
 	template<std::derived_from<Activity> T>
 	static flecs::entity instantiate(flecs::world& world)
 	{
-		return world.entity().is_a<T>().set_doc_name(type_name_cstr<T>());
+		return world.entity()
+			.is_a(opack::prefab<Activity, T>(world))
+			.template child_of<adl_::world::Activities>()
+			.set_doc_name(type_name_cstr<T>())
+			;
 	}
 
 	/**

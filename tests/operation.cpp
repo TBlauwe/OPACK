@@ -12,25 +12,35 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 	REQUIRE(sim.world.template has<opack::dynamics>());
 
 	struct _MyFlow_ : opack::Flow{};
+	struct Data { int i{ 0 }; };
 	opack::flow<_MyFlow_>(sim);
-	opack::agent(sim).template add<_MyFlow_>();
-	opack::agent(sim).template add<_MyFlow_>();
+	auto a1 = opack::agent(sim).template add<_MyFlow_>().template add<Data>();
+	auto a2 = opack::agent(sim).template add<_MyFlow_>().template add<Data>();
 
-	struct _MyOp_ : opack::O<opack::Inputs<>, opack::Outputs<>> {};
+	struct _MyOp_ : opack::O<opack::Inputs<Data>, opack::Outputs<>> {};
 
 	SUBCASE("Default behaviour")
 	{
-		bool called{ false };
 		opack::operation<_MyFlow_, _MyOp_>::template make<opack::strat::every>(sim);
 		opack::impact<_MyOp_>::make(sim,
-			[&called](flecs::entity e)
+			[](flecs::entity e, Data& data)
 			{
-				called = true;
+				data.i++;
 				return opack::make_output<_MyOp_>();
 			}
 		);
+		sim.step(1.0f);
 		sim.step();
-		CHECK(called);
+		CHECK(a1.get<Data>()->i == 1);
+		CHECK(a2.get<Data>()->i == 1);
+		sim.step(1.0f);
+		sim.step();
+		CHECK(a1.get<Data>()->i == 2);
+		CHECK(a2.get<Data>()->i == 2);
+		sim.step(10.0f);
+		sim.step();
+		CHECK(a1.get<Data>()->i == 3);
+		CHECK(a2.get<Data>()->i == 3);
 	}
 }
 
