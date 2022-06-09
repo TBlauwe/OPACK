@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iostream>
 #include <opack/core.hpp>
+#include <opack/strategy/influence_graph.hpp>
 
 struct MedicalSim : opack::Simulation
 {
@@ -12,8 +12,11 @@ struct MedicalSim : opack::Simulation
 
 	struct Qualification { size_t value{ 0 }; };
 
-	struct FC { size_t value { 70 }; };
-	struct FCBase { size_t value { 70 }; };
+	struct FC { size_t value{ 70 }; };
+	struct FCBase { size_t value { 70 }; float var{ 5 };};
+
+	struct Flow : opack::Flow{};
+	struct SuitableActions : opack::O<opack::Inputs<>, opack::Outputs<std::vector<flecs::entity>>> {};
 
 	MedicalSim(int argc = 0, char * argv[] = nullptr) : opack::Simulation{argc, argv}
 	{
@@ -25,10 +28,25 @@ struct MedicalSim : opack::Simulation
 			.member<size_t>("value")
 			;
 
-		opack::reg<Patient>(world);
+		opack::reg<Patient>(world)
+			.override<FC>()
+			.override<FCBase>()
+			;
+
 		opack::reg<Nurse>(world)
+			.add<Flow>()
 			.override<Qualification>()
 			;
+
+		opack::flow<Flow>(world);
+		opack::operation<Flow, SuitableActions>::make<opack::strat::influence_graph>(world);
+		opack::impact<SuitableActions>::make<>(world,
+			[](flecs::entity agent)
+			{
+				std::cout << "Hello\n";
+				return opack::make_output<SuitableActions>();
+			}
+			);
 
 		world.system<const FCBase, FC>()
 			.iter(
@@ -36,7 +54,7 @@ struct MedicalSim : opack::Simulation
 				{
 					for (auto i : it)
 					{
-						fc[i].value = fcb[i].value * sin(it.world().time());
+						fc[i].value = fcb[i].value + (fcb[i].var * sin(it.world().time()));
 					}
 				}
 			);

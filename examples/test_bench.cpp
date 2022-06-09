@@ -1,12 +1,28 @@
-#include <iostream>
 #include <flecs.h>
+
+template<typename T>
+struct R {};
+
+struct A {};
+struct B {};
+struct C {};
 
 int main(int, char* [])
 {
     flecs::world ecs;
-    auto p1 = ecs.prefab();
-    auto p2 = ecs.prefab().is_a(p1);
-    auto e = ecs.entity().is_a(p2);
-    std::cout << e.to_json() << std::endl;
+    auto e = ecs.entity()
+        .set<R<A>, int>({1})
+        .set<R<B>, int>({2})
+        .set<R<A>, float>({3.0});
+    ecs.system<flecs::pair<R<A>, int>>()
+        .iter(
+            [](flecs::iter& it)
+            {
+                for (auto i : it)
+                {
+
+                }
+            }
+        );
     ecs.app().enable_rest().run();
 }
