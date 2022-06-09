@@ -16,7 +16,16 @@ struct MedicalSim : opack::Simulation
 	struct FCBase { size_t value { 70 }; float var{ 5 };};
 
 	struct Flow : opack::Flow{};
-	struct SuitableActions : opack::O<opack::Inputs<>, opack::Outputs<std::vector<flecs::entity>>> {};
+	struct SuitableActions : opack::O<opack::strat::accumulator, opack::Inputs<FC>, opack::Outputs<opack::Actions_t>> {};
+	//struct ActionSelection : 
+	//	opack::O<
+	//		opack::Inputs<
+	//			const opack::df<SuitableActions, opack::Action_t>
+	//		>, 
+	//		opack::Outputs<
+	//			opack::Action_t
+	//		>
+	//	> {};
 
 	MedicalSim(int argc = 0, char * argv[] = nullptr) : opack::Simulation{argc, argv}
 	{
@@ -35,18 +44,29 @@ struct MedicalSim : opack::Simulation
 
 		opack::reg<Nurse>(world)
 			.add<Flow>()
+			.add<FC>()
 			.override<Qualification>()
 			;
 
 		opack::flow<Flow>(world);
-		opack::operation<Flow, SuitableActions>::make<opack::strat::influence_graph>(world);
-		opack::impact<SuitableActions>::make<>(world,
-			[](flecs::entity agent)
+		opack::operation<Flow, SuitableActions>(world);
+		//opack::operation<Flow, ActionSelection>::make<opack::strat::influence_graph>(world);
+
+		opack::impact<SuitableActions>::make(world,
+			[](flecs::entity agent, SuitableActions::operation_inputs& operation_inputs, SuitableActions::impact_inputs& impact_inputs)
 			{
-				std::cout << "Hello\n";
+				std::cout << "Hello  : " << std::get<FC&>(operation_inputs).value++ << "\n";
 				return opack::make_output<SuitableActions>();
 			}
 			);
+
+		//opack::impact<ActionSelection>::make<>(world,
+		//	[](flecs::entity agent, const opack::df<SuitableActions, opack::Actions_t>&)
+		//	{
+		//		std::cout << "Hello\n";
+		//		return opack::make_output<ActionSelection>();
+		//	}
+		//	);
 
 		world.system<const FCBase, FC>()
 			.iter(

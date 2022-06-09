@@ -93,18 +93,25 @@ namespace opack
 	template<typename... T>
 	using Outputs = std::tuple<T...>;
 
-	template<typename TInputs, typename TOutputs>
+	template<typename TStrat, typename TInputs, typename TOutputs>
 	struct O;                     
  
 	template
 	<
+		typename TStrat,
 		template<typename...> typename TInputs, typename... TInput, 
 		template<typename...> typename TOutputs, typename... TOutput
 	>
-	struct O<TInputs<TInput...>, TOutputs<TOutput...>> 
+	struct O<TStrat, TInputs<TInput...>, TOutputs<TOutput...>> 
 	{
-		using inputs = std::tuple<TInput...>;
-		using outputs = std::tuple<TOutput...>;
+		using operation_inputs_t = std::tuple<TInput...>;
+		using operation_outputs_t = std::tuple<TOutput...>;
+		using operation_inputs = std::tuple<TInput&...>;
+		using operation_outputs = std::tuple<TOutput...>;
+		using strategy = TStrat;
+		using impact_inputs = typename strategy::impact_inputs;
+		using impact_outputs = typename strategy::impact_outputs;
+
 	};
 
 	template<typename TOper, typename T>
@@ -113,18 +120,47 @@ namespace opack
 		T value;
 	};
 
-	template<typename TInputs, typename TOutputs, typename TOtherInputs>
-	struct Impact;                     
+	template<typename TOper>
+	struct Impact
+	{
+		std::function<typename TOper::impact_outputs(flecs::entity, typename TOper::operation_inputs&, typename TOper::impact_inputs&)> func;
+	};
+
+	template<typename TInputs, typename TOutputs>
+	struct Strategy;                     
 
 	template
 	<
-		template<typename...> typename TInputs, typename... TInput, 
-		template<typename...> typename TOutputs, typename... TOutput,
-		template<typename...> typename TOtherInputs, typename... TOtherInput
+		template<typename...> typename TInputs, typename... TInput,
+		template<typename...> typename TOutputs, typename... TOutput
 	>
-	struct Impact<TInputs<TInput...>, TOutputs<TOutput...>, TOtherInputs<TOtherInput...>>
+	struct Strategy<TInputs<TInput...>, TOutputs<TOutput...>>
 	{
-		std::function<std::tuple<TOutput...>(flecs::entity, TInput&..., TOtherInput&...)> func;
+		using impact_inputs = std::tuple<TInput&...> ;
+		using impact_outputs = std::tuple<TOutput...> ;
+
+		template<typename TOper>
+		struct Algorithm
+		{
+			using impact_t = Impact<TOper>;
+			using impacts_t = std::vector<const impact_t*>;
+
+			Algorithm(flecs::entity _agent) : agent{ _agent }
+			{
+				agent.each<Active>(
+					[&](flecs::entity object)
+					{
+						auto impact = object.get_w_object<TOper, impact_t>();
+						if (impact)
+							impacts.push_back(impact);
+					}
+				);
+			}
+
+			flecs::entity	agent{};
+			impacts_t		impacts{};
+			impact_inputs	inputs{};
+		};
 	};
 
 	// P - Perception
@@ -137,6 +173,8 @@ namespace opack
 	//-----------
 	struct Actuator {};	
 	struct Action {};
+	using Actions_t = std::vector<flecs::entity>;
+	using Action_t = flecs::entity;
 	enum ActionType {Ponctual, Continuous};
 	// An action is performed by someones
 	struct By {};

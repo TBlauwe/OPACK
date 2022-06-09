@@ -17,15 +17,15 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 	auto a1 = opack::agent(sim).template add<_MyFlow_>().template add<Data>();
 	auto a2 = opack::agent(sim).template add<_MyFlow_>().template add<Data>();
 
-	struct _MyOp_ : opack::O<opack::Inputs<Data>, opack::Outputs<>> {};
+	struct _MyOp_ : opack::O<opack::strat::every, opack::Inputs<Data>, opack::Outputs<>> {};
 
 	SUBCASE("Default behaviour")
 	{
-		opack::operation<_MyFlow_, _MyOp_>::template make<opack::strat::every>(sim);
+		opack::operation<_MyFlow_, _MyOp_>(sim);
 		opack::impact<_MyOp_>::make(sim,
-			[](flecs::entity e, Data& data)
+			[](flecs::entity e, typename _MyOp_::operation_inputs& i1, typename _MyOp_::impact_inputs& i2)
 			{
-				data.i++;
+				std::get<Data&>(i1).i++;
 				return opack::make_output<_MyOp_>();
 			}
 		);

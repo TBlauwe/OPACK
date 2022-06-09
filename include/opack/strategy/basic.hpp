@@ -13,30 +13,63 @@
 namespace opack::strat
 {
 
-	template<typename TInputs, typename TOutputs, typename TOtherInputs>
-	struct every;                     
- 
-	template
-	<
-		template<typename...> typename TInputs, typename... TInput, 
-		template<typename...> typename TOutputs, typename... TOutput,
-		template<typename...> typename TOtherInputs, typename... TOtherInput
-	>
-	struct every<TInputs<TInput...>, TOutputs<TOutput...>, TOtherInputs<TOtherInput...> >
-	{
-		using inputs = std::tuple<TInput...>;
-		using other_inputs = std::tuple<TOtherInput...>;
-		using outputs = std::tuple<TOutput...>;
+	//template<typename TOper>
+	//struct every : opack::Strategy<TOper, std::tuple<>, std::tuple<>>
+	//{
+	//	using opack::Strategy<TOper, std::tuple<>, std::tuple<>>::Strategy;
 
-		static outputs run(flecs::entity agent, const std::vector<const Impact<inputs, outputs, other_inputs>*>& impacts, TInput& ... args)
+	//	typename TOper::operation_outputs compute(const typename TOper::operation_inputs& args)
+	//	{
+	//		auto result = typename TOper::operation_outputs();
+	//		for (const auto impact : this->impacts)
+	//		{
+	//			result = impact->func(this->agent, args, this->inputs);
+	//		}
+	//		return result;
+	//	};
+	struct every : opack::Strategy<opack::Inputs<>, opack::Outputs<>>
+	{
+		using strategy_t = opack::Strategy<opack::Inputs<>, opack::Outputs<>>;
+
+		template<typename TOper>
+		struct Algorithm : strategy_t::Algorithm<TOper>
 		{
-			auto result = std::tuple<TOutput...>();
-			for (const auto impact : impacts)
+			using strategy_t::Algorithm<TOper>::Algorithm;
+
+			typename TOper::operation_outputs compute(typename TOper::operation_inputs& args)
 			{
-				result = impact->func(agent, args...);
-			}
-			return result;
+				for (const auto impact : this->impacts)
+				{
+					impact->func(this->agent, args, this->inputs);
+				}
+				return typename TOper::operation_outputs();
+			};
 		};
+	};
+
+//};
+
+	struct accumulator : opack::Strategy<opack::Inputs<>, opack::Outputs<>>
+	{
+		using strategy_t = opack::Strategy<opack::Inputs<>, opack::Outputs<>>;
+
+		template<typename TOper>
+		struct Algorithm : strategy_t::Algorithm<TOper>
+		{
+			using strategy_t::Algorithm<TOper>::Algorithm;
+
+			typename TOper::operation_outputs compute(typename TOper::operation_inputs& args)
+			{
+				auto result = typename TOper::operation_outputs();
+				for (const auto impact : this->impacts)
+				{
+					auto impact_result = impact->func(this->agent, args, this->inputs);
+					//(std::get<TOutput>(result).push_back() }), ...); // Should be set from strategy result
+				}
+				return result;
+			};
+		};
+
 	};
 
 	/**

@@ -43,10 +43,10 @@ struct SimpleSim : opack::Simulation
 	struct MyBehaviour	: opack::Behaviour {};
 	struct MyBehaviour2 : opack::Behaviour {};
 	struct MyFlow : opack::Flow {};
-	struct Operation_Percept : opack::O<opack::Inputs<>, opack::Outputs<>> {};
-	struct Operation_Reason : opack::O<opack::Inputs<>, opack::Outputs<int>> {};
-	struct Operation_Act : opack::O<opack::Inputs<opack::df<Operation_Reason, int>>, opack::Outputs<>> {};
-	struct Operation_UpdateStress : opack::O<opack::Inputs<Stress>, opack::Outputs<>> {};
+	struct Operation_Percept : opack::O<opack::strat::every, opack::Inputs<>, opack::Outputs<>> {};
+	struct Operation_Reason : opack::O<opack::strat::every, opack::Inputs<>, opack::Outputs<int>> {};
+	struct Operation_Act : opack::O<opack::strat::every, opack::Inputs<opack::df<Operation_Reason, int>>, opack::Outputs<>> {};
+	struct Operation_UpdateStress : opack::O<opack::strat::every, opack::Inputs<Stress>, opack::Outputs<>> {};
 
 	// Types : Activity-model
 	// ======================
@@ -125,72 +125,72 @@ struct SimpleSim : opack::Simulation
 
 		opack::flow<MyFlow>(world, 1.0);
 
-		opack::OperationBuilder<Operation_Percept, Operation_Percept::inputs, Operation_Percept::outputs>(world)
-			.flow<MyFlow>()
-			.build(
-			[](flecs::entity agent) 
-			{
-				//std::cout << "Operation_Percept for " << agent.doc_name()  << "\n"; 
-				//opack::each_perceived<opack::Sense, AudioMessage>(agent,
-				//	[](flecs::entity subject, const AudioMessage& value)
-				//	{
-				//		std::cout << " - " << subject.doc_name() << " has " << value.value << "\n";
-				//	}
-				//);
+		//opack::OperationBuilder<Operation_Percept, Operation_Percept::inputs, Operation_Percept::outputs>(world)
+		//	.flow<MyFlow>()
+		//	.build(
+		//	[](flecs::entity agent) 
+		//	{
+		//		//std::cout << "Operation_Percept for " << agent.doc_name()  << "\n"; 
+		//		//opack::each_perceived<opack::Sense, AudioMessage>(agent,
+		//		//	[](flecs::entity subject, const AudioMessage& value)
+		//		//	{
+		//		//		std::cout << " - " << subject.doc_name() << " has " << value.value << "\n";
+		//		//	}
+		//		//);
 
-				//opack::each_perceived_relation<opack::Sense, Act>(agent,
-				//	[](flecs::entity subject, flecs::entity object)
-				//	{
-				//		std::cout << " - " << subject.doc_name() << " is acting on " << object.get_object<On>().doc_name() << "\n";
-				//	}
-				//);
-			}
-		);
+		//		//opack::each_perceived_relation<opack::Sense, Act>(agent,
+		//		//	[](flecs::entity subject, flecs::entity object)
+		//		//	{
+		//		//		std::cout << " - " << subject.doc_name() << " is acting on " << object.get_object<On>().doc_name() << "\n";
+		//		//	}
+		//		//);
+		//	}
+		//);
 
-		opack::OperationBuilder<Operation_UpdateStress, Operation_UpdateStress::inputs, Operation_UpdateStress::outputs>(world)
-			.build(
-				[](flecs::iter& iter, size_t index, Stress& stress)
-				{
-					stress.value -= iter.delta_system_time();
-					if (stress.value <= 0)
-						stress.value = 10;
-				}
-		);
+		//opack::OperationBuilder<Operation_UpdateStress, Operation_UpdateStress::inputs, Operation_UpdateStress::outputs>(world)
+		//	.build(
+		//		[](flecs::iter& iter, size_t index, Stress& stress)
+		//		{
+		//			stress.value -= iter.delta_system_time();
+		//			if (stress.value <= 0)
+		//				stress.value = 10;
+		//		}
+		//);
 
-		opack::operation<MyFlow, Operation_Reason>::make<opack::strat::every>(world);
-		opack::impact<Operation_Reason>::make(world,
-			[](flecs::entity e)
-			{
-				return opack::make_output<Operation_Reason>();
-			}
-		);
+		//opack::operation<MyFlow, Operation_Reason>::make<opack::strat::every>(world);
+		//opack::impact<Operation_Reason>::make(world,
+		//	[](flecs::entity e)
+		//	{
+		//		return opack::make_output<Operation_Reason>();
+		//	}
+		//);
 
-		opack::operation<MyFlow, Operation_Act>::make<opack::strat::every>(world);
+		//opack::operation<MyFlow, Operation_Act>::make<opack::strat::every>(world);
 
-		opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
-		opack::impact<Operation_Act>::make(world,
-			[](flecs::entity e, opack::df<Operation_Reason, int>& df)
-			{
-				std::cout << "---- always df : " << df.value << "\n";
-				return std::make_tuple();
-			}
-		);
-		opack::impact<Operation_Act, MyBehaviour>::make(world,
-			[](flecs::entity e, opack::df<Operation_Reason, int>& df)
-			{
-				std::cout << "---- df : " << df.value << "\n";
-				return std::make_tuple();
-			}
-		);
+		//opack::behaviour<MyBehaviour, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value > 5; });
+		//opack::impact<Operation_Act>::make(world,
+		//	[](flecs::entity e, opack::df<Operation_Reason, int>& df)
+		//	{
+		//		std::cout << "---- always df : " << df.value << "\n";
+		//		return std::make_tuple();
+		//	}
+		//);
+		//opack::impact<Operation_Act, MyBehaviour>::make(world,
+		//	[](flecs::entity e, opack::df<Operation_Reason, int>& df)
+		//	{
+		//		std::cout << "---- df : " << df.value << "\n";
+		//		return std::make_tuple();
+		//	}
+		//);
 
-		opack::behaviour<MyBehaviour2, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value <= 5; });
-		opack::impact<Operation_Act, MyBehaviour2>::make(world,
-			[](flecs::entity e, opack::df<Operation_Reason, int>& df)
-			{
-				std::cout << "---- also df : " << df.value << "\n";
-				return std::make_tuple();
-			}
-		);
+		//opack::behaviour<MyBehaviour2, const Stress>(world, [](flecs::entity e, const Stress& stress) {return stress.value <= 5; });
+		//opack::impact<Operation_Act, MyBehaviour2>::make(world,
+		//	[](flecs::entity e, opack::df<Operation_Reason, int>& df)
+		//	{
+		//		std::cout << "---- also df : " << df.value << "\n";
+		//		return std::make_tuple();
+		//	}
+		//);
 
 		// Step III : Populate world
 		// -------------------------
