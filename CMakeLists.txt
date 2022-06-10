@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.13...3.23)
 # Project information
 # ===================
 project(OPACK
-        VERSION 0.3.1
+        VERSION 0.4.0
         DESCRIPTION "C++ library to simulate cognitive agents."
         HOMEPAGE_URL "https://github.com/tblauwe/opack"
         LANGUAGES C CXX
@@ -67,7 +67,7 @@ set(HEADER_LIST
     "include/opack/utils/flecs_helper.hpp" 
     "include/opack/core/action.hpp" 
     "include/opack/module/activity_dl.hpp"
- "include/opack/module/core.hpp" "include/opack/strategy/basic.hpp" "include/opack/strategy/influence_graph.hpp")
+ "include/opack/module/core.hpp" "include/opack/operations/basic.hpp" "include/opack/operations/influence_graph.hpp")
 
 set(SOURCE_LIST 
 	"src/core/simulation.cpp"
