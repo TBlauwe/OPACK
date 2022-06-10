@@ -4,7 +4,7 @@
 
 #include <opack/core.hpp>
 #include <opack/module/activity_dl.hpp>
-#include <opack/strategy/basic.hpp>
+#include <opack/operations/basic.hpp>
 
 struct SimpleSim : opack::Simulation
 {

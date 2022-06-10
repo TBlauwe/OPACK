@@ -1,7 +1,7 @@
 #pragma once
 
 #include <opack/core.hpp>
-#include <opack/strategy/influence_graph.hpp>
+#include <opack/operations/influence_graph.hpp>
 
 struct MedicalSim : opack::Simulation
 {

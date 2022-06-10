@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 #include <opack/core.hpp>
 #include <opack/examples/all.hpp>
-#include <opack/strategy/influence_graph.hpp>
+#include <opack/operations/influence_graph.hpp>
 
 TEST_SUITE_BEGIN("Operation");
 
