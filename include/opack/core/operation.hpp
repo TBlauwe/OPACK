@@ -42,7 +42,7 @@ namespace opack
 					for (auto i : it)
 					{
 						auto e = it.entity(i);
-						if(f(e, (args[i], ...)))
+						if(f(e, args[i]...))
 							e.add<Active, TBeh>();
 						else
 							e.remove<Active, TBeh>();
