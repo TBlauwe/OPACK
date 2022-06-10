@@ -215,5 +215,12 @@ namespace opack
 	{
 		return typename T::impact_outputs{args...};
 	}
+
+	// Shorthand to directly get the const ref of a dataflow.
+	template<typename TOper, typename T>
+	const T& dataflow(flecs::entity e)
+	{
+		return e.template get<df<TOper, T>>()->value;
+	}
 }
 

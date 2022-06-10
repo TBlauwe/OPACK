@@ -132,7 +132,7 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		sim.step();
 
 		{
-			auto v = a1.template get<opack::df<Op, std::vector<int>>>()->value;
+			auto v = opack::dataflow<Op, std::vector<int>>(a1);
 			CHECK(std::find(v.begin(), v.end(), 0) != v.end());
 			CHECK(std::find(v.begin(), v.end(), 1) != v.end());
 			CHECK(std::find(v.begin(), v.end(), 2) == v.end());
@@ -140,7 +140,7 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		}
 
 		{
-			auto v = a2.template get<opack::df<Op, std::vector<int>>>()->value;
+			auto v = opack::dataflow<Op, std::vector<int>>(a2);
 			CHECK(std::find(v.begin(), v.end(), 0) != v.end());
 			CHECK(std::find(v.begin(), v.end(), 1) != v.end());
 			CHECK(std::find(v.begin(), v.end(), 2) != v.end());
