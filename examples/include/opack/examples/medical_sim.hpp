@@ -16,7 +16,7 @@ struct MedicalSim : opack::Simulation
 	struct FCBase { size_t value { 70 }; float var{ 5 };};
 
 	struct Flow : opack::Flow{};
-	struct SuitableActions : opack::O<opack::strat::accumulator, opack::Inputs<FC>, opack::Outputs<opack::Actions_t>> {};
+	struct SuitableActions : opack::operations::Join<flecs::entity> {};
 	//struct ActionSelection : 
 	//	opack::O<
 	//		opack::Inputs<
@@ -55,7 +55,7 @@ struct MedicalSim : opack::Simulation
 		opack::impact<SuitableActions>::make(world,
 			[](flecs::entity agent, SuitableActions::operation_inputs& operation_inputs, SuitableActions::impact_inputs& impact_inputs)
 			{
-				std::cout << "Hello  : " << std::get<FC&>(operation_inputs).value++ << "\n";
+				std::get<SuitableActions::iterator>(impact_inputs) = agent;
 				return opack::make_output<SuitableActions>();
 			}
 			);

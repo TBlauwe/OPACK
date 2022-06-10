@@ -43,10 +43,10 @@ struct SimpleSim : opack::Simulation
 	struct MyBehaviour	: opack::Behaviour {};
 	struct MyBehaviour2 : opack::Behaviour {};
 	struct MyFlow : opack::Flow {};
-	struct Operation_Percept : opack::O<opack::strat::every, opack::Inputs<>, opack::Outputs<>> {};
-	struct Operation_Reason : opack::O<opack::strat::every, opack::Inputs<>, opack::Outputs<int>> {};
-	struct Operation_Act : opack::O<opack::strat::every, opack::Inputs<opack::df<Operation_Reason, int>>, opack::Outputs<>> {};
-	struct Operation_UpdateStress : opack::O<opack::strat::every, opack::Inputs<Stress>, opack::Outputs<>> {};
+	//struct Operation_Percept : opack::O<opack::strat::every, opack::Inputs<>, opack::Outputs<>> {};
+	//struct Operation_Reason : opack::O<opack::strat::every, opack::Inputs<>, opack::Outputs<int>> {};
+	//struct Operation_Act : opack::O<opack::strat::every, opack::Inputs<opack::df<Operation_Reason, int>>, opack::Outputs<>> {};
+	//struct Operation_UpdateStress : opack::O<opack::strat::every, opack::Inputs<Stress>, opack::Outputs<>> {};
 
 	// Types : Activity-model
 	// ======================

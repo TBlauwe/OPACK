@@ -13,11 +13,12 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 
 	struct _MyFlow_ : opack::Flow{};
 	struct Data { int i{ 0 }; };
+
 	opack::flow<_MyFlow_>(sim);
 	auto a1 = opack::agent(sim).template add<_MyFlow_>().template add<Data>();
 	auto a2 = opack::agent(sim).template add<_MyFlow_>().template add<Data>();
 
-	struct _MyOp_ : opack::O<opack::strat::every, opack::Inputs<Data>, opack::Outputs<>> {};
+	struct _MyOp_ : opack::operations::All<Data> {};
 
 	SUBCASE("Default behaviour")
 	{

@@ -15,6 +15,10 @@
 
 #include <opack/utils/type_map.hpp>
 
+#define DEFINE_SELF \
+    typedef auto _self_fn() -> std::remove_reference<decltype(*this)>::type; \
+    using self = decltype(((_self_fn*)0)())
+
 namespace opack
 {
 	namespace internal
@@ -84,6 +88,12 @@ namespace opack
 	struct Behaviour {};
 	using DefaultBehaviour = flecs::pair<Active, Behaviour>;
 
+	template<typename TOper, typename T>
+	struct df 
+	{
+		T value;
+	};
+
 	template<typename T>
 	struct Input {};
 
@@ -93,59 +103,43 @@ namespace opack
 	template<typename... T>
 	using Outputs = std::tuple<T...>;
 
-	template<typename TStrat, typename TInputs, typename TOutputs>
-	struct O;                     
- 
-	template
-	<
-		typename TStrat,
-		template<typename...> typename TInputs, typename... TInput, 
-		template<typename...> typename TOutputs, typename... TOutput
-	>
-	struct O<TStrat, TInputs<TInput...>, TOutputs<TOutput...>> 
-	{
-		using operation_inputs_t = std::tuple<TInput...>;
-		using operation_outputs_t = std::tuple<TOutput...>;
-		using operation_inputs = std::tuple<TInput&...>;
-		using operation_outputs = std::tuple<TOutput...>;
-		using strategy = TStrat;
-		using impact_inputs = typename strategy::impact_inputs;
-		using impact_outputs = typename strategy::impact_outputs;
-
-	};
-
-	template<typename TOper, typename T>
-	struct df 
-	{
-		T value;
-	};
-
 	template<typename TOper>
 	struct Impact
 	{
 		std::function<typename TOper::impact_outputs(flecs::entity, typename TOper::operation_inputs&, typename TOper::impact_inputs&)> func;
 	};
 
-	template<typename TInputs, typename TOutputs>
-	struct Strategy;                     
-
+	template<typename TInputs, typename TOutputs, typename UInputs, typename UOutputs>
+	struct O;                     
+ 
 	template
 	<
-		template<typename...> typename TInputs, typename... TInput,
-		template<typename...> typename TOutputs, typename... TOutput
+		template<typename...> typename TInputs, typename... TInput, 
+		template<typename...> typename TOutputs, typename... TOutput,
+		template<typename...> typename UInputs, typename... UInput, 
+		template<typename...> typename UOutputs, typename... UOutput
 	>
-	struct Strategy<TInputs<TInput...>, TOutputs<TOutput...>>
+	struct O<TInputs<TInput...>, TOutputs<TOutput...>, UInputs<UInput...>, UOutputs<UOutput...>> 
 	{
-		using impact_inputs = std::tuple<TInput&...> ;
-		using impact_outputs = std::tuple<TOutput...> ;
+		using operation_t = O<TInputs<TInput...>, TOutputs<TOutput...>, UInputs<UInput...>, UOutputs<UOutput...>>;
+		using operation_inputs_t = std::tuple<TInput...>;
+		using operation_outputs_t = std::tuple<TOutput...>;
+		using operation_inputs = std::tuple<TInput&...>;
+		using operation_outputs = std::tuple<TOutput...>;
+		using impact_inputs = std::tuple<UInput...>;
+		using impact_outputs = std::tuple<UOutput...>;
+		static constexpr size_t operation_inputs_size = sizeof...(TInput);
+		static constexpr size_t operation_outputs_size = sizeof...(TOutput);
+		static constexpr size_t impact_inputs_size = sizeof...(UInput);
+		static constexpr size_t impact_outputs_size = sizeof...(UOutput);
 
 		template<typename TOper>
-		struct Algorithm
+		struct Strategy
 		{
 			using impact_t = Impact<TOper>;
 			using impacts_t = std::vector<const impact_t*>;
 
-			Algorithm(flecs::entity _agent) : agent{ _agent }
+			Strategy(flecs::entity _agent) : agent{ _agent }
 			{
 				agent.each<Active>(
 					[&](flecs::entity object)
@@ -157,9 +151,10 @@ namespace opack
 				);
 			}
 
+			operation_outputs compute(operation_inputs& args);
+
 			flecs::entity	agent{};
 			impacts_t		impacts{};
-			impact_inputs	inputs{};
 		};
 	};
 

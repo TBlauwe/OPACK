@@ -120,16 +120,18 @@ namespace opack
 	}
 
 	// Primary template
-	template<typename TOper, typename TInputs, typename TOutputs>
+	template<typename TOper, typename TInputs, typename TOutputs, typename UInputs, typename UOutputs>
 	class OperationBuilder;                     
  
 	// Partial specialization
 	template<
 		typename TOper, 
 		template<typename...> typename TInputs, typename... TInput, 
-		template<typename ...> typename TOutputs, typename... TOutput
+		template<typename ...> typename TOutputs, typename... TOutput,
+		template<typename...> typename UInputs, typename... UInput, 
+		template<typename ...> typename UOutputs, typename... UOutput
 	>
-	class OperationBuilder<TOper, TInputs<TInput...>, TOutputs<TOutput...>>
+	class OperationBuilder<TOper, TInputs<TInput...>, TOutputs<TOutput...>, UInputs<UInput...>, UOutputs<UOutput...>>
 	{
 	public:
 		using inputs = std::tuple<TInput&...> ;
@@ -178,8 +180,6 @@ namespace opack
 			return operation;
 		}
 
-		//flecs::entity strategy(std::function<void(flecs::entity, TInputs...)> strategy)
-
 		flecs::entity strategy()
 		{
 			system_builder.iter(
@@ -188,8 +188,8 @@ namespace opack
 					for (auto i : it)
 					{
 						auto e = it.entity(i);
-						inputs tuple = std::tie<TInput&...>((args[i], ...));
-						auto result = typename TOper::strategy::template Algorithm<TOper>(e).compute(tuple);
+						inputs tuple = std::tie(args[i]...);
+						auto result = typename TOper::template Strategy<TOper>(e).compute(tuple);
 						(e.set<df<TOper, TOutput>>({std::get<TOutput>(result)}), ...); // Should be set from strategy result
 					}
 				}
@@ -206,7 +206,7 @@ namespace opack
 	template<typename TFlow, typename TOper>
 	void operation(flecs::world& world)
 	{
-		OperationBuilder<TOper, typename TOper::operation_inputs_t, typename TOper::operation_outputs_t>(world)
+		OperationBuilder<TOper, typename TOper::operation_inputs_t, typename TOper::operation_outputs_t, typename TOper::impact_inputs, typename TOper::impact_outputs>(world)
 			.template flow<TFlow>().strategy();
 	};
 

@@ -10,66 +10,71 @@
 #include <flecs.h>
 #include <opack/core/types.hpp>
 
-namespace opack::strat
+namespace opack::operations
 {
+	template<typename... Args>
+	using all_t =
+		opack::O<
+		opack::Inputs<Args...>,
+		opack::Outputs<>,
+		opack::Inputs<>,
+		opack::Outputs<>
+		>;
 
-	//template<typename TOper>
-	//struct every : opack::Strategy<TOper, std::tuple<>, std::tuple<>>
-	//{
-	//	using opack::Strategy<TOper, std::tuple<>, std::tuple<>>::Strategy;
-
-	//	typename TOper::operation_outputs compute(const typename TOper::operation_inputs& args)
-	//	{
-	//		auto result = typename TOper::operation_outputs();
-	//		for (const auto impact : this->impacts)
-	//		{
-	//			result = impact->func(this->agent, args, this->inputs);
-	//		}
-	//		return result;
-	//	};
-	struct every : opack::Strategy<opack::Inputs<>, opack::Outputs<>>
+	template<typename... Args>
+	struct All : all_t<Args...>
 	{
-		using strategy_t = opack::Strategy<opack::Inputs<>, opack::Outputs<>>;
+		using type = all_t<Args...>;
 
 		template<typename TOper>
-		struct Algorithm : strategy_t::Algorithm<TOper>
+		struct Strategy : type::template Strategy<TOper>
 		{
-			using strategy_t::Algorithm<TOper>::Algorithm;
+			using type::template Strategy<TOper>::Strategy;
 
 			typename TOper::operation_outputs compute(typename TOper::operation_inputs& args)
 			{
+				auto inputs = std::make_tuple();
 				for (const auto impact : this->impacts)
 				{
-					impact->func(this->agent, args, this->inputs);
+					impact->func(this->agent, args, inputs);
 				}
-				return typename TOper::operation_outputs();
+				return std::make_tuple();
 			};
 		};
 	};
 
-//};
+	template<typename T, typename... Args>
+	using join_t =
+		opack::O<
+		opack::Inputs<Args...>,
+		opack::Outputs<std::vector<T>>,
+		opack::Inputs<std::back_insert_iterator<std::vector<T>>>,
+		opack::Outputs<>
+		>;
 
-	struct accumulator : opack::Strategy<opack::Inputs<>, opack::Outputs<>>
+	template<typename T, typename... Args>
+	struct Join : join_t<T, Args...>
 	{
-		using strategy_t = opack::Strategy<opack::Inputs<>, opack::Outputs<>>;
+		using type = join_t<T, Args...>;
+		using container = std::vector<T>;
+		using iterator = std::back_insert_iterator<container>;
 
 		template<typename TOper>
-		struct Algorithm : strategy_t::Algorithm<TOper>
+		struct Strategy : type::template Strategy<TOper>
 		{
-			using strategy_t::Algorithm<TOper>::Algorithm;
+			using type::template Strategy<TOper>::Strategy;
 
 			typename TOper::operation_outputs compute(typename TOper::operation_inputs& args)
 			{
-				auto result = typename TOper::operation_outputs();
+				std::vector<T> container{};
+				auto inputs = std::make_tuple(std::back_inserter(container));
 				for (const auto impact : this->impacts)
 				{
-					auto impact_result = impact->func(this->agent, args, this->inputs);
-					//(std::get<TOutput>(result).push_back() }), ...); // Should be set from strategy result
+					impact->func(this->agent, args, inputs);
 				}
-				return result;
+				return std::make_tuple(container);
 			};
 		};
-
 	};
 
 	/**
