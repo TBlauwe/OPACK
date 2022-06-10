@@ -92,6 +92,12 @@ namespace opack
                 scores.emplace(&v, -1);
         }
 
+        void entry(const V& v)
+        {
+            if(scores.find(&v) == scores.end())
+                scores.emplace(&v, 0);
+        }
+
         Influences& positive_influences()
         {
             return _positive_influences;
@@ -105,6 +111,11 @@ namespace opack
         int score(const V& v) const
         {
             return scores.at(&v);
+        }
+
+        Scores& get_scores()
+        {
+            return scores;
         }
 
         bool is_highest(const V* v) const

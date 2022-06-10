@@ -24,6 +24,16 @@ namespace opack
 	}
 
 	/**
+	@brief Create an action of type @c T. Compose the action as required, before having entites acting on it.
+	*/
+	template<std::derived_from<Action> T>
+	flecs::entity action(flecs::entity entity)
+	{
+		auto world = entity.world();
+		return action<T>(world);
+	}
+
+	/**
 	@brief @c initiator is now acting with actuator @c to accomplish given @c action.
 	*/
 	template<std::derived_from<Actuator> T>

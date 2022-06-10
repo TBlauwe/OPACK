@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 #include <opack/core.hpp>
 #include <opack/examples/all.hpp>
+#include <opack/strategy/influence_graph.hpp>
 
 TEST_SUITE_BEGIN("Operation");
 
@@ -145,6 +146,86 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 			CHECK(std::find(v.begin(), v.end(), 1) != v.end());
 			CHECK(std::find(v.begin(), v.end(), 2) != v.end());
 			CHECK(std::find(v.begin(), v.end(), 3) == v.end());
+		}
+	}
+
+	SUBCASE("Operation Join")
+	{
+		struct Op1 : opack::operations::Join<opack::Action_t> {};
+		struct Op2 : opack::operations::SelectionByIGraph<opack::Action_t, Op1, Data> {};
+		struct Op3 : opack::operations::All<opack::df<Op2, opack::Action_t>> {};
+
+		struct Action1 : opack::Action {};
+		struct Action2 : opack::Action {};
+		struct Action3 : opack::Action {};
+		struct Actuator : opack::Actuator {};
+
+		opack::reg<Action1>(sim);
+		opack::reg<Action2>(sim);
+		opack::reg<Action3>(sim);
+		opack::reg<Actuator>(sim);
+
+		opack::operation<_MyFlow_, Op1>(sim);
+		opack::operation<_MyFlow_, Op2>(sim);
+		opack::operation<_MyFlow_, Op3>(sim);
+
+		opack::impact<Op1>::make(sim,
+			[](flecs::entity e, typename Op1::operation_inputs& i1, typename Op1::impact_inputs& i2)
+			{
+				return opack::make_output<Op1>();
+			}
+		);
+		opack::impact<Op1, _B1_>::make(sim,
+			[](flecs::entity e, typename Op1::operation_inputs& i1, typename Op1::impact_inputs& i2)
+			{
+				std::get<typename Op1::iterator>(i2) = opack::action<Action1>(e);
+				return opack::make_output<Op1>();
+			}
+		);
+		opack::impact<Op1, _B2_>::make(sim,
+			[](flecs::entity e, typename Op1::operation_inputs& i1, typename Op1::impact_inputs& i2)
+			{
+				std::get<typename Op1::iterator>(i2) = opack::action<Action2>(e);
+				return opack::make_output<Op1>();
+			}
+		);
+		opack::impact<Op1, _B3_>::make(sim,
+			[](flecs::entity e, typename Op1::operation_inputs& i1, typename Op1::impact_inputs& i2)
+			{
+				std::get<typename Op1::iterator>(i2) = opack::action<Action3>(e);
+				return opack::make_output<Op1>();
+			}
+		);	
+
+		opack::impact<Op2>::make(sim,
+			[](flecs::entity e, typename Op2::operation_inputs& i1, typename Op2::impact_inputs& i2)
+			{
+				const auto id = std::get<typename Op2::id>(i2);
+				auto& actions = std::get<typename Op2::input_dataflow>(i1).value;
+				auto & graph = std::get<typename Op2::graph>(i2);
+				for (auto& a : actions)
+				{
+					graph.entry(a);
+					//if(a.template has<Action1>())
+				}
+				return opack::make_output<Op2>();
+			}
+		);
+
+		opack::impact<Op3>::make(sim,
+			[](flecs::entity e, typename Op3::operation_inputs& i1, typename Op3::impact_inputs& i2)
+			{
+				auto action = std::get<opack::df<Op2, opack::Action_t>&>(i1).value;
+				opack::act<Actuator>(e, action);
+				return opack::make_output<Op3>();
+			}
+		);
+		
+		sim.step(1.0f);
+		sim.step();
+		{
+			auto action = opack::dataflow<Op2, opack::Action_t>(a1);
+			CHECK(action.template has<Action1>());
 		}
 	}
 }

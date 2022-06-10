@@ -91,6 +91,8 @@ namespace opack
 	template<typename TOper, typename T>
 	struct df 
 	{
+		using operation = TOper;
+		using type = T;
 		T value;
 	};
 
@@ -106,6 +108,7 @@ namespace opack
 	template<typename TOper>
 	struct Impact
 	{
+		flecs::entity_view behaviour;
 		std::function<typename TOper::impact_outputs(flecs::entity, typename TOper::operation_inputs&, typename TOper::impact_inputs&)> func;
 	};
 

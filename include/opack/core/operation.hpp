@@ -68,7 +68,7 @@ namespace opack
 		static void make(flecs::world& world, TFunc&& func)
 		{
 			auto behaviour = world.entity<T>();
-			behaviour.template set<TOper, Impact<TOper>> ({ func });
+			behaviour.template set<TOper, Impact<TOper>> ({ behaviour, func });
 		};
 	};
 
@@ -214,6 +214,12 @@ namespace opack
 	typename T::impact_outputs make_output(Args&&... args)
 	{
 		return typename T::impact_outputs{args...};
+	}
+
+	template<typename T, typename... Args>
+	typename T::impact_inputs make_input(Args&&... args)
+	{
+		return typename T::impact_inputs{args...};
 	}
 
 	// Shorthand to directly get the const ref of a dataflow.

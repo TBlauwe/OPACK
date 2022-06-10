@@ -1,5 +1,8 @@
 #include <flecs.h>
+#include <tuple>
 
+template<typename... T>
+using Inputs = std::tuple<T...>;
 
 template<typename TOper>
 struct dataflow {};
@@ -18,8 +21,23 @@ struct C
     const char * w {"Test"};
 };
 
+template<typename TInputs>
+struct Test;
+
+template<template <typename...> class TInputs, typename... TInput>
+struct Test<TInputs<TInput...>>
+{
+    using tuple = std::tuple<TInput...>;
+};
+
+template<typename T>
+struct input_type
+{};
+
 int main(int, char* [])
 {
+    static_assert(std::is_same_v<int, df<A, int>::type>, "works");
+
     flecs::world ecs;
     auto e = ecs.entity()
         .set<df<A, int>>({1})
