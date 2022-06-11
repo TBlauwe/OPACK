@@ -161,7 +161,7 @@ struct SimpleSim : opack::Simulation
 		//opack::impact<Operation_Reason>::make(world,
 		//	[](flecs::entity e)
 		//	{
-		//		return opack::make_output<Operation_Reason>();
+		//		return opack::make_outputs<Operation_Reason>();
 		//	}
 		//);
 

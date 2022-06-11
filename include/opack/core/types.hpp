@@ -93,7 +93,7 @@ namespace opack
 	struct Impact
 	{
 		flecs::entity_view behaviour;
-		std::function<typename TOper::impact_outputs(flecs::entity, typename TOper::impact_inputs&)> func;
+		std::function<typename TOper::outputs(flecs::entity, typename TOper::inputs&)> func;
 	};
 
 	template<typename TInputs, typename TOutputs, typename UInputs, typename UOutputs>
@@ -113,8 +113,10 @@ namespace opack
 		using operation_outputs_t = std::tuple<TOutput...>;
 		using operation_inputs = std::tuple<TInput&...>;
 		using operation_outputs = std::tuple<TOutput...>;
-		using impact_inputs = std::tuple<TInput&..., UInput...>;
+		using impact_inputs = std::tuple<UInput...>;
 		using impact_outputs = std::tuple<UOutput...>;
+		using inputs = std::tuple<TInput&..., UInput...>;
+		using outputs = std::tuple<UOutput...>;
 		static constexpr size_t operation_inputs_size = sizeof...(TInput);
 		static constexpr size_t operation_outputs_size = sizeof...(TOutput);
 		static constexpr size_t impact_inputs_size = sizeof...(UInput);

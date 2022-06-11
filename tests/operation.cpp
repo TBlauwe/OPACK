@@ -49,34 +49,34 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 
 		// Default impact for Op
 		opack::impact<Op, opack::Behaviour>(sim,
-			[](flecs::entity e, typename Op::impact_inputs& i1)
+			[](flecs::entity e, typename Op::inputs& i1)
 			{
 				std::get<Data&>(i1).i++;
-				return opack::make_output<Op>();
+				return opack::make_outputs<Op>();
 			}
 		);
 
 		opack::impact<Op, _B1_>(sim,
-			[](flecs::entity e, typename Op::impact_inputs& i1)
+			[](flecs::entity e, typename Op::inputs& i1)
 			{
 				std::get<Data&>(i1).i += 2;
-				return opack::make_output<Op>();
+				return opack::make_outputs<Op>();
 			}
 		);
 
 		opack::impact<Op, _B2_>(sim,
-			[](flecs::entity e, typename Op::impact_inputs& i1)
+			[](flecs::entity e, typename Op::inputs& i1)
 			{
 				std::get<Data&>(i1).i++;
-				return opack::make_output<Op>();
+				return opack::make_outputs<Op>();
 			}
 		);
 
 		opack::impact<Op, _B3_>(sim,
-			[](flecs::entity e, typename Op::impact_inputs& i1)
+			[](flecs::entity e, typename Op::inputs& i1)
 			{
 				std::get<Data&>(i1).i += 100;
-				return opack::make_output<Op>();
+				return opack::make_outputs<Op>();
 			}
 		);
 
@@ -101,31 +101,31 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		struct Op : opack::operations::Join<int> {};
 		opack::operation<_MyFlow_, Op>(sim);
 		opack::default_impact<Op>(sim,
-			[](flecs::entity e, typename Op::impact_inputs& i1)
+			[](flecs::entity e, typename Op::inputs& i1)
 			{
 				Op::iterator(i1) = 0;
-				return opack::make_output<Op>();
+				return opack::make_outputs<Op>();
 			}
 		);
 		opack::impact<Op, _B1_>(sim,
-			[](flecs::entity e, typename Op::impact_inputs& i1)
+			[](flecs::entity e, typename Op::inputs& i1)
 			{
 				Op::iterator(i1) = 1;
-				return opack::make_output<Op>();
+				return opack::make_outputs<Op>();
 			}
 		);
 		opack::impact<Op, _B2_>(sim,
-			[](flecs::entity e, typename Op::impact_inputs& i1)
+			[](flecs::entity e, typename Op::inputs& i1)
 			{
 				Op::iterator(i1) = 2;
-				return opack::make_output<Op>();
+				return opack::make_outputs<Op>();
 			}
 		);
 		opack::impact<Op, _B3_>(sim,
-			[](flecs::entity e, typename Op::impact_inputs& i1)
+			[](flecs::entity e, typename Op::inputs& i1)
 			{
 				Op::iterator(i1) = 3;
-				return opack::make_output<Op>();
+				return opack::make_outputs<Op>();
 			}
 		);	
 		
@@ -165,35 +165,35 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		opack::operation<_MyFlow_, Op1, Op2, Op3>(sim);
 
 		opack::default_impact<Op1>(sim,
-			[](flecs::entity e, typename Op1::impact_inputs& i1)
+			[](flecs::entity e, typename Op1::inputs& i1)
 			{
-				return opack::make_output<Op1>();
+				return opack::make_outputs<Op1>();
 			}
 		);
 		opack::impact<Op1, _B1_>(sim,
-			[](flecs::entity e, typename Op1::impact_inputs& i1)
+			[](flecs::entity e, typename Op1::inputs& i1)
 			{
 				Op1::iterator(i1) = opack::action<Action1>(e);
-				return opack::make_output<Op1>();
+				return opack::make_outputs<Op1>();
 			}
 		);
 		opack::impact<Op1, _B2_>(sim,
-			[](flecs::entity e, typename Op1::impact_inputs& i1)
+			[](flecs::entity e, typename Op1::inputs& i1)
 			{
 				Op1::iterator(i1) = opack::action<Action2>(e);
-				return opack::make_output<Op1>();
+				return opack::make_outputs<Op1>();
 			}
 		);
 		opack::impact<Op1, _B3_>(sim,
-			[](flecs::entity e, typename Op1::impact_inputs& i1)
+			[](flecs::entity e, typename Op1::inputs& i1)
 			{
 				Op1::iterator(i1) = opack::action<Action3>(e);
-				return opack::make_output<Op1>();
+				return opack::make_outputs<Op1>();
 			}
 		);	
 
 		opack::default_impact<Op2>(sim,
-			[](flecs::entity e, typename Op2::impact_inputs& i1)
+			[](flecs::entity e, typename Op2::inputs& i1)
 			{
 				const auto id = Op2::get_influencer(i1);
 				auto& actions = Op2::get_choices(i1);
@@ -203,16 +203,16 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 					graph.entry(a);
 					//if(a.template has<Action1>())
 				}
-				return opack::make_output<Op2>();
+				return opack::make_outputs<Op2>();
 			}
 		);
 
 		opack::default_impact<Op3>(sim,
-			[](flecs::entity e, typename Op3::impact_inputs& i1)
+			[](flecs::entity e, typename Op3::inputs& i1)
 			{
 				auto action = std::get<opack::df<Op2, opack::Action_t>&>(i1).value;
 				opack::act<Actuator>(e, action);
-				return opack::make_output<Op3>();
+				return opack::make_outputs<Op3>();
 			}
 		);
 		

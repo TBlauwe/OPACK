@@ -216,20 +216,20 @@ namespace opack
 	template<typename TFlow, typename... TOper>
 	void operation(flecs::world& world)
 	{
-		(OperationBuilder<TOper, typename TOper::operation_inputs_t, typename TOper::operation_outputs_t, typename TOper::impact_inputs, typename TOper::impact_outputs>(world)
+		(OperationBuilder<TOper, typename TOper::operation_inputs_t, typename TOper::operation_outputs_t, typename TOper::inputs, typename TOper::outputs>(world)
 			.template flow<TFlow>().strategy(), ...);
 	};
 
 	template<typename T, typename... Args>
-	inline typename T::impact_outputs make_output(Args&&... args)
+	inline typename T::outputs make_outputs(Args&&... args)
 	{
-		return typename T::impact_outputs{args...};
+		return typename T::outputs{args...};
 	}
 
 	template<typename T, typename... Args>
-	inline typename T::impact_inputs make_input(Args&&... args)
+	inline typename T::inputs make_inputs(Args&&... args)
 	{
-		return typename T::impact_inputs{args...};
+		return typename T::inputs{args...};
 	}
 
 	// Shorthand to directly get the const ref of a dataflow.

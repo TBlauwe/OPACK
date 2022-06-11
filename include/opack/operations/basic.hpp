@@ -34,7 +34,7 @@ namespace opack::operations
 			template<typename... Ts>
 			typename TOper::operation_outputs compute(Ts&... args)
 			{
-				auto inputs = opack::make_input<TOper>(args...);
+				auto inputs = opack::make_inputs<TOper>(args...);
 				for (const auto impact : this->impacts)
 				{
 					impact->func(this->agent, inputs);
@@ -60,7 +60,7 @@ namespace opack::operations
 		using container_t = std::vector<T>;
 		using iterator_t = std::back_insert_iterator<container_t>;
 
-		static iterator_t iterator(typename parent_t::impact_inputs& tuple)
+		static iterator_t iterator(typename parent_t::inputs& tuple)
 		{
 			return std::get<iterator_t>(tuple);
 		}
@@ -74,7 +74,7 @@ namespace opack::operations
 			typename TOper::operation_outputs compute(Ts&... args)
 			{
 				std::vector<T> container{};
-				auto inputs = opack::make_input<TOper>(args..., std::back_inserter(container));
+				auto inputs = opack::make_inputs<TOper>(args..., std::back_inserter(container));
 				for (const auto impact : this->impacts)
 				{
 					impact->func(this->agent, inputs);

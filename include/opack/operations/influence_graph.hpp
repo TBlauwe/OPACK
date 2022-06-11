@@ -35,17 +35,17 @@ namespace opack::operations
 		using graph = opack::InfluenceGraph<flecs::entity_view, T>&;
 		using id = flecs::entity_view;
 
-		static container& get_choices(typename parent_t::impact_inputs& tuple)
+		static container& get_choices(typename parent_t::inputs& tuple)
 		{
 			return std::get<input_dataflow>(tuple).value;
 		}
 
-		static id get_influencer(typename parent_t::impact_inputs& tuple)
+		static id get_influencer(typename parent_t::inputs& tuple)
 		{
 			return std::get<id>(tuple);
 		}
 
-		static graph get_graph(typename parent_t::impact_inputs& tuple)
+		static graph get_graph(typename parent_t::inputs& tuple)
 		{
 			return std::get<graph>(tuple);
 		}
@@ -62,7 +62,7 @@ namespace opack::operations
 				for (size_t i{ 0 }; i < this->impacts.size(); i++)
 				{
 					const auto& impact = *this->impacts[i];
-					auto inputs = opack::make_input<TOper>(args..., impact.behaviour, ig);
+					auto inputs = opack::make_inputs<TOper>(args..., impact.behaviour, ig);
 					impact.func(this->agent, inputs);
 				}
 				auto result = ig.compute();
