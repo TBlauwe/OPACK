@@ -7,8 +7,6 @@ adl::adl(flecs::world& world)
 	world.entity<adl_::world::prefab::Activities>("::world::prefab::Activities").add(flecs::Module);
 	world.entity<adl_::world::Activities>("::world::Activities").add(flecs::Module);
 
-	world.add<opack::internal::PrefabDict<Activity>>();
-
 	world.component<adl::Activity>();
 	world.component<adl::Satisfied>();
 	world.component<adl::Order>();

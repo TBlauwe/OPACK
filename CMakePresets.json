@@ -29,7 +29,6 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "cl.exe",
                 "CMAKE_CXX_COMPILER": "cl.exe",
-                "CPM_SOURCE_CACHE": "D:\\dev\\.cache"
             },
             "condition": {
                 "type": "equals",

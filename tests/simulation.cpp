@@ -200,18 +200,18 @@ flecs::entity test_entity_creation(flecs::world& world, const char* name = "")
 	size_t counter{ opack::count<Base>(world) };
 	size_t second_counter{ opack::count<Derived>(world) };
 
-	auto e = opack::instantiate<Base, Derived>(world, name);
+	auto e = opack::instantiate<Derived>(world, name);
 	counter++;
 	second_counter++;
 	if (name)
 		CHECK(strcmp(e.doc_name(), name) == 0);
 
-	CHECK(e.is_a(opack::prefab<Base, Base>(world)));
+	CHECK(e.is_a(opack::prefab<Base>(world)));
 	CHECK(e.template has<Base>());
-	CHECK(e.is_a(opack::prefab<Base, Derived>(world)));
+	CHECK(e.is_a(opack::prefab<Derived>(world)));
 	CHECK(e.template has<Derived>());
-	CHECK(opack::count(world, flecs::IsA, opack::prefab<Base, Base>(world)) == counter);
-	CHECK(opack::count(world, flecs::IsA, opack::prefab<Base, Derived>(world)) == second_counter);
+	CHECK(opack::count(world, flecs::IsA, opack::prefab<Base>(world)) == counter);
+	CHECK(opack::count(world, flecs::IsA, opack::prefab<Derived>(world)) == second_counter);
 	CHECK(opack::count<Base>(world) == counter);
 	CHECK(opack::count<Derived>(world) == second_counter);
 	return e;
@@ -424,7 +424,7 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation manipulation", T, sim_manipulation)
 		// ==============
 		auto help_inst = opack::action<Help>(sim);
 		CHECK(opack::is_a<opack::Action>(help_inst));
-		CHECK(opack::is_a<opack::Action, Help>(help_inst));
+		CHECK(opack::is_a<Help>(help_inst));
 
 		//Action without initiator should be deleted
 		CHECK(help_inst.is_alive());

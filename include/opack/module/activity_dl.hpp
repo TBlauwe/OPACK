@@ -89,7 +89,7 @@ struct adl
 		size_t arity_min = 1
 	)
 	{
-		return opack::internal::add_prefab<Activity, T>(world)
+		return opack::internal::add_prefab<T>(world)
 			.template set<Constructor>({ logical, temporal })
 			.template set<opack::Arity>({ arity_min, arity_max })
 			.template child_of<adl_::world::prefab::Activities>();
@@ -102,7 +102,7 @@ struct adl
 	static flecs::entity instantiate(flecs::world& world)
 	{
 		return world.entity()
-			.is_a(opack::prefab<Activity, T>(world))
+			.is_a(opack::prefab<T>(world))
 			.template child_of<adl_::world::Activities>()
 			.set_doc_name(type_name_cstr<T>())
 			;

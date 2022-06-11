@@ -20,7 +20,7 @@ namespace opack
 	template<std::derived_from<Action> T>
 	flecs::entity action(flecs::world& world)
 	{
-		return world.entity().is_a(prefab<Action, T>(world)).set_doc_name(type_name_cstr<T>()).template child_of<world::Actions>();
+		return world.entity().is_a(prefab<T>(world)).set_doc_name(type_name_cstr<T>()).template child_of<world::Actions>();
 	}
 
 	/**

@@ -26,12 +26,6 @@ opack::concepts::concepts(flecs::world& world)
 	world.entity<world::Operations>("::world::Operations").add(flecs::Module);
 	world.entity<world::Behaviours>("::world::Behaviours").add(flecs::Module);
 
-	world.add<opack::internal::PrefabDict<Agent>>();
-	world.add<opack::internal::PrefabDict<Artefact>>();
-	world.add<opack::internal::PrefabDict<Action>>();
-	world.add<opack::internal::PrefabDict<Actuator>>();
-	world.add<opack::internal::PrefabDict<Sense>>();
-
 	// Operation
 	// ---------
 	world.component<Flow>();
@@ -47,10 +41,10 @@ opack::concepts::concepts(flecs::world& world)
 	world.component<Actuator>();
 	world.component<Sense>();
 
-	opack::internal::add_prefab<Agent, Agent>(world)
+	opack::internal::add_prefab<Agent>(world)
 		.child_of<world::prefab::Agents>();
 
-	opack::internal::add_prefab<Artefact, Artefact>(world)
+	opack::internal::add_prefab<Artefact>(world)
 		.child_of<world::prefab::Artefacts>();
 
 	// Action
@@ -65,7 +59,7 @@ opack::concepts::concepts(flecs::world& world)
 		.member<float, flecs::units::duration::Seconds>("value")
 		;
 
-	auto action = opack::internal::add_prefab<Action, Action>(world)
+	auto action = opack::internal::add_prefab<Action>(world)
 		.add<Arity>()
 		.child_of<world::prefab::Actions>();
 

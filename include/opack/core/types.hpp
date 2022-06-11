@@ -15,45 +15,35 @@
 
 #include <opack/utils/type_map.hpp>
 
-#define DEFINE_SELF \
-    typedef auto _self_fn() -> std::remove_reference<decltype(*this)>::type; \
-    using self = decltype(((_self_fn*)0)())
-
 namespace opack
 {
 	namespace internal
 	{
-		template<typename T>
-		struct PrefabDict
-		{
-			std::map<std::type_index, flecs::entity> container;
-		};
+		//struct Prefab { flecs::entity entity; };
 
-		template<typename Category, typename Key>
+		template<typename T>
 		flecs::entity add_prefab(flecs::world& world)
 		{
-			auto dict = world.get_mut<opack::internal::PrefabDict<Category>>();
-			auto entity = world.prefab().add<Key>();
-			dict->container.emplace(typeid(Key), entity );
+			auto entity = world.prefab().add<T>();
+			world.entity<T>().template set<flecs::entity>({ entity });
+			//dict->container.emplace(typeid(Key), entity );
 			return entity;
 		}
 
-		template<typename Category, typename Key>
+		template<typename T>
 		bool has_prefab(flecs::world& world)
 		{
-			auto dict = world.get<opack::internal::PrefabDict<Category>>();
-			return dict->container.contains(typeid(Key));
+			return world.entity<T>().template has<flecs::entity>();
 		}
 	}
 
 	/**
-	 * Returns entity (prefab) associated with @c Key in the category @c Category.
+	 * Get prefab of type @c T.
 	 */
-	template<typename Category, typename Key = Category>
-	flecs::entity prefab(flecs::world& world)
+	template<typename T>
+	flecs::entity& prefab(flecs::world& world)
 	{
-		auto dict = world.get<opack::internal::PrefabDict<Category>>();
-		return dict->container.at(typeid(Key));
+		return *world.entity<T>().template get_mut<flecs::entity>();
 	}
 
 	// Used only to structure hierarchy

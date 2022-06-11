@@ -27,13 +27,13 @@ namespace opack {
 	template<std::derived_from<Agent> T, std::derived_from<Agent> TDerived = Agent>
 	inline flecs::entity register_agent(flecs::world& world)
 	{
-		if (opack::internal::has_prefab<Agent, T>(world))
-			return flecs::entity{};
+		if (opack::internal::has_prefab<T>(world))
+			return opack::prefab<T>(world);
 		else
 		{
 			world.component<T>().template child_of<opack::concepts>();
-			return opack::internal::add_prefab<Agent, T>(world)
-				.is_a(prefab<Agent, TDerived>(world))
+			return opack::internal::add_prefab<T>(world)
+				.is_a(prefab<TDerived>(world))
 				.template child_of<world::prefab::Agents>();
 		}
 	}
@@ -44,13 +44,13 @@ namespace opack {
 	template<std::derived_from<Artefact> T, std::derived_from<Artefact> TDerived = Artefact>
 	inline flecs::entity register_artefact(flecs::world& world)
 	{
-		if (opack::internal::has_prefab<Artefact, T>(world))
-			return flecs::entity{};
+		if (opack::internal::has_prefab<T>(world))
+			return opack::prefab<T>(world);
 		else
 		{
 			world.component<T>().template child_of<opack::concepts>();
-			return opack::internal::add_prefab<Artefact, T>(world)
-				.is_a(prefab<Artefact, TDerived>(world))
+			return opack::internal::add_prefab<T>(world)
+				.is_a(prefab<TDerived>(world))
 				.template child_of<world::prefab::Artefacts>();
 		}
 	}
@@ -61,13 +61,13 @@ namespace opack {
 	template<std::derived_from<Action> T, std::derived_from<Action> TDerived = Action>
 	inline flecs::entity register_action(flecs::world& world)
 	{
-		if (opack::internal::has_prefab<Action, T>(world))
-			return flecs::entity{};
+		if (opack::internal::has_prefab<T>(world))
+			return opack::prefab<T>(world);
 		else
 		{
 			world.component<T>().template child_of<opack::concepts>();
-			return opack::internal::add_prefab<Action, T>(world)
-				.is_a(prefab<Action, TDerived>(world))
+			return opack::internal::add_prefab<T>(world)
+				.is_a(prefab<TDerived>(world))
 				.template child_of<world::prefab::Actions>();
 		}
 	}
@@ -95,11 +95,11 @@ namespace opack {
 			.template child_of<world::Actuators>();
 	}
 
-	template<typename Category, typename Key = Category>
+	template<typename T>
 	bool is_a(flecs::entity entity)
 	{
 		auto world = entity.world();
-		return entity.has(flecs::IsA, prefab<Category, Key>(world));
+		return entity.has(flecs::IsA, prefab<T>(world));
 	}
 
 	/**
@@ -141,10 +141,10 @@ namespace opack {
 	/**
 	@brief Instantiate an entity from prefab @c U of category @c T.
 	*/
-	template<typename T, typename U>
+	template<typename T>
 	inline flecs::entity instantiate(flecs::world& world)
 	{
-		return world.entity().is_a(prefab<T, U>(world));
+		return world.entity().is_a(prefab<T>(world));
 	}
 
 	/**
@@ -154,12 +154,12 @@ namespace opack {
 	void name(flecs::entity e, const char* name);
 
 	/**
-	@brief Instantiate an entity named @c name (for debugging/visualization) purposes, from prefab @c U of category @c T.
+	@brief Instantiate an entity named @c name (for debugging/visualization) purposes, from prefab @c T.
 	*/
-	template<typename T, typename U>
+	template<typename T>
 	inline flecs::entity instantiate(flecs::world& world, const char* name)
 	{
-		auto e = world.entity().is_a(prefab<T, U>(world));
+		auto e = world.entity().is_a(prefab<T>(world));
 		opack::name(e, name);
 		return e;
 	}
@@ -171,7 +171,7 @@ namespace opack {
 	template<std::derived_from<Agent> T = opack::Agent>
 	inline flecs::entity agent(flecs::world& world, const char* name)
 	{
-		return instantiate<Agent, T>(world, name).template child_of<world::Agents>().template add<DefaultBehaviour>();
+		return instantiate<T>(world, name).template child_of<world::Agents>().template add<DefaultBehaviour>();
 	}
 
 	/**
@@ -180,7 +180,7 @@ namespace opack {
 	template<std::derived_from<Agent> T = opack::Agent>
 	inline flecs::entity agent(flecs::world& world)
 	{
-		return instantiate<Agent, T>(world).template child_of<world::Agents>().template add<DefaultBehaviour>();
+		return instantiate<T>(world).template child_of<world::Agents>().template add<DefaultBehaviour>();
 	}
 
 	/**
@@ -189,7 +189,7 @@ namespace opack {
 	template<std::derived_from<Artefact> T = opack::Artefact>
 	inline flecs::entity artefact(flecs::world& world, const char* name)
 	{
-		return instantiate<Artefact, T>(world, name).template child_of<world::Artefacts>();
+		return instantiate<T>(world, name).template child_of<world::Artefacts>();
 	}
 
 
@@ -199,7 +199,7 @@ namespace opack {
 	template<std::derived_from<Artefact> T = opack::Artefact>
 	inline flecs::entity artefact(flecs::world& world)
 	{
-		return instantiate<Artefact, T>(world).template child_of<world::Artefacts>();
+		return instantiate<T>(world).template child_of<world::Artefacts>();
 	}
 
 	/**
