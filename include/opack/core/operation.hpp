@@ -7,6 +7,7 @@
  *********************************************************************/
 #pragma once
 
+#include <tuple>
 #include <concepts>
 #include <functional>
 
@@ -203,11 +204,11 @@ namespace opack
 		flecs::world& world;
 	};
 
-	template<typename TFlow, typename TOper>
+	template<typename TFlow, typename... TOper>
 	void operation(flecs::world& world)
 	{
-		OperationBuilder<TOper, typename TOper::operation_inputs_t, typename TOper::operation_outputs_t, typename TOper::impact_inputs, typename TOper::impact_outputs>(world)
-			.template flow<TFlow>().strategy();
+		(OperationBuilder<TOper, typename TOper::operation_inputs_t, typename TOper::operation_outputs_t, typename TOper::impact_inputs, typename TOper::impact_outputs>(world)
+			.template flow<TFlow>().strategy(), ...);
 	};
 
 	template<typename T, typename... Args>
@@ -227,6 +228,12 @@ namespace opack
 	const T& dataflow(flecs::entity e)
 	{
 		return e.template get<df<TOper, T>>()->value;
+	}
+
+	template<typename T, typename... Args>
+	inline T& input(std::tuple<Args...>& tuple)
+	{
+		return std::get<T&>(tuple);
 	}
 }
 

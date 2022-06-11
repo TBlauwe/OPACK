@@ -19,14 +19,11 @@ namespace opack
 {
 	namespace internal
 	{
-		//struct Prefab { flecs::entity entity; };
-
 		template<typename T>
 		flecs::entity add_prefab(flecs::world& world)
 		{
 			auto entity = world.prefab().add<T>();
 			world.entity<T>().template set<flecs::entity>({ entity });
-			//dict->container.emplace(typeid(Key), entity );
 			return entity;
 		}
 
@@ -41,7 +38,7 @@ namespace opack
 	 * Get prefab of type @c T.
 	 */
 	template<typename T>
-	flecs::entity& prefab(flecs::world& world)
+	flecs::entity prefab(flecs::world& world)
 	{
 		return *world.entity<T>().template get_mut<flecs::entity>();
 	}
@@ -85,9 +82,6 @@ namespace opack
 		using type = T;
 		T value;
 	};
-
-	template<typename T>
-	struct Input {};
 
 	template<typename... T>
 	using Inputs = std::tuple<T...>;
@@ -187,10 +181,6 @@ namespace opack
 		float value {0.0f};
 	};
 
-	struct Begin 
-	{
-	};
-	struct End 
-	{
-	};
+	struct Begin {};
+	struct End {};
 }

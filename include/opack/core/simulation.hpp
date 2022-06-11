@@ -16,6 +16,14 @@
 #include <opack/utils/type_map.hpp>
 #include <opack/utils/flecs_helper.hpp>
 
+#define OPACK_ACTION_TYPE(name) struct name : opack::Action {}
+#define OPACK_AGENT_TYPE(name) struct name : opack::Agent {}
+#define OPACK_ARTEFACT_TYPE(name) struct name : opack::Artefact {}
+#define OPACK_ACTUATOR(name) struct name : opack::Actuator {}
+#define OPACK_BEHAVIOUR(name) struct name : opack::Behaviour {}
+#define OPACK_FLOW(name) struct name : opack::Flow {}
+#define OPACK_SENSE(name) struct name : opack::Sense {}
+
  /**
  @brief Main entry point to use the library.
  */
@@ -136,6 +144,16 @@ namespace opack {
 		return flecs::entity{};
 	}
 
+	/**
+	If you need to quickly register multiple types without modifying them and without derivation (use @c opack::reg).
+	You can always modify them afterwards with @c opack::entity<T>.
+	*/
+	template<typename... Ts>
+	inline void reg_n(flecs::world& world)
+	{
+		(reg<Ts>(world), ...);
+	}
+
 	// Simulation interaction
 	// ======================
 	/**
@@ -218,6 +236,18 @@ namespace opack {
 	inline flecs::entity entity(const flecs::world& world)
 	{
 		return world.entity<T>();
+	}
+
+	template<typename T>
+	inline const T& get(flecs::entity entity)
+	{
+		return *entity.get<T>();
+	}
+
+	template<typename T>
+	inline T& get_mut(flecs::entity entity)
+	{
+		return *entity.get_mut<T>();
 	}
 
 

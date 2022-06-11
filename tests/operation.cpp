@@ -48,7 +48,7 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		opack::operation<_MyFlow_, Op>(sim);
 
 		// Default impact for Op
-		opack::impact<Op>::make(sim,
+		opack::impact<Op, opack::Behaviour>::make(sim,
 			[](flecs::entity e, typename Op::operation_inputs& i1, typename Op::impact_inputs& i2)
 			{
 				std::get<Data&>(i1).i++;
@@ -160,14 +160,9 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		struct Action3 : opack::Action {};
 		struct Actuator : opack::Actuator {};
 
-		opack::reg<Action1>(sim);
-		opack::reg<Action2>(sim);
-		opack::reg<Action3>(sim);
-		opack::reg<Actuator>(sim);
+		opack::reg_n<Action1, Action2, Action3, Actuator>(sim);
 
-		opack::operation<_MyFlow_, Op1>(sim);
-		opack::operation<_MyFlow_, Op2>(sim);
-		opack::operation<_MyFlow_, Op3>(sim);
+		opack::operation<_MyFlow_, Op1, Op2, Op3>(sim);
 
 		opack::impact<Op1>::make(sim,
 			[](flecs::entity e, typename Op1::operation_inputs& i1, typename Op1::impact_inputs& i2)
@@ -200,9 +195,9 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		opack::impact<Op2>::make(sim,
 			[](flecs::entity e, typename Op2::operation_inputs& i1, typename Op2::impact_inputs& i2)
 			{
-				const auto id = std::get<typename Op2::id>(i2);
-				auto& actions = std::get<typename Op2::input_dataflow>(i1).value;
-				auto & graph = std::get<typename Op2::graph>(i2);
+				const auto id = Op2::get_influencer(i2);
+				auto& actions = Op2::get_choices(i1);
+				auto& graph = Op2::get_graph(i2);
 				for (auto& a : actions)
 				{
 					graph.entry(a);

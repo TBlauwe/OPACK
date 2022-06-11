@@ -35,6 +35,21 @@ namespace opack::operations
 		using graph = opack::InfluenceGraph<flecs::entity_view, T>&;
 		using id = flecs::entity_view;
 
+		static container& get_choices(typename parent_t::operation_inputs& tuple)
+		{
+			return std::get<input_dataflow>(tuple).value;
+		}
+
+		static id get_influencer(typename parent_t::impact_inputs& tuple)
+		{
+			return std::get<id>(tuple);
+		}
+
+		static graph get_graph(typename parent_t::impact_inputs& tuple)
+		{
+			return std::get<graph>(tuple);
+		}
+
 		template<typename TOper>
 		struct Strategy : parent_t::template Strategy<TOper>
 		{
