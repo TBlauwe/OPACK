@@ -55,14 +55,19 @@ namespace opack::operations
 	template<typename T, typename... Args>
 	struct Join : join_t<T, Args...>
 	{
-		using type = join_t<T, Args...>;
-		using container = std::vector<T>;
-		using iterator = std::back_insert_iterator<container>;
+		using parent_t = join_t<T, Args...>;
+		using container_t = std::vector<T>;
+		using iterator_t = std::back_insert_iterator<container_t>;
+
+		static iterator_t iterator(typename parent_t::impact_inputs& tuple)
+		{
+			return std::get<iterator_t>(tuple);
+		}
 
 		template<typename TOper>
-		struct Strategy : type::template Strategy<TOper>
+		struct Strategy : parent_t::template Strategy<TOper>
 		{
-			using type::template Strategy<TOper>::Strategy;
+			using parent_t::template Strategy<TOper>::Strategy;
 
 			typename TOper::operation_outputs compute(typename TOper::operation_inputs& args)
 			{

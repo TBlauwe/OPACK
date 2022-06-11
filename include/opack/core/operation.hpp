@@ -61,17 +61,27 @@ namespace opack
 	template
 		<
 		typename TOper,
-		std::derived_from<Behaviour> T = Behaviour
+		std::derived_from<Behaviour> T = Behaviour,
+		typename TFunc
 		>
-	struct impact
-	{
-		template<typename TFunc>
-		static void make(flecs::world& world, TFunc&& func)
-		{
-			auto behaviour = world.entity<T>();
-			behaviour.template set<TOper, Impact<TOper>> ({ behaviour, func });
-		};
-	};
+	void impact(flecs::world& world, TFunc&& func)
+    {
+        auto behaviour = world.entity<T>();
+        behaviour.template set<TOper, Impact<TOper>> ({ behaviour, func });
+    };
+
+	/**
+	 * Add an impact to the default behaviour.
+	 */
+	template
+		<
+		typename TOper,
+		typename TFunc
+		>
+	void default_impact(flecs::world& world, TFunc&& func)
+    {
+		impact<TOper, opack::Behaviour>(world, std::forward<TFunc>(func));
+    };
 
 	/**
 	@brief Create a flow named @c T that represents part of the agent model
