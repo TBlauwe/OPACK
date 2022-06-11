@@ -35,7 +35,7 @@ namespace opack::operations
 		using graph = opack::InfluenceGraph<flecs::entity_view, T>&;
 		using id = flecs::entity_view;
 
-		static container& get_choices(typename parent_t::operation_inputs& tuple)
+		static container& get_choices(typename parent_t::impact_inputs& tuple)
 		{
 			return std::get<input_dataflow>(tuple).value;
 		}
@@ -55,14 +55,15 @@ namespace opack::operations
 		{
 			using parent_t::template Strategy<TOper>::Strategy;
 
-			typename TOper::operation_outputs compute(typename TOper::operation_inputs& args)
+			template<typename... Ts>
+			typename TOper::operation_outputs compute(Ts&... args)
 			{
 				ig_t ig{ };
 				for (size_t i{ 0 }; i < this->impacts.size(); i++)
 				{
 					const auto& impact = *this->impacts[i];
-					auto inputs = opack::make_input<TOper>(impact.behaviour, ig);
-					impact.func(this->agent, args, inputs);
+					auto inputs = opack::make_input<TOper>(args..., impact.behaviour, ig);
+					impact.func(this->agent, inputs);
 				}
 				auto result = ig.compute();
 				return std::make_tuple(result == nullptr ? T() : *result);

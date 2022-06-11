@@ -31,12 +31,13 @@ namespace opack::operations
 		{
 			using type::template Strategy<TOper>::Strategy;
 
-			typename TOper::operation_outputs compute(typename TOper::operation_inputs& args)
+			template<typename... Ts>
+			typename TOper::operation_outputs compute(Ts&... args)
 			{
-				auto inputs = std::make_tuple();
+				auto inputs = opack::make_input<TOper>(args...);
 				for (const auto impact : this->impacts)
 				{
-					impact->func(this->agent, args, inputs);
+					impact->func(this->agent, inputs);
 				}
 				return std::make_tuple();
 			};
@@ -69,13 +70,14 @@ namespace opack::operations
 		{
 			using parent_t::template Strategy<TOper>::Strategy;
 
-			typename TOper::operation_outputs compute(typename TOper::operation_inputs& args)
+			template<typename... Ts>
+			typename TOper::operation_outputs compute(Ts&... args)
 			{
 				std::vector<T> container{};
-				auto inputs = std::make_tuple(std::back_inserter(container));
+				auto inputs = opack::make_input<TOper>(args..., std::back_inserter(container));
 				for (const auto impact : this->impacts)
 				{
-					impact->func(this->agent, args, inputs);
+					impact->func(this->agent, inputs);
 				}
 				return std::make_tuple(container);
 			};

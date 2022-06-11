@@ -199,9 +199,8 @@ namespace opack
 					for (auto i : it)
 					{
 						auto e = it.entity(i);
-						inputs tuple = std::tie(args[i]...);
-						auto result = typename TOper::template Strategy<TOper>(e).compute(tuple);
-						(e.set<df<TOper, TOutput>>({std::get<TOutput>(result)}), ...); // Should be set from strategy result
+						auto result = typename TOper::template Strategy<TOper>(e).compute(args[i]...);
+						(e.set<df<TOper, TOutput>>({std::get<TOutput>(result)}), ...); 
 					}
 				}
 			).template child_of<opack::dynamics>();
@@ -222,13 +221,13 @@ namespace opack
 	};
 
 	template<typename T, typename... Args>
-	typename T::impact_outputs make_output(Args&&... args)
+	inline typename T::impact_outputs make_output(Args&&... args)
 	{
 		return typename T::impact_outputs{args...};
 	}
 
 	template<typename T, typename... Args>
-	typename T::impact_inputs make_input(Args&&... args)
+	inline typename T::impact_inputs make_input(Args&&... args)
 	{
 		return typename T::impact_inputs{args...};
 	}

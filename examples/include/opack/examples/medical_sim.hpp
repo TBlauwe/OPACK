@@ -53,7 +53,7 @@ struct MedicalSim : opack::Simulation
 		//opack::operation<Flow, ActionSelection>::make<opack::strat::influence_graph>(world);
 
 		opack::default_impact<SuitableActions>(world,
-			[](flecs::entity agent, SuitableActions::operation_inputs& operation_inputs, SuitableActions::impact_inputs& impact_inputs)
+			[](flecs::entity agent, SuitableActions::impact_inputs& impact_inputs)
 			{
 				SuitableActions::iterator(impact_inputs) = agent;
 				return opack::make_output<SuitableActions>();
