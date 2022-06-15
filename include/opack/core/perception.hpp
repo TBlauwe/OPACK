@@ -122,10 +122,10 @@ namespace opack
 	@param agent Which agent perceives this
 	@return entity of @c U component;
 	*/
-	template<std::derived_from<Sense> T = Sense, typename U>
+	template<std::derived_from<Sense> T = Sense, typename... Us>
 	inline flecs::entity perceive(flecs::world& world)
 	{
-		return world.component<T>().template add<Sense, U>();
+		return (world.component<T>().template add<Sense, Us>(), ...);
 	}
 
 	/**
