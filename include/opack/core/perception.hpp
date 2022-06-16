@@ -149,12 +149,12 @@ namespace opack
 	/**
 	 Iterate all currently perceived entities with sense @c T, or any if unspecified, with component @c U.
 	 @param observer From which perserpective this should be checked.
-	 @param func Signature is : void(flecs::entity subject, flecs::entity value)
+	 @param func if @c U is not a tag void(flecs::entity subject, const U& value). Otherwise:  void(flecs::entity);
 
 	 TODO For some reasons, it doesn't work with components from a prefab.
 	 */
-	template<std::derived_from<Sense> T = opack::Sense, typename U>
-	void each_perceived(flecs::entity observer, std::function<void(flecs::entity, const U&)> func)
+	template<typename U, std::derived_from<Sense> T = opack::Sense, typename TFunc>
+	void each_perceived(flecs::entity observer, TFunc&& func)
 	{
 		auto world = observer.world();
 		auto query = world.get<queries::perception::Component>();
@@ -171,10 +171,14 @@ namespace opack
 		rule.iter(
 			[&](flecs::iter& it)
 			{
+				std::cout << "Hello\n";
 				auto subject = it.get_var(query->subject_var);
 				if (!hide.contains(subject))
 				{
-					func(subject, *subject.get<U>());
+					if constexpr (std::is_empty_v<U>)
+						func(subject);
+					else
+						func(subject, *subject.get<U>());
 					hide.emplace(subject);
 				}
 			}
@@ -186,7 +190,7 @@ namespace opack
 	 @param observer From which perserpective this should be checked.
 	 @param func Signature is : void(flecs::entity subject, flecs::entity object)
 	 */
-	template<std::derived_from<Sense> T = opack::Sense, typename R>
+	template<typename R, std::derived_from<Sense> T = opack::Sense>
 	void each_perceived_relation(flecs::entity observer, std::function<void(flecs::entity, flecs::entity)> func)
 	{
 		auto world = observer.world();
@@ -219,7 +223,7 @@ namespace opack
 	 @param observer From which perserpective this should be checked.
 	 @param
 	 */
-	template<std::derived_from<Sense> T = opack::Sense, typename U = void>
+	template<typename U = void, std::derived_from<Sense> T = opack::Sense>
 	bool does_perceive(flecs::world& world, flecs::entity observer, flecs::entity subject)
 	{
 		{
@@ -258,22 +262,22 @@ namespace opack
 		}
 	}
 
-	template<std::derived_from<Sense> T = opack::Sense, typename U = void>
+	template<typename U = void, std::derived_from<Sense> T = opack::Sense>
 	bool does_perceive(flecs::entity observer, flecs::entity subject)
 	{
 		auto world = observer.world();
-		return does_perceive<T, U>(world, observer, subject);
+		return does_perceive<U, T>(world, observer, subject);
 	}
 
 	/**
 	 * Return true if @c observer is currently perceiving relation @c R of @c subject with @c object trough sense @c T.
 	 * Return false if @c object is not perceived by @c observer with identical sense @c T.
 	 */
-	template<std::derived_from<Sense> T = opack::Sense, typename R = void>
+	template<typename R = void, std::derived_from<Sense> T = opack::Sense>
 	bool does_perceive(flecs::entity observer, flecs::entity subject, flecs::entity object)
 	{
 		auto world = observer.world();
-		if (!does_perceive<T>(observer, object))
+		if (!does_perceive<void, T>(observer, object))
 			return false;
 
 		{

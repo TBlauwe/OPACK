@@ -340,12 +340,12 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation manipulation", T, sim_manipulation)
 		//opack::each_perceived<opack::Sense, opack::Artefact>(e1, [&artefact_1](flecs::entity subject) { CHECK(subject == artefact_1); });
 		//opack::each_perceived<MySense, opack::Artefact>(e1, [&artefact_1](flecs::entity subject) { CHECK(subject == artefact_1); });
 		CHECK(opack::does_perceive(agent_1, artefact_1));
-		CHECK(opack::does_perceive<MySense>(agent_1, artefact_1));
-		CHECK(opack::does_perceive<MySense, A>(agent_1, artefact_1));
-		CHECK(opack::does_perceive<opack::Sense, A>(agent_1, artefact_1));
-		CHECK(opack::does_perceive<MySense, B>(agent_1, artefact_1));
-		CHECK(opack::does_perceive<opack::Sense, B>(agent_1, artefact_1));
-		CHECK(!opack::does_perceive<MySense, C>(agent_1, artefact_1));
+		CHECK(opack::does_perceive<void, MySense>(agent_1, artefact_1));
+		CHECK(opack::does_perceive<A, MySense>(agent_1, artefact_1));
+		CHECK(opack::does_perceive<A>(agent_1, artefact_1));
+		CHECK(opack::does_perceive<B>(agent_1, artefact_1));
+		CHECK(opack::does_perceive<B>(agent_1, artefact_1));
+		CHECK(!opack::does_perceive<C>(agent_1, artefact_1));
 
 		// Multiple add shouldn't be taken into account
 		opack::perceive<MySense>(agent_1, artefact_1);
@@ -378,9 +378,9 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation manipulation", T, sim_manipulation)
 		}
 		CHECK(percepts.size() == 4);
 
-		CHECK(opack::does_perceive<opack::Sense, R>(agent_1, agent_2));
-		CHECK(opack::does_perceive<opack::Sense, R>(agent_1, agent_2, artefact_1));
-		CHECK(!opack::does_perceive<opack::Sense, R>(agent_1, agent_2, artefact_2));
+		CHECK(opack::does_perceive<R>(agent_1, agent_2));
+		CHECK(opack::does_perceive<R>(agent_1, agent_2, artefact_1));
+		CHECK(!opack::does_perceive<R>(agent_1, agent_2, artefact_2));
 		CHECK(opack::query_percepts<MySense>(agent_2).size() == 1);
 
 		// Visualisation

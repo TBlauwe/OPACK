@@ -39,11 +39,11 @@ struct MedicalSim : opack::Simulation
 	// --- Flow & Operation
 	struct Flow : opack::Flow{};
 
-	struct Perception : opack::operations::Union<opack::Percept> {};
+	struct Filter : opack::operations::All<flecs::entity> {};
 	struct SuitableActions : opack::operations::Union<flecs::entity> {};
-	struct ActionSelection : opack::operations::SelectionByIGraph<flecs::entity, SuitableActions, opack::df<Perception, typename Perception::output>> {};
+	struct ActionSelection : opack::operations::SelectionByIGraph<flecs::entity, SuitableActions> {};
 	struct Act : opack::operations::All<opack::df<ActionSelection, typename ActionSelection::output>> {};
-	struct UpdateStress : opack::operations::All<opack::df<Perception, typename Perception::output>> {};
+	struct UpdateStress : opack::operations::All<> {};
 
 	MedicalSim(int argc = 0, char * argv[] = nullptr) : opack::Simulation{argc, argv}
 	{
@@ -69,7 +69,7 @@ struct MedicalSim : opack::Simulation
 		
 		// --- World dynamics
 		{
-			world.system<const FCBase, FC>()
+			world.system<const FCBase, FC>("UpdateFC")
 				.iter(
 					[](flecs::iter& it, const FCBase* fcb, FC* fc)
 					{
@@ -78,9 +78,9 @@ struct MedicalSim : opack::Simulation
 							fc[i].value = fcb[i].value + (fcb[i].var * sin(it.world().time()));
 						}
 					}
-				);
+				).child_of<opack::world::Dynamics>();
 
-			world.system<const Nurse>()
+			world.system<const Nurse>("UpdateVision")
 				.kind(flecs::PreUpdate)
 				.term<Near>().obj(flecs::Wildcard)
 				.iter(
@@ -93,7 +93,7 @@ struct MedicalSim : opack::Simulation
 							iter.entity(i).add<Vision>(obj);
 						}
 					}
-				);
+				).child_of<opack::world::Dynamics>();
 		}
 
 		// --- Types definition
@@ -111,22 +111,41 @@ struct MedicalSim : opack::Simulation
 				.override<Qualification>()
 				;
 
-			opack::reg<Hearing>(world)
-				;
+			opack::reg<Hearing>(world);
 
-			opack::reg<Vision>(world)
-				;
+			opack::reg<Vision>(world);
+			opack::perceive<Vision, Patient, FC>(world);
 		}
 
 		// --- Flow definition
 		{
 			opack::flow<Flow>(world);
-			opack::operation<Flow, SuitableActions>(world);
-			//opack::operation<Flow, ActionSelection>::make<opack::strat::influence_graph>(world);
+			opack::operation<Flow, Filter, SuitableActions>(world);
+
+			opack::default_impact<Filter>(world,
+				[](flecs::entity agent, Filter::inputs& inputs)
+				{
+					opack::each_perceived<Patient>(agent,
+						[agent](flecs::entity subject)
+						{
+							std::cout << "concealing" << "\n";
+							opack::conceal<Vision>(agent, subject);
+						}
+					);
+					return opack::make_outputs<Filter>();
+				}
+				);
 
 			opack::default_impact<SuitableActions>(world,
 				[](flecs::entity agent, SuitableActions::inputs& inputs)
 				{
+					std::cout << agent.has<Vision>(flecs::Wildcard) << "\n";
+					opack::each_perceived<Patient>(agent,
+						[agent](flecs::entity subject)
+						{
+							std::cout << "NOOO" << "\n";
+						}
+					);
 					SuitableActions::iterator(inputs) = agent;
 					return opack::make_outputs<SuitableActions>();
 				}
@@ -152,7 +171,6 @@ struct MedicalSim : opack::Simulation
 
 			opack::agent<Nurse>(world, "Nurse 1").add<Near>(patient);
 			opack::agent<Nurse>(world, "Nurse 2");
-
 		}
 	}
 };

@@ -25,6 +25,7 @@ opack::concepts::concepts(flecs::world& world)
 	world.entity<world::Flows>("::world::Flows").add(flecs::Module);
 	world.entity<world::Operations>("::world::Operations").add(flecs::Module);
 	world.entity<world::Behaviours>("::world::Behaviours").add(flecs::Module);
+	world.entity<world::Dynamics>("::world::Dynamics").add(flecs::Module);
 
 	// Operation
 	// ---------

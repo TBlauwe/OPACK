@@ -54,6 +54,7 @@ namespace opack
 		struct Flows {};
 		struct Operations {};
 		struct Behaviours {};
+		struct Dynamics {};
 		namespace prefab
 		{
 			struct Actions {};
