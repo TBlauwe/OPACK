@@ -28,6 +28,7 @@ namespace opack::operations
 	{
 		using parent_t = selection_ig_t<T, TInput, Args...>;
 		using type = T;
+		using output = T;
 		using prev_operation = TInput;
 		using container = std::vector<T>;
 		using input_dataflow = opack::df<TInput, container>&;

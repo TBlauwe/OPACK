@@ -45,7 +45,7 @@ namespace opack::operations
 	};
 
 	template<typename T, typename... Args>
-	using join_t =
+	using union_t =
 		opack::O<
 		opack::Inputs<Args...>,
 		opack::Outputs<std::vector<T>>,
@@ -54,10 +54,11 @@ namespace opack::operations
 		>;
 
 	template<typename T, typename... Args>
-	struct Join : join_t<T, Args...>
+	struct Union : union_t<T, Args...>
 	{
-		using parent_t = join_t<T, Args...>;
+		using parent_t = union_t<T, Args...>;
 		using container_t = std::vector<T>;
+		using output = container_t;
 		using iterator_t = std::back_insert_iterator<container_t>;
 
 		static iterator_t iterator(typename parent_t::inputs& tuple)

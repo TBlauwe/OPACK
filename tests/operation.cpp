@@ -96,9 +96,9 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		CHECK(a2.template get<Data>()->i == 12);
 	}
 
-	SUBCASE("Operation Join")
+	SUBCASE("Operation Union")
 	{
-		struct Op : opack::operations::Join<int> {};
+		struct Op : opack::operations::Union<int> {};
 		opack::operation<_MyFlow_, Op>(sim);
 		opack::default_impact<Op>(sim,
 			[](flecs::entity e, typename Op::inputs& i1)
@@ -149,9 +149,9 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		}
 	}
 
-	SUBCASE("Operation Join")
+	SUBCASE("Operation Union")
 	{
-		struct Op1 : opack::operations::Join<opack::Action_t> {};
+		struct Op1 : opack::operations::Union<opack::Action_t> {};
 		struct Op2 : opack::operations::SelectionByIGraph<opack::Action_t, Op1, Data> {};
 		struct Op3 : opack::operations::All<opack::df<Op2, opack::Action_t>> {};
 
