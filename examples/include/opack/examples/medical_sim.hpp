@@ -39,9 +39,9 @@ struct MedicalSim : opack::Simulation
 	// --- Flow & Operation
 	struct Flow : opack::Flow{};
 
-	struct Filter : opack::operations::All<flecs::entity> {};
+	struct Filter : opack::operations::All<> {};
 	struct SuitableActions : opack::operations::Union<flecs::entity> {};
-	struct ActionSelection : opack::operations::SelectionByIGraph<flecs::entity, SuitableActions> {};
+	struct ActionSelection : opack::operations::SelectionByIGraph<SuitableActions> {};
 	struct Act : opack::operations::All<opack::df<ActionSelection, typename ActionSelection::output>> {};
 	struct UpdateStress : opack::operations::All<> {};
 
@@ -121,20 +121,6 @@ struct MedicalSim : opack::Simulation
 		{
 			opack::flow<Flow>(world);
 			opack::operation<Flow, Filter, SuitableActions>(world);
-
-			opack::default_impact<Filter>(world,
-				[](flecs::entity agent, Filter::inputs& inputs)
-				{
-					opack::each_perceived<Patient>(agent,
-						[agent](flecs::entity subject)
-						{
-							std::cout << "concealing" << "\n";
-							opack::conceal<Vision>(agent, subject);
-						}
-					);
-					return opack::make_outputs<Filter>();
-				}
-				);
 
 			opack::default_impact<SuitableActions>(world,
 				[](flecs::entity agent, SuitableActions::inputs& inputs)

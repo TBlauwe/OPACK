@@ -58,6 +58,7 @@ namespace opack::operations
 	{
 		using parent_t = union_t<T, Args...>;
 		using container_t = std::vector<T>;
+		using type = T;
 		using output = container_t;
 		using iterator_t = std::back_insert_iterator<container_t>;
 

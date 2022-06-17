@@ -152,7 +152,7 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 	SUBCASE("Operation Union")
 	{
 		struct Op1 : opack::operations::Union<opack::Action_t> {};
-		struct Op2 : opack::operations::SelectionByIGraph<opack::Action_t, Op1, Data> {};
+		struct Op2 : opack::operations::SelectionByIGraph<Op1, Data> {};
 		struct Op3 : opack::operations::All<opack::df<Op2, opack::Action_t>> {};
 
 		struct Action1 : opack::Action {};

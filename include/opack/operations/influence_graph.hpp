@@ -14,26 +14,26 @@
 
 namespace opack::operations
 {
-	template<typename T, typename TOper, typename... Args>
+	template<typename TOper, typename... Args>
 	using selection_ig_t =
 		opack::O<
-		opack::Inputs<opack::df<TOper, std::vector<T>>, Args...>,
-		opack::Outputs<T>,
-		opack::Inputs<flecs::entity_view, opack::InfluenceGraph<flecs::entity_view, T>&>,
+		opack::Inputs<opack::df<TOper, typename TOper::container_t>, Args...>,
+		opack::Outputs<typename TOper::type>,
+		opack::Inputs<flecs::entity_view, opack::InfluenceGraph<flecs::entity_view, typename TOper::type>&>,
 		opack::Outputs<>
 		>;
 
-	template<typename T, typename TInput, typename... Args>
-	struct SelectionByIGraph : selection_ig_t<T, TInput, Args...>
+	template<typename TOper, typename... Args>
+	struct SelectionByIGraph : selection_ig_t<TOper, Args...>
 	{
-		using parent_t = selection_ig_t<T, TInput, Args...>;
-		using type = T;
-		using output = T;
-		using prev_operation = TInput;
-		using container = std::vector<T>;
-		using input_dataflow = opack::df<TInput, container>&;
-		using ig_t = opack::InfluenceGraph<flecs::entity_view, T>;
-		using graph = opack::InfluenceGraph<flecs::entity_view, T>&;
+		using parent_t = selection_ig_t<TOper, Args...>;
+		using type = typename TOper::type;
+		using output = typename TOper::type;
+		using prev_operation = TOper;
+		using container = std::vector<type>;
+		using input_dataflow = opack::df<TOper, container>&;
+		using ig_t = opack::InfluenceGraph<flecs::entity_view, type>;
+		using graph = opack::InfluenceGraph<flecs::entity_view, type>&;
 		using id = flecs::entity_view;
 
 		static container& get_choices(typename parent_t::inputs& tuple)
@@ -51,23 +51,23 @@ namespace opack::operations
 			return std::get<graph>(tuple);
 		}
 
-		template<typename TOper>
-		struct Strategy : parent_t::template Strategy<TOper>
+		template<typename T>
+		struct Strategy : parent_t::template Strategy<T>
 		{
-			using parent_t::template Strategy<TOper>::Strategy;
+			using parent_t::template Strategy<T>::Strategy;
 
 			template<typename... Ts>
-			typename TOper::operation_outputs compute(Ts&... args)
+			typename T::operation_outputs compute(Ts&... args)
 			{
 				ig_t ig{ };
 				for (size_t i{ 0 }; i < this->impacts.size(); i++)
 				{
 					const auto& impact = *this->impacts[i];
-					auto inputs = opack::make_inputs<TOper>(args..., impact.behaviour, ig);
+					auto inputs = opack::make_inputs<T>(args..., impact.behaviour, ig);
 					impact.func(this->agent, inputs);
 				}
 				auto result = ig.compute();
-				return std::make_tuple(result == nullptr ? T() : *result);
+				return std::make_tuple(result == nullptr ? type() : *result);
 			}
 		};
 	};
