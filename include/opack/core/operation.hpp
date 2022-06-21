@@ -83,22 +83,64 @@ namespace opack
 		impact<TOper, opack::Behaviour>(world, std::forward<TFunc>(func));
     };
 
+
 	/**
-	@brief Create a flow named @c T that represents part of the agent model
+	@brief Create a flow named @c T that represents part of the agent model.
 	@param @c world 
 	@param @c rate how much time per second
 	*/
 	template<std::derived_from<Flow> T>
-	flecs::entity flow(flecs::world& world, float rate = 1.0f)
+	class FlowBuilder
 	{
-		auto flow = world.component<T>();
-		flow.template child_of<world::Flows>();
+	public:
+		FlowBuilder(flecs::world& world) : 
+			world{ world },
+			flow_system { world.system<const T>() }
+		{
+			world.component<T>().template child_of<world::Flows>();
 
-		auto launcher = world.system<const T>()
-			.template term<T, Begin>().inout(flecs::Out).set(flecs::Nothing)
-			.kind(flecs::PreUpdate)
-			.interval(rate)
-			.iter(
+			flow_system.template term<T, Begin>().inout(flecs::Out).set(flecs::Nothing);
+			flow_system.kind(flecs::PreUpdate);
+
+			auto cleaner = world.system<const T>()
+				.template term<T, Begin>()
+				.kind(flecs::PostUpdate)
+				.iter(
+					[](flecs::iter& it)
+					{
+						for (auto i : it)
+						{
+							it.entity(i).remove<T, Begin>();
+						}
+					}
+			);
+			cleaner.set_doc_name("System_CleanFlowLeftOver");
+			cleaner.set_doc_brief(type_name_cstr<T>());
+			cleaner.template child_of<opack::dynamics>();
+		}
+
+		template<typename Condition>
+		FlowBuilder<T>& has()
+		{
+			flow_system.template term<Condition>().inout(flecs::InOutFilter);
+			return *this;
+		}
+
+		flecs::system_builder<const T>& conditions()
+		{
+			return flow_system;
+		}
+
+		FlowBuilder<T>& interval(float rate = 1.0f)
+		{
+			flow_system.interval(rate);
+			return *this;
+		}
+
+		void build()
+		{
+			auto launcher = flow_system
+				.iter(
 				[](flecs::iter& it)
 				{
 					for (auto i : it)
@@ -106,29 +148,23 @@ namespace opack
 						it.entity(i).add<T, Begin>();
 					}
 				}
-		);
-		launcher.set_doc_name("System_LaunchFlow");
-		launcher.set_doc_brief(type_name_cstr<T>());
-		launcher.template child_of<opack::dynamics>();
+			);
+			launcher.set_doc_name("System_LaunchFlow");
+			launcher.set_doc_brief(type_name_cstr<T>());
+			launcher.template child_of<opack::dynamics>();
+		}
 
-		auto cleaner = world.system<const T>()
-			.template term<T, Begin>()
-			.kind(flecs::PostUpdate)
-			.iter(
-				[](flecs::iter& it)
-				{
-					for (auto i : it)
-					{
-						it.entity(i).remove<T, Begin>();
-					}
-				}
-		);
-		cleaner.set_doc_name("System_CleanFlowLeftOver");
-		cleaner.set_doc_brief(type_name_cstr<T>());
-		cleaner.template child_of<opack::dynamics>();
+	private:
+		flecs::system_builder<const T> flow_system;
+		flecs::world& world;
+	};
 
-		return flow;
-	}
+	template<typename TFlow>
+	void flow(flecs::world& world)
+	{
+		FlowBuilder<TFlow>(world).interval().build();
+	};
+
 
 	// Primary template
 	template<typename TOper, typename TInputs, typename TOutputs, typename UInputs, typename UOutputs>

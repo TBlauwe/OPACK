@@ -123,7 +123,7 @@ struct SimpleSim : opack::Simulation
 				}
 		);
 
-		opack::flow<MyFlow>(world, 1.0);
+		opack::FlowBuilder<MyFlow>(world).interval().build();
 
 		//opack::OperationBuilder<Operation_Percept, Operation_Percept::inputs, Operation_Percept::outputs>(world)
 		//	.flow<MyFlow>()

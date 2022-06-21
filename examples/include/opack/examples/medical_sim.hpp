@@ -119,7 +119,7 @@ struct MedicalSim : opack::Simulation
 
 		// --- Flow definition
 		{
-			opack::flow<Flow>(world);
+			opack::FlowBuilder<Flow>(world).interval().build();
 			opack::operation<Flow, Filter, SuitableActions>(world);
 
 			opack::default_impact<SuitableActions>(world,

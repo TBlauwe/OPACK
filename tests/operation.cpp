@@ -5,7 +5,7 @@
 
 TEST_SUITE_BEGIN("Operation");
 
-TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
+TEST_CASE_TEMPLATE_DEFINE("Flow Basics", T, operation)
 {
 	auto sim = T();
 
@@ -83,15 +83,12 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		CHECK(a1.template get<Data>()->i == 0);
 		CHECK(a2.template get<Data>()->i == 0);
 		sim.step(1.0f);
-		sim.step();
 		CHECK(a1.template get<Data>()->i == 3);
 		CHECK(a2.template get<Data>()->i == 4);
 		sim.step(1.0f);
-		sim.step();
 		CHECK(a1.template get<Data>()->i == 6);
 		CHECK(a2.template get<Data>()->i == 8);
 		sim.step(10.0f);
-		sim.step();
 		CHECK(a1.template get<Data>()->i == 9);
 		CHECK(a2.template get<Data>()->i == 12);
 	}
@@ -130,8 +127,6 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		);	
 		
 		sim.step(1.0f);
-		sim.step();
-
 		{
 			auto v = opack::dataflow<Op, std::vector<int>>(a1);
 			CHECK(std::find(v.begin(), v.end(), 0) != v.end());
@@ -217,7 +212,6 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 		);
 		
 		sim.step(1.0f);
-		sim.step();
 		{
 			auto action = opack::dataflow<Op2, opack::Action_t>(a1);
 			CHECK(action.template has<Action1>());
@@ -225,6 +219,117 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, operation)
 	}
 }
 
+TEST_CASE_TEMPLATE_DEFINE("Flow conditions", T, operation_flow_conditions)
+{
+	auto sim = T();
+
+	REQUIRE(sim.world.template has<opack::concepts>());
+	REQUIRE(sim.world.template has<opack::dynamics>());
+
+	struct _MyFlow_ : opack::Flow{};
+	struct Data { int i{ 0 }; };
+	struct State { int i{ 0 }; };
+	struct Event {};
+
+	opack::FlowBuilder<_MyFlow_>(sim).interval(2.0f).template has<Event>().build();
+	//auto flow_builder = opack::FlowBuilder<_MyFlow_>(sim).interval(2.0f).has<Event>().build();
+	//flow_builder.conditions().template term<Event>().inout(flecs::InOutFilter);
+	//flow_builder.build();
+	auto a1 = opack::agent(sim).template add<_MyFlow_>().template add<Data>().template add<State>();
+	auto a2 = opack::agent(sim).template add<_MyFlow_>().template add<Data>().template set<State>({1});
+
+	struct _B1_	: opack::Behaviour {};
+	struct _B2_	: opack::Behaviour {};
+	struct _B3_	: opack::Behaviour {};
+
+	// B1 is always active
+	opack::behaviour<_B1_>(sim, [](flecs::entity) {return true; });
+	// B2 is always active when state == 1;
+	opack::behaviour<_B2_, const State>(sim, [](flecs::entity, const State& state) {return state.i == 1; });
+	// B2 is never active;
+	opack::behaviour<_B3_>(sim, [](flecs::entity) {return false; });
+
+	SUBCASE("Behaviours")
+	{
+		sim.step(); // To activate behaviours
+		CHECK(a1.template has<opack::Active, _B1_>());
+		CHECK(!a1.template has<opack::Active, _B2_>());
+		CHECK(!a1.template has<opack::Active, _B3_>());
+		CHECK(a2.template has<opack::Active, _B1_>());
+		CHECK(a2.template has<opack::Active, _B2_>());
+		CHECK(!a2.template has<opack::Active, _B3_>());
+	}
+
+	SUBCASE("Operation ALL")
+	{
+		struct Op : opack::operations::All<Data> {};
+		opack::operation<_MyFlow_, Op>(sim);
+
+		// Default impact for Op
+		opack::impact<Op, opack::Behaviour>(sim,
+			[](flecs::entity e, typename Op::inputs& i1)
+			{
+				std::get<Data&>(i1).i++;
+				return opack::make_outputs<Op>();
+			}
+		);
+
+		opack::impact<Op, _B1_>(sim,
+			[](flecs::entity e, typename Op::inputs& i1)
+			{
+				std::get<Data&>(i1).i += 2;
+				return opack::make_outputs<Op>();
+			}
+		);
+
+		opack::impact<Op, _B2_>(sim,
+			[](flecs::entity e, typename Op::inputs& i1)
+			{
+				std::get<Data&>(i1).i++;
+				return opack::make_outputs<Op>();
+			}
+		);
+
+		opack::impact<Op, _B3_>(sim,
+			[](flecs::entity e, typename Op::inputs& i1)
+			{
+				std::get<Data&>(i1).i += 100;
+				return opack::make_outputs<Op>();
+			}
+		);
+
+		CHECK(a1.template get<Data>()->i == 0);
+		CHECK(a2.template get<Data>()->i == 0);
+		sim.step(2.0f);
+		// No one has "Event" tag
+		CHECK(a1.template get<Data>()->i == 0);
+		CHECK(a2.template get<Data>()->i == 0);
+
+		// Only a1 has it
+		a1.template add<Event>();
+		sim.step(2.0f);
+		CHECK(a1.template get<Data>()->i == 3);
+		CHECK(a2.template get<Data>()->i == 0);
+
+		// Only a2 has it
+		a1.template remove<Event>();
+		a2.template add<Event>();
+		sim.step(2.0f);
+		CHECK(a1.template get<Data>()->i == 3);
+		CHECK(a2.template get<Data>()->i == 4);
+
+		// Both have it
+		a1.template add<Event>();
+		sim.step(2.0f);
+		CHECK(a1.template get<Data>()->i == 6);
+		CHECK(a2.template get<Data>()->i == 8);
+		sim.step(10.0f);
+		CHECK(a1.template get<Data>()->i == 9);
+		CHECK(a2.template get<Data>()->i == 12);
+	}
+}
+
 TEST_CASE_TEMPLATE_INVOKE(operation, EmptySim, SimpleSim);
+TEST_CASE_TEMPLATE_INVOKE(operation_flow_conditions, EmptySim, SimpleSim);
 
 TEST_SUITE_END();
