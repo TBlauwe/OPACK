@@ -66,12 +66,12 @@ BENCHMARK(BM_create_action)
 
 static void BM_create_n_actions_with_n_agents(benchmark::State& state) {
     auto sim = opack::Simulation();
+    sim.world.component<opack::On>();
     auto artefact = opack::artefact(sim);
     opack::register_actuator<MyActuator>(sim);
     opack::register_action<MyAction>(sim);
     create_n_agent(sim, state.range(0));
     sim.world.system<opack::Agent>()
-        .multi_threaded(true)
         .iter(
             [&artefact](flecs::iter& it)
             {

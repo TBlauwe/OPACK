@@ -68,7 +68,7 @@ namespace opack
             }
 
             if(highest_scores.size())
-                return highest_scores[rand() % (num_eligibles())];
+                return highest_scores[rand() % (num_eligibles())]; //TODO Better random or maybe determinist ?
 
             return nullptr;
 		}

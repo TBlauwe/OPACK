@@ -232,9 +232,6 @@ TEST_CASE_TEMPLATE_DEFINE("Flow conditions", T, operation_flow_conditions)
 	struct Event {};
 
 	opack::FlowBuilder<_MyFlow_>(sim).interval(2.0f).template has<Event>().build();
-	//auto flow_builder = opack::FlowBuilder<_MyFlow_>(sim).interval(2.0f).has<Event>().build();
-	//flow_builder.conditions().template term<Event>().inout(flecs::InOutFilter);
-	//flow_builder.build();
 	auto a1 = opack::agent(sim).template add<_MyFlow_>().template add<Data>().template add<State>();
 	auto a2 = opack::agent(sim).template add<_MyFlow_>().template add<Data>().template set<State>({1});
 
