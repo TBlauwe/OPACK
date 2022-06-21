@@ -106,7 +106,6 @@ namespace opack
 			auto cleaner = world.system<const T>()
 				.template term<T, Begin>()
 				.kind(flecs::PostUpdate)
-				.multi_threaded(true)
 				.iter(
 					[](flecs::iter& it)
 					{
@@ -142,7 +141,6 @@ namespace opack
 		void build()
 		{
 			auto launcher = flow_system
-				.multi_threaded(true)
 				.iter(
 				[](flecs::iter& it)
 				{
@@ -194,9 +192,7 @@ namespace opack
 		{
 			//(world.template component<df<TOper, TInput>>().template member<TInput>("value") , ...); // BUG Doesn't work with templated class ?
 			operation.child_of<world::Operations>();
-			system_builder
-				.kind(flecs::OnUpdate)
-				.multi_threaded(true);
+			system_builder.kind(flecs::OnUpdate);
 			(system_builder.template term<df<TOper,TOutput>>().inout(flecs::Out).set(flecs::Nothing),...);
 			//system_builder.multi_threaded(true); // BUG doesn't seem to work with monitor
 		}
