@@ -128,8 +128,7 @@ struct adl
 	template<std::derived_from<opack::Action> T>
 	static flecs::entity action(flecs::entity parent)
 	{
-		auto world = parent.world();
-		auto entity = opack::action<T>(world).child_of(parent);
+		auto entity = opack::action<T>(parent).child_of(parent).template add<opack::Knowledge>();
 		entity.template set<Order>({ adl::children_count(parent) });
 		return entity;
 	}

@@ -108,6 +108,20 @@ TEST_CASE("Reasonning")
 		}
 	}
 
+	SUBCASE("Traversal")
+	{
+		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::OR, adl::TemporalConstructor::IND);
+		auto a1 = adl::action<Action1>(root);
+		auto a2 = adl::action<Action2>(root);
+		auto a3 = adl::action<Action3>(root);
+
+		auto instance = adl::instantiate<Activity_A>(sim);
+
+		int counter { 0 };
+		adl::traverse_dfs(instance, [&counter](flecs::entity task) { counter++; });
+		CHECK(counter == 4);
+	}
+
 	SUBCASE("IND AND")
 	{
 		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::AND, adl::TemporalConstructor::IND);

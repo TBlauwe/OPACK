@@ -171,7 +171,6 @@ namespace opack
 		rule.iter(
 			[&](flecs::iter& it)
 			{
-				std::cout << "Hello\n";
 				auto subject = it.get_var(query->subject_var);
 				if (!hide.contains(subject))
 				{
