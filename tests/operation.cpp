@@ -144,7 +144,7 @@ TEST_CASE_TEMPLATE_DEFINE("Flow Basics", T, operation)
 		}
 	}
 
-	SUBCASE("Operation Union")
+	SUBCASE("Operation ActionSelection")
 	{
 		struct Op1 : opack::operations::Union<opack::Action_t> {};
 		struct Op2 : opack::operations::SelectionByIGraph<Op1, Data> {};

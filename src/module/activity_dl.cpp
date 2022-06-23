@@ -60,7 +60,17 @@ bool adl::is_finished(flecs::entity task)
 
 bool adl::has_started(flecs::entity task)
 {
-	return task.has<opack::Begin, opack::Timestamp>();
+	bool result{ false };
+	if(adl::has_children(task))
+	{
+		ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a constructor component");
+		task.children([&result](flecs::entity e) {result |= has_started(e); }); // False if children are not finished 
+	}
+	else
+	{
+		result = task.has<opack::Begin, opack::Timestamp>();
+	}
+	return result;
 }
 
 bool adl::in_progress(flecs::entity task)

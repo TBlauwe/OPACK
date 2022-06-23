@@ -37,7 +37,6 @@ namespace opack
 			.template term<const opack::Agent>()
 			.template term<Active, TBeh>().inout(flecs::Out).set(flecs::Nothing)
 			.kind(flecs::PreUpdate)
-			.multi_threaded(true)
 			.iter(
 				[f = std::forward<TFunc>(func)](flecs::iter& it, TInputs * ... args)
 				{

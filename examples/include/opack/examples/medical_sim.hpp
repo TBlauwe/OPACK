@@ -276,7 +276,7 @@ struct MedicalSim : opack::Simulation
 
 		// --- Cognitive models definition
 		{
-			opack::behaviour<Behaviour_Consistent>(world, [&active_consistent](flecs::entity agent) {return active_consistent; });
+			opack::behaviour<Behaviour_Consistent>(world, [active_consistent](flecs::entity agent) {return active_consistent; });
 			opack::impact<ActionSelection, Behaviour_Consistent>(world,
 				[](flecs::entity agent, ActionSelection::inputs& inputs)
 				{
@@ -287,7 +287,7 @@ struct MedicalSim : opack::Simulation
 					{
 						auto patient = a.get_object<opack::On>();
 						auto procedure = agent.get_object(patient);
-						if (!adl::has_started(procedure) && !adl::is_finished(procedure))
+						if (adl::in_progress(procedure))
 						{
 							graph.positive_influence(id, a);
 						}
@@ -296,7 +296,7 @@ struct MedicalSim : opack::Simulation
 				}
 			);
 
-			opack::behaviour<Behaviour_Friendship>(world, [&active_friendship](flecs::entity agent) {return active_friendship; });
+			opack::behaviour<Behaviour_Friendship>(world, [active_friendship](flecs::entity agent) {return active_friendship; });
 			opack::impact<ActionSelection, Behaviour_Friendship>(world,
 				[](flecs::entity agent, ActionSelection::inputs& inputs)
 				{
