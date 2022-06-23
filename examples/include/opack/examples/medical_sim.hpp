@@ -93,10 +93,10 @@ struct MedicalSim : opack::Simulation
 		// --- Environment definition
 		{
 		}
-		auto patient_query = world.query_builder().term<Patient>().build();
 		
 		// --- World dynamics
 		{
+			auto patient_query = world.query_builder().term<Patient>().build();
 			world.system<const FCBase, FC>("UpdateFC")
 				.iter(
 					[](flecs::iter& it, const FCBase* fcb, FC* fc)
@@ -166,6 +166,7 @@ struct MedicalSim : opack::Simulation
 							auto action = iter.entity(i);
 							auto initiator = action.get_object<opack::By>();
 							auto patient = action.get_object<opack::On>();
+							patient.remove<UnWell>();
 							std::cout << initiator.doc_name() << " is doing " << action.doc_name() << " on " << action.get_object<opack::On>().doc_name() << "\n";
 							action.set<opack::End, opack::Timestamp>({iter.world().time()});
 							action.add<adl::Satisfied>();
@@ -173,6 +174,23 @@ struct MedicalSim : opack::Simulation
 						}
 					}
 				);
+
+			world.system("FinishCondition")
+				.kind(flecs::PostUpdate)
+				.iter(
+					[](flecs::iter& iter)
+						{
+							if (iter.world().count<UnWell>() == 0)
+							{
+								std::cout << "---------- [ STOP ] ----------\n";
+								std::cout << "All patients treated.\n";
+								std::cout << "--- stats :\n";
+								std::cout << "Simulation time (seconds): " << iter.world().time() << "\n";
+								std::cout << "         Number of ticks : " << iter.world().get_tick() << "\n";
+								iter.world().quit();
+							}
+						}
+				).child_of<opack::world::Dynamics>();
 		}
 
 		// --- Activity
@@ -196,8 +214,8 @@ struct MedicalSim : opack::Simulation
 		}
 
 		// --- Flow definition
+		opack::FlowBuilder<Flow>(world).build();
 		{
-			opack::FlowBuilder<Flow>(world).interval().build();
 			opack::operation<Flow, UpdateKnowledge, SuitableActions, ActionSelection, Act>(world);
 
 			opack::default_impact<UpdateKnowledge>(world,
@@ -328,6 +346,7 @@ struct MedicalSim : opack::Simulation
 		{
 			// Defines a "Patient" prefab
 			opack::reg<Patient>(world)
+				.override<UnWell>()
 				.override<FC>()
 				.override<FCBase>()
 				;
@@ -348,5 +367,7 @@ struct MedicalSim : opack::Simulation
 			auto nurse = opack::agent<Nurse>(world, "Nurse 1");
 			nurse.add<is_friend>(patient_3);
 		}
+
+		std::cout << "---------- [ START ] ----------\n";
 	}
 };
