@@ -99,6 +99,7 @@ namespace opack {
 	inline flecs::entity register_actuator(flecs::world& world)
 	{
 		return world.component<T>()
+			.add(flecs::Exclusive)
 			.template is_a<Actuator>()
 			.template child_of<world::Actuators>();
 	}

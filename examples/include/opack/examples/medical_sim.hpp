@@ -11,7 +11,7 @@ struct MedicalSim : opack::Simulation
 	// -------------------
 	struct Base {}; // Relation
 	struct Near {}; // Relation
-	struct On {}; // Relation
+	struct is_friend {};
 
 	struct Qualification { size_t value{ 0 }; };
 
@@ -25,6 +25,7 @@ struct MedicalSim : opack::Simulation
 	// -------------------------
 	struct Patient	: opack::Artefact {};
 	struct Nurse	: opack::Agent {};
+
 
 	// -------------
 	// --- OPACK ---
@@ -60,6 +61,11 @@ struct MedicalSim : opack::Simulation
 	struct ActionSelection : opack::operations::SelectionByIGraph<SuitableActions> {};
 	struct Act : opack::operations::All<opack::df<ActionSelection, typename ActionSelection::output>> {};
 	struct UpdateStress : opack::operations::All<> {};
+
+	// --- Cognitive Model
+	struct Behaviour_Friendship : opack::Behaviour {};
+	struct Behaviour_Consistent : opack::Behaviour {};
+	struct Behaviour_Stress : opack::Behaviour {};
 
 	MedicalSim(int argc = 0, char * argv[] = nullptr) : opack::Simulation{argc, argv}
 	{
@@ -121,6 +127,52 @@ struct MedicalSim : opack::Simulation
 						}
 					}
 				).child_of<opack::world::Dynamics>();
+
+			world.system<const Examine>("ExamineEffect")
+				.kind(flecs::PreUpdate)
+				.term<opack::By>().obj(flecs::Wildcard)
+				.term<opack::On>().obj(flecs::Wildcard)
+				.term<adl::Satisfied>().inout(flecs::Out).set(flecs::Nothing)
+				.term<opack::End, opack::Timestamp>().oper(flecs::Not)
+				.term<opack::End, opack::Timestamp>().inout(flecs::Out).set(flecs::Nothing)
+				.iter(
+					[](flecs::iter& iter)
+					{
+						for (auto i : iter)
+						{
+							auto action = iter.entity(i);
+							auto initiator = action.get_object<opack::By>();
+							auto patient = action.get_object<opack::On>();
+							std::cout << initiator.doc_name() << " is doing " << action.doc_name() << " on " << action.get_object<opack::On>().doc_name() << "\n";
+							action.set<opack::End, opack::Timestamp>({iter.world().time()});
+							action.add<adl::Satisfied>();
+							initiator.mut(iter).remove<Body>(action);
+						}
+					}
+				);
+
+			world.system<const Treat>("TreatEffect")
+				.kind(flecs::PreUpdate)
+				.term<opack::By>().obj(flecs::Wildcard)
+				.term<opack::On>().obj(flecs::Wildcard)
+				.term<adl::Satisfied>().inout(flecs::Out).set(flecs::Nothing)
+				.term<opack::End, opack::Timestamp>().oper(flecs::Not)
+				.term<opack::End, opack::Timestamp>().inout(flecs::Out).set(flecs::Nothing)
+				.iter(
+					[](flecs::iter& iter)
+					{
+						for (auto i : iter)
+						{
+							auto action = iter.entity(i);
+							auto initiator = action.get_object<opack::By>();
+							auto patient = action.get_object<opack::On>();
+							std::cout << initiator.doc_name() << " is doing " << action.doc_name() << " on " << action.get_object<opack::On>().doc_name() << "\n";
+							action.set<opack::End, opack::Timestamp>({iter.world().time()});
+							action.add<adl::Satisfied>();
+							initiator.mut(iter).remove<Body>(action);
+						}
+					}
+				);
 		}
 
 		// --- Activity
@@ -133,24 +185,14 @@ struct MedicalSim : opack::Simulation
 
 		// --- Types definition
 		{
-			// Defines a "Patient" prefab
-			opack::reg<Patient>(world)
-				.override<FC>()
-				.override<FCBase>()
-				;
-
-			// Defines a "Nurse" prefab
-			opack::reg<Nurse>(world)
-				.add<Flow>()
-				.add<FC>()
-				.override<Qualification>()
-				;
-
 			opack::reg<Hearing>(world);
 			opack::perceive<Hearing, IsCoughing>(world);
 
 			opack::reg<Vision>(world);
 			opack::perceive<Vision, Patient, FC>(world);
+
+			opack::reg<Body>(world);
+			opack::reg<Voice>(world);
 		}
 
 		// --- Flow definition
@@ -189,7 +231,7 @@ struct MedicalSim : opack::Simulation
 								adl::potential_actions(activity, std::back_inserter(actions));
 								for (auto action : actions)
 								{
-									action.add<On>(subject);
+									action.add<opack::On>(subject);
 									SuitableActions::iterator(inputs) = action;
 								}
 
@@ -221,25 +263,82 @@ struct MedicalSim : opack::Simulation
 					auto action = std::get<opack::df<ActionSelection, typename ActionSelection::output>&>(inputs).value;
 					if (action)
 					{
-						std::cout << agent.doc_name() << " is doing " << action.doc_name() << " on " << action.get_object<On>().doc_name() << "\n";
-						action.add<adl::Satisfied>();
+						opack::act<Body>(agent, action);
 					}
 					return opack::make_outputs<Act>();
 				}
-				);
+			);
+		}
+
+		// --- Cognitive models controls
+		bool active_consistent{ true };
+		bool active_friendship{ true };
+
+		// --- Cognitive models definition
+		{
+			opack::behaviour<Behaviour_Consistent>(world, [&active_consistent](flecs::entity agent) {return active_consistent; });
+			opack::impact<ActionSelection, Behaviour_Consistent>(world,
+				[](flecs::entity agent, ActionSelection::inputs& inputs)
+				{
+					const auto id = ActionSelection::get_influencer(inputs);
+					auto& actions = ActionSelection::get_choices(inputs);
+					auto& graph = ActionSelection::get_graph(inputs);
+					for (auto& a : actions)
+					{
+						auto patient = a.get_object<opack::On>();
+						auto procedure = agent.get_object(patient);
+						if (!adl::has_started(procedure) && !adl::is_finished(procedure))
+						{
+							graph.positive_influence(id, a);
+						}
+					}
+					return opack::make_outputs<ActionSelection>();
+				}
+			);
+
+			opack::behaviour<Behaviour_Friendship>(world, [&active_friendship](flecs::entity agent) {return active_friendship; });
+			opack::impact<ActionSelection, Behaviour_Friendship>(world,
+				[](flecs::entity agent, ActionSelection::inputs& inputs)
+				{
+					const auto id = ActionSelection::get_influencer(inputs);
+					auto& actions = ActionSelection::get_choices(inputs);
+					auto& graph = ActionSelection::get_graph(inputs);
+					for (auto& a : actions)
+					{
+						auto patient = a.get_object<opack::On>();
+						if(agent.has<is_friend>(patient))
+						{
+							graph.positive_influence(id, a);
+						}
+					}
+					return opack::make_outputs<ActionSelection>();
+				}
+			);
 		}
 
 		// --- World population
 		{
-			opack::artefact<Patient>(world, "Patient 1");
-			opack::artefact<Patient>(world, "Patient 2");
-			opack::artefact<Patient>(world, "Patient 3");
-			opack::artefact<Patient>(world, "Patient 4");
-			opack::artefact<Patient>(world, "Patient 5");
-			opack::artefact<Patient>(world, "Patient 6");
+			// Defines a "Patient" prefab
+			opack::reg<Patient>(world)
+				.override<FC>()
+				.override<FCBase>()
+				;
 
-			opack::agent<Nurse>(world, "Nurse 1");
-			opack::agent<Nurse>(world, "Nurse 2");
+			// Defines a "Nurse" prefab
+			opack::reg<Nurse>(world)
+				.add<Flow>()	// Reason using "Flow"
+				.override<Qualification>()
+				;
+
+			auto patient_1 = opack::artefact<Patient>(world, "Patient 1");
+			auto patient_2 = opack::artefact<Patient>(world, "Patient 2");
+			auto patient_3 = opack::artefact<Patient>(world, "Patient 3");
+			auto patient_4 = opack::artefact<Patient>(world, "Patient 4");
+			auto patient_5 = opack::artefact<Patient>(world, "Patient 5");
+			auto patient_6 = opack::artefact<Patient>(world, "Patient 6");
+
+			auto nurse = opack::agent<Nurse>(world, "Nurse 1");
+			nurse.add<is_friend>(patient_3);
 		}
 	}
 };

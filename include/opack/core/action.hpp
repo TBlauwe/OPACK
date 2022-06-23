@@ -34,6 +34,15 @@ namespace opack
 	}
 
 	/**
+	@brief Return current action done by @c entity with actuator @c T
+	*/
+	template<std::derived_from<Actuator> T>
+	flecs::entity current_action(flecs::entity entity)
+	{
+		return entity.get_object<T>();
+	}
+
+	/**
 	@brief @c initiator is now acting with actuator @c to accomplish given @c action.
 	*/
 	template<std::derived_from<Actuator> T>
