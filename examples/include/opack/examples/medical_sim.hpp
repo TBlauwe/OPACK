@@ -277,43 +277,51 @@ struct MedicalSim : opack::Simulation
 		// --- Cognitive models definition
 		{
 			opack::behaviour<Behaviour_Consistent>(world, [active_consistent](flecs::entity agent) {return active_consistent; });
-			opack::impact<ActionSelection, Behaviour_Consistent>(world,
-				[](flecs::entity agent, ActionSelection::inputs& inputs)
-				{
-					const auto id = ActionSelection::get_influencer(inputs);
-					auto& actions = ActionSelection::get_choices(inputs);
-					auto& graph = ActionSelection::get_graph(inputs);
-					for (auto& a : actions)
+
+			// Impacts
+			{
+				opack::impact<ActionSelection, Behaviour_Consistent>(world,
+					[](flecs::entity agent, ActionSelection::inputs& inputs)
 					{
-						auto patient = a.get_object<opack::On>();
-						auto procedure = agent.get_object(patient);
-						if (adl::in_progress(procedure))
+						const auto id = ActionSelection::get_influencer(inputs);
+						auto& actions = ActionSelection::get_choices(inputs);
+						auto& graph = ActionSelection::get_graph(inputs);
+						for (auto& a : actions)
 						{
-							graph.positive_influence(id, a);
+							auto patient = a.get_object<opack::On>();
+							auto procedure = agent.get_object(patient);
+							if (adl::in_progress(procedure))
+							{
+								graph.positive_influence(id, a);
+							}
 						}
+						return opack::make_outputs<ActionSelection>();
 					}
-					return opack::make_outputs<ActionSelection>();
-				}
-			);
+				);
+			}
 
 			opack::behaviour<Behaviour_Friendship>(world, [active_friendship](flecs::entity agent) {return active_friendship; });
-			opack::impact<ActionSelection, Behaviour_Friendship>(world,
-				[](flecs::entity agent, ActionSelection::inputs& inputs)
-				{
-					const auto id = ActionSelection::get_influencer(inputs);
-					auto& actions = ActionSelection::get_choices(inputs);
-					auto& graph = ActionSelection::get_graph(inputs);
-					for (auto& a : actions)
+
+			// Impacts
+			{
+				opack::impact<ActionSelection, Behaviour_Friendship>(world,
+					[](flecs::entity agent, ActionSelection::inputs& inputs)
 					{
-						auto patient = a.get_object<opack::On>();
-						if(agent.has<is_friend>(patient))
+						const auto id = ActionSelection::get_influencer(inputs);
+						auto& actions = ActionSelection::get_choices(inputs);
+						auto& graph = ActionSelection::get_graph(inputs);
+						for (auto& a : actions)
 						{
-							graph.positive_influence(id, a);
+							auto patient = a.get_object<opack::On>();
+							if (agent.has<is_friend>(patient))
+							{
+								graph.positive_influence(id, a);
+							}
 						}
+						return opack::make_outputs<ActionSelection>();
 					}
-					return opack::make_outputs<ActionSelection>();
-				}
-			);
+				);
+			}
 		}
 
 		// --- World population

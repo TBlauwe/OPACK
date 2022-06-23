@@ -67,17 +67,6 @@ namespace opack::operations
 					impact.func(this->agent, inputs);
 				}
 				auto result = ig.compute();
-				std::cout << "Scores : \n";
-				for (const auto [u, score] : ig.get_scores())
-				{
-					std::cout << *u << " = " << score << "\n";
-				}
-				std::cout << "Positive influence : \n";
-				for (const auto [u, v] : ig.positive_influences())
-				{
-					std::cout << *u << " -- + -- >" << *v << "\n";
-				}
-				std::cout << "\n";
 				return std::make_tuple(result == nullptr ? type() : *result);
 			}
 		};
