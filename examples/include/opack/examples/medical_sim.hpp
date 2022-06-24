@@ -182,11 +182,14 @@ struct MedicalSim : opack::Simulation
 						{
 							if (iter.world().count<UnWell>() == 0)
 							{
+								auto time = iter.world().time();
+								auto tick = iter.world().tick();
 								std::cout << "---------- [ STOP ] ----------\n";
 								std::cout << "All patients treated.\n";
 								std::cout << "--- stats :\n";
-								std::cout << "Simulation time (seconds): " << iter.world().time() << "\n";
-								std::cout << "         Number of ticks : " << iter.world().get_tick() << "\n";
+								std::cout << " Simulation time (seconds): " << time << "\n";
+								std::cout << "          Number of ticks : " << tick << "\n";
+								std::cout << "Average tick duration (ms): " << (time/tick)*100 << "\n";
 								iter.world().quit();
 							}
 						}
