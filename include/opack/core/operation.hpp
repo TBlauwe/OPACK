@@ -120,6 +120,13 @@ namespace opack
 		}
 
 		template<typename Condition>
+		FlowBuilder<T>& Not()
+		{
+			flow_system.template term<Condition>().oper(flecs::Not);
+			return *this;
+		}
+
+		template<typename Condition>
 		FlowBuilder<T>& has()
 		{
 			flow_system.template term<Condition>().inout(flecs::InOutFilter);

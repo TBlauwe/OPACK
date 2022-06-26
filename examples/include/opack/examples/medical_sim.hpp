@@ -18,7 +18,7 @@ struct MedicalSim : opack::Simulation
 	struct FC { size_t value{ 70 }; };
 	struct FCBase { size_t value { 70 }; float var{ 5 };};
 
-	struct has_order {};
+	struct Order { flecs::entity patient; };
 
 	// -------------------------
 	// --- Agent & Artefacts ---
@@ -36,12 +36,15 @@ struct MedicalSim : opack::Simulation
 	struct Vision : opack::Sense {};
 
 	// --- Action
+	struct Contest : opack::Action {};
+	struct Comply : opack::Action {};
+	struct Ignore : opack::Action {};
+	struct Communicative {};
 
 	// --- Action
 	struct Voice : opack::Actuator {};
 	struct Body : opack::Actuator {};
 
-	struct Communicative {};
 
 	// --- Activity
 	struct March : adl::Activity {};
@@ -51,6 +54,12 @@ struct MedicalSim : opack::Simulation
 	// --- Caracteristic
 	struct UnWell {};
 	struct IsCoughing {};
+	struct WaitOrder {};
+	struct FollowOrder {};
+
+	struct ProActive {};
+	struct Regulatory {};
+	struct Stressed {};
 
 	// --- Flow & Operation
 	struct Flow : opack::Flow{};
@@ -62,10 +71,20 @@ struct MedicalSim : opack::Simulation
 	struct Act : opack::operations::All<opack::df<ActionSelection, typename ActionSelection::output>> {};
 	struct UpdateStress : opack::operations::All<> {};
 
+	struct CommunicationFlow : opack::Flow{};
+
+	struct SuitableAnswers : opack::operations::Union<flecs::entity> {};
+	struct AnswerSelection : opack::operations::SelectionByIGraph<SuitableAnswers> {};
+	struct Communicate : opack::operations::All<opack::df<AnswerSelection, typename AnswerSelection::output>> {};
+
 	// --- Cognitive Model
 	struct Behaviour_Friendship : opack::Behaviour {};
 	struct Behaviour_Consistent : opack::Behaviour {};
 	struct Behaviour_Stress : opack::Behaviour {};
+	struct Behaviour_Regulatory : opack::Behaviour {};
+	struct Behaviour_ProActive : opack::Behaviour {};
+	struct Behaviour_Communicative : opack::Behaviour {};
+	struct Behaviour_Passive : opack::Behaviour {};
 
 	MedicalSim(int argc = 0, char * argv[] = nullptr) : opack::Simulation{argc, argv}
 	{
@@ -104,6 +123,19 @@ struct MedicalSim : opack::Simulation
 						for (auto i : it)
 						{
 							fc[i].value = fcb[i].value + (fcb[i].var * sin(it.world().time()));
+						}
+					}
+				).child_of<opack::world::Dynamics>();
+
+			world.observer<Order>("Event_order")
+				.event(flecs::OnSet)
+				.iter(
+					[](flecs::iter& it, Order* order)
+					{
+						for (auto i : it)
+						{
+							auto agent = it.entity(i);
+							std::cout << agent.doc_name() << " has been ordered to treat " << order[i].patient.doc_name() << "\n";
 						}
 					}
 				).child_of<opack::world::Dynamics>();
@@ -175,6 +207,57 @@ struct MedicalSim : opack::Simulation
 					}
 				);
 
+			world.system<const Comply>("ComplyAnswer")
+				.kind(flecs::PreUpdate)
+				.term<opack::By>().obj(flecs::Wildcard)
+				.term<opack::End, opack::Timestamp>().inout(flecs::Out).set(flecs::Nothing)
+				.iter(
+					[](flecs::iter& iter)
+					{
+						for (auto i : iter)
+						{
+							auto action = iter.entity(i);
+							auto initiator = action.get_object<opack::By>();
+							std::cout << initiator.doc_name() << " complied with order to treat " << initiator.get_mut<Order>()->patient.doc_name() << "\n";
+							action.set<opack::End, opack::Timestamp>({iter.world().time()});
+							initiator.add<FollowOrder>();
+							action.destruct();
+						}
+					}
+				);
+
+			world.system<const Ignore>("IgnoreAnswer")
+				.kind(flecs::PreUpdate)
+				.term<opack::By>().obj(flecs::Wildcard)
+				.iter(
+					[](flecs::iter& iter)
+					{
+						for (auto i : iter)
+						{
+							auto action = iter.entity(i);
+							auto initiator = action.get_object<opack::By>();
+							std::cout << initiator.doc_name() << " is not communicating\n";
+							action.destruct();
+						}
+					}
+				);
+
+			world.system<const Contest>("ContestAnswer")
+				.kind(flecs::PreUpdate)
+				.term<opack::By>().obj(flecs::Wildcard)
+				.iter(
+					[](flecs::iter& iter)
+					{
+						for (auto i : iter)
+						{
+							auto action = iter.entity(i);
+							auto initiator = action.get_object<opack::By>();
+							std::cout << initiator.doc_name() << " is contesting order to treat " << initiator.get_mut<Order>()->patient.doc_name() << "\n";
+							action.destruct();
+						}
+					}
+				);
+
 			world.system("FinishCondition")
 				.kind(flecs::PostUpdate)
 				.iter(
@@ -198,7 +281,9 @@ struct MedicalSim : opack::Simulation
 
 		// --- Activity
 		{
-			opack::reg_n<Examine, Treat>(world);
+			opack::reg_n<Examine, Treat, Ignore>(world);
+			opack::reg<Comply>(world).add<Communicative>();
+			opack::reg<Contest>(world).add<Communicative>();
 			auto march = adl::activity<March>(world, adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ_ORD);
 			auto examine = adl::action<Examine>(march);
 			auto treat = adl::action<Treat>(march);
@@ -217,7 +302,7 @@ struct MedicalSim : opack::Simulation
 		}
 
 		// --- Flow definition
-		opack::FlowBuilder<Flow>(world).build();
+		opack::FlowBuilder<Flow>(world).Not<WaitOrder>().build();
 		{
 			opack::operation<Flow, UpdateKnowledge, SuitableActions, ActionSelection, Act>(world);
 
@@ -291,6 +376,51 @@ struct MedicalSim : opack::Simulation
 			);
 		}
 
+		opack::FlowBuilder<CommunicationFlow>(world).has<WaitOrder>().has<Order>().build();
+		{
+			opack::operation<CommunicationFlow, SuitableAnswers, AnswerSelection, Communicate>(world);
+
+			opack::default_impact<SuitableAnswers>(world,
+				[](flecs::entity agent, SuitableAnswers::inputs& inputs)
+				{				
+					SuitableAnswers::iterator(inputs) = opack::action<Contest>(agent);
+					SuitableAnswers::iterator(inputs) = opack::action<Comply>(agent);
+					SuitableAnswers::iterator(inputs) = opack::action<Ignore>(agent);
+
+					return opack::make_outputs<SuitableAnswers>();
+				}
+			);
+
+			opack::default_impact<AnswerSelection>(world,
+				[](flecs::entity agent, AnswerSelection::inputs& inputs)
+				{				
+					const auto id	= AnswerSelection::get_influencer(inputs);
+					auto& actions	= AnswerSelection::get_choices(inputs);
+					auto& graph		= AnswerSelection::get_graph(inputs);
+					for (auto& a : actions)
+					{
+						graph.entry(a);
+					}
+
+					return opack::make_outputs<AnswerSelection>();
+				}
+			);
+
+			opack::default_impact<Communicate>(world,
+				[](flecs::entity agent, Communicate::inputs& inputs)
+				{
+					auto action = std::get<opack::df<AnswerSelection, typename AnswerSelection::output>&>(inputs).value;
+					if (action)
+					{
+						opack::act<Voice>(agent, action);
+					}
+					agent.mut(agent).remove<WaitOrder>();
+					return opack::make_outputs<Communicate>();
+				}
+			);
+
+		}
+
 		// --- Cognitive models controls
 		bool active_consistent{ true };
 		bool active_friendship{ true };
@@ -322,7 +452,6 @@ struct MedicalSim : opack::Simulation
 			}
 
 			opack::behaviour<Behaviour_Friendship>(world, [active_friendship](flecs::entity agent) {return active_friendship; });
-
 			// Impacts
 			{
 				opack::impact<ActionSelection, Behaviour_Friendship>(world,
@@ -343,6 +472,68 @@ struct MedicalSim : opack::Simulation
 					}
 				);
 			}
+
+			opack::behaviour<Behaviour_Communicative>(world, [](flecs::entity agent) {return  true; });
+			// Impacts
+			{
+				opack::impact<AnswerSelection, Behaviour_Communicative>(world,
+					[](flecs::entity agent, AnswerSelection::inputs& inputs)
+					{				
+						const auto id	= AnswerSelection::get_influencer(inputs);
+						auto& actions	= AnswerSelection::get_choices(inputs);
+						auto& graph		= AnswerSelection::get_graph(inputs);
+						for (auto& a : actions)
+						{
+							if (a.has<Communicative>() && agent.has<Communicative>())
+								graph.positive_influence(id, a);
+							else if (!a.has<Communicative>() && agent.has<Communicative>())
+								graph.negative_influence(id, a);
+							else if (!a.has<Communicative>() && !agent.has<Communicative>())
+								graph.positive_influence(id, a);
+						}
+
+						return opack::make_outputs<AnswerSelection>();
+					}
+				);
+			}
+
+			opack::behaviour<Behaviour_ProActive>(world, [](flecs::entity agent) {return  true; });
+			// Impacts
+			{
+				opack::impact<AnswerSelection, Behaviour_ProActive>(world,
+					[](flecs::entity agent, AnswerSelection::inputs& inputs)
+					{				
+						const auto id	= AnswerSelection::get_influencer(inputs);
+						auto& actions	= AnswerSelection::get_choices(inputs);
+						auto& graph		= AnswerSelection::get_graph(inputs);
+						for (auto& a : actions)
+						{
+							if (a.has<Comply>() && agent.has<ProActive>())
+								graph.negative_influence(id, a);
+							else if (!a.has<Contest>() && agent.has<ProActive>())
+								graph.positive_influence(id, a);
+						}
+
+						return opack::make_outputs<AnswerSelection>();
+					}
+				);
+				
+				opack::impact<ActionSelection, Behaviour_ProActive>(world,
+					[](flecs::entity agent, ActionSelection::inputs& inputs)
+					{				
+						const auto id	= ActionSelection::get_influencer(inputs);
+						auto& actions	= ActionSelection::get_choices(inputs);
+						auto& graph		= ActionSelection::get_graph(inputs);
+						for (auto& a : actions)
+						{
+							if (a.has<FollowOrder>() && !agent.has<ProActive>())
+								graph.positive_influence(id, a);
+						}
+
+						return opack::make_outputs<ActionSelection>();
+					}
+				);
+			}
 		}
 
 		// --- World population
@@ -356,7 +547,8 @@ struct MedicalSim : opack::Simulation
 
 			// Defines a "Nurse" prefab
 			opack::reg<Nurse>(world)
-				.add<Flow>()	// Reason using "Flow"
+				.add<Flow>()				
+				.add<CommunicationFlow>()	
 				.override<Qualification>()
 				;
 
@@ -369,6 +561,8 @@ struct MedicalSim : opack::Simulation
 
 			auto nurse = opack::agent<Nurse>(world, "Nurse 1");
 			nurse.add<is_friend>(patient_3);
+			nurse.set<Order>({ patient_2 });
+			nurse.add<WaitOrder>();
 		}
 
 		std::cout << "---------- [ START ] ----------\n";
