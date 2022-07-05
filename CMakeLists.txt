@@ -67,13 +67,13 @@ set(HEADER_LIST
     "include/opack/utils/flecs_helper.hpp" 
     "include/opack/core/action.hpp" 
     "include/opack/module/activity_dl.hpp"
- "include/opack/module/core.hpp" "include/opack/operations/basic.hpp" "include/opack/operations/influence_graph.hpp")
+ "include/opack/module/core.hpp" "include/opack/operations/basic.hpp" "include/opack/operations/influence_graph.hpp" "include/opack/module/fipa_acl.hpp")
 
 set(SOURCE_LIST 
 	"src/core/simulation.cpp"
     "src/core/perception.cpp" 
     "src/module/activity_dl.cpp"
- "src/module/core.cpp")
+ "src/module/core.cpp" "src/module/fipa_acl.cpp")
 
 
 # Target : opack
