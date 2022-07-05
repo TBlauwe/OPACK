@@ -14,6 +14,7 @@
 #include <flecs.h>
 
 #include <opack/core/types.hpp>
+#include <opack/core/simulation.hpp>
 #include <opack/module/core.hpp>
 
 namespace opack
