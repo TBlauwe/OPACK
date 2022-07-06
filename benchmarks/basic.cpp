@@ -1,6 +1,7 @@
 #include <concepts>
 #include <benchmark/benchmark.h>
 #include <opack/core.hpp>
+#include <opack/module/fipa_acl.hpp>
 #include <opack/examples/empty_sim.hpp>
 #include <opack/examples/simple_sim.hpp>
 
@@ -147,6 +148,64 @@ BENCHMARK(BM_run_simulation<SimpleSim>)
     ->Unit(benchmark::kMillisecond)
     ->Arg(1<<14)
     ;
+
+static void BM_send_message(benchmark::State& state) {
+    auto sim = opack::Simulation();
+    sim.import<fipa_acl>();
+    auto sender = opack::agent(sim);
+    auto receiver = opack::agent(sim);
+    for ([[maybe_unused]] auto _ : state) {
+        auto message = fipa_acl::MessageBuilder(sim)
+            .performative(fipa_acl::Performative::AcceptProposal)
+            .sender(sender)
+            .receiver(receiver)
+            .build();
+        fipa_acl::send(message);
+    }
+}
+BENCHMARK(BM_send_message)
+        ->Unit(benchmark::kNanosecond)
+;
+
+static void BM_send_n_messages(benchmark::State& state) {
+    auto sim = opack::Simulation();
+    sim.import<fipa_acl>();
+    auto sender = opack::agent(sim);
+    auto receiver = opack::agent(sim);
+    for ([[maybe_unused]] auto _ : state) {
+        for (int i{ 0 }; i < state.range(0); i++)
+        {
+            fipa_acl::send(fipa_acl::MessageBuilder(sim)
+                .performative(fipa_acl::Performative::AcceptProposal)
+                .sender(sender)
+                .receiver(receiver)
+                .build());
+        }
+    }
+}
+BENCHMARK(BM_send_n_messages)
+        ->Unit(benchmark::kMillisecond)
+        ->Arg(1<<10)->Arg(1<<20)
+;
+
+static void BM_receive_message(benchmark::State& state) {
+    auto sim = opack::Simulation();
+    sim.import<fipa_acl>();
+    auto sender = opack::agent(sim);
+    auto receiver = opack::agent(sim);
+	auto message = fipa_acl::MessageBuilder(sim)
+		.performative(fipa_acl::Performative::AcceptProposal)
+		.sender(sender)
+		.receiver(receiver)
+        .build();
+	fipa_acl::send(message);
+    for ([[maybe_unused]] auto _ : state) {
+		fipa_acl::receive(receiver);
+    }
+}
+BENCHMARK(BM_receive_message)
+        ->Unit(benchmark::kNanosecond)
+;
 
 // Run the benchmark
 BENCHMARK_MAIN();
