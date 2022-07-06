@@ -17,10 +17,12 @@ opack::concepts::concepts(flecs::world& world)
 	world.entity<world::prefab::Actions>("::world::prefab::Actions").add(flecs::Module);
 	world.entity<world::prefab::Artefacts>("::world::prefab::Artefacts").add(flecs::Module);
 	world.entity<world::prefab::Agents>("::world::prefab::Agents").add(flecs::Module);
+	world.entity<world::prefab::Messages>("::world::prefab::Messages").add(flecs::Module);
 	world.entity<world::Agents>("::world::Agents").add(flecs::Module);
 	world.entity<world::Artefacts>("::world::Artefacts").add(flecs::Module);
 	world.entity<world::Actions>("::world::Actions").add(flecs::Module);
 	world.entity<world::Actuators>("::world::Actuators").add(flecs::Module);
+	world.entity<world::Messages>("::world::Messages").add(flecs::Module);
 	world.entity<world::Senses>("::world::Senses").add(flecs::Module);
 	world.entity<world::Flows>("::world::Flows").add(flecs::Module);
 	world.entity<world::Operations>("::world::Operations").add(flecs::Module);
@@ -40,6 +42,7 @@ opack::concepts::concepts(flecs::world& world)
 	world.component<Artefact>();
 	world.component<Action>();
 	world.component<Actuator>();
+	world.component<Message>();
 	world.component<Sense>();
 
 	opack::internal::add_prefab<Agent>(world)

@@ -32,6 +32,30 @@ namespace opack
 		{
 			return world.entity<T>().template has<flecs::entity>();
 		}
+
+		template<typename T>
+		void organize(flecs::entity& entity)
+		{
+#ifndef NO_ORGANIZATION
+			entity.child_of<T>();
+#endif
+		}
+
+		template<typename T>
+		void doc_name(flecs::entity& entity, const char * name)
+		{
+#ifndef NO_ORGANIZATION
+			entity.set_doc_name(name);
+#endif
+		}
+
+		template<typename T>
+		void doc_brief(flecs::entity& entity, const char * brief)
+		{
+#ifndef NO_ORGANIZATION
+			entity.set_doc_brief(brief);
+#endif
+		}
 	}
 
 	/**
@@ -49,6 +73,7 @@ namespace opack
 		struct Agents {};
 		struct Artefacts {};
 		struct Actuators {};	
+		struct Messages {};	
 		struct Senses {};
 		struct Actions {};
 		struct Flows {};
@@ -60,6 +85,7 @@ namespace opack
 			struct Actions {};
 			struct Agents {};
 			struct Artefacts {};
+			struct Messages {};	
 		};
 	};
 
@@ -177,6 +203,7 @@ namespace opack
 
 	// MISC
 	//-----
+	struct Message {};
 	struct Timestamp
 	{
 		float value {0.0f};

@@ -115,9 +115,9 @@ namespace opack
 						}
 					}
 			);
-			cleaner.set_doc_name("System_CleanFlowLeftOver");
-			cleaner.set_doc_brief(type_name_cstr<T>());
-			cleaner.template child_of<opack::dynamics>();
+			internal::organize<opack::dynamics>(cleaner);
+			internal::doc_name<opack::dynamics>(cleaner, "System_CleanFlowLeftOver");
+			internal::doc_brief<opack::dynamics>(cleaner, type_name_cstr<T>());
 		}
 
 		template<typename Condition>
