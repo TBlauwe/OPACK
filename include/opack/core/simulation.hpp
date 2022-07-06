@@ -190,7 +190,9 @@ namespace opack {
 	template<std::derived_from<Agent> T = opack::Agent>
 	inline flecs::entity agent(flecs::world& world, const char* name)
 	{
-		return instantiate<T>(world, name).template child_of<world::Agents>().template add<DefaultBehaviour>();
+		auto agent = instantiate<T>(world, name).template add<DefaultBehaviour>();
+		internal::organize<world::Agents>(agent);
+		return agent;
 	}
 
 	/**
@@ -199,7 +201,9 @@ namespace opack {
 	template<std::derived_from<Agent> T = opack::Agent>
 	inline flecs::entity agent(flecs::world& world)
 	{
-		return instantiate<T>(world).template child_of<world::Agents>().template add<DefaultBehaviour>();
+		auto agent = instantiate<T>(world).template add<DefaultBehaviour>();
+		internal::organize<world::Agents>(agent);
+		return agent;
 	}
 
 	/**
