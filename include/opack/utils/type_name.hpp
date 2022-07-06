@@ -9,8 +9,10 @@
 namespace impl
 {
     // TODO When, and if, flecs expose it, use its function to deduce type name.
+#ifndef _MSC_VER
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wlanguage-extension-token"
+#endif
     template <typename T>
     [[nodiscard]] constexpr std::string_view RawTypeName()
     {
@@ -20,7 +22,9 @@ namespace impl
         return __FUNCSIG__;
         #endif
     }
+#ifndef _MSC_VER
 #pragma GCC diagnostic pop
+#endif
 
     struct TypeNameFormat
     {
