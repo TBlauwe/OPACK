@@ -20,6 +20,7 @@ endif ()
 
 add_executable(opack_benchmarks ${SOURCE_LIST})
 target_compile_features(opack_benchmarks PRIVATE cxx_std_20)
+target_compile_definitions(opack_benchmarks PRIVATE OPACK_OPTIMIZATION)
 target_link_libraries(opack_benchmarks PRIVATE opack opack_examples benchmark::benchmark)
 set_target_properties(opack_benchmarks PROPERTIES OUTPUT_NAME opack_benchmark_${CMAKE_PROJECT_VERSION}_$<CONFIG>_${CMAKE_CXX_COMPILER_ID})
 set_target_properties(opack_benchmarks PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OPACK_SOURCE_DIR}/bin/benchmarks")

@@ -36,7 +36,7 @@ namespace opack
 		template<typename T>
 		void organize(flecs::entity& entity)
 		{
-#ifndef NO_ORGANIZATION
+#ifndef OPACK_OPTIMIZATION
 			entity.child_of<T>();
 #endif
 		}
@@ -44,7 +44,7 @@ namespace opack
 		template<typename T>
 		void doc_name(flecs::entity& entity, const char * name)
 		{
-#ifndef NO_ORGANIZATION
+#ifndef OPACK_OPTIMIZATION
 			entity.set_doc_name(name);
 #endif
 		}
@@ -52,7 +52,7 @@ namespace opack
 		template<typename T>
 		void doc_brief(flecs::entity& entity, const char * brief)
 		{
-#ifndef NO_ORGANIZATION
+#ifndef OPACK_OPTIMIZATION
 			entity.set_doc_brief(brief);
 #endif
 		}
