@@ -381,18 +381,18 @@ struct MedicalSim : opack::Simulation
 			opack::operation<CommunicationFlow, SuitableAnswers, AnswerSelection, Communicate>(world);
 
 			opack::default_impact<SuitableAnswers>(world,
-				[](flecs::entity agent, SuitableAnswers::inputs& inputs)
+				[](flecs::entity agent, auto& inputs)
 				{				
 					SuitableAnswers::iterator(inputs) = opack::action<Contest>(agent);
 					SuitableAnswers::iterator(inputs) = opack::action<Comply>(agent);
 					SuitableAnswers::iterator(inputs) = opack::action<Ignore>(agent);
 
-					return opack::make_outputs<SuitableAnswers>();
+					return opack::make_outputs();
 				}
 			);
 
 			opack::default_impact<AnswerSelection>(world,
-				[](flecs::entity agent, AnswerSelection::inputs& inputs)
+				[](flecs::entity agent, auto& inputs)
 				{				
 					const auto id	= AnswerSelection::get_influencer(inputs);
 					auto& actions	= AnswerSelection::get_choices(inputs);
@@ -402,12 +402,12 @@ struct MedicalSim : opack::Simulation
 						graph.entry(a);
 					}
 
-					return opack::make_outputs<AnswerSelection>();
+					return opack::make_outputs();
 				}
 			);
 
 			opack::default_impact<Communicate>(world,
-				[](flecs::entity agent, Communicate::inputs& inputs)
+				[](flecs::entity agent, auto& inputs)
 				{
 					auto action = std::get<opack::df<AnswerSelection, typename AnswerSelection::output>&>(inputs).value;
 					if (action)
@@ -415,7 +415,7 @@ struct MedicalSim : opack::Simulation
 						opack::act<Voice>(agent, action);
 					}
 					agent.mut(agent).remove<WaitOrder>();
-					return opack::make_outputs<Communicate>();
+					return opack::make_outputs();
 				}
 			);
 
@@ -432,7 +432,7 @@ struct MedicalSim : opack::Simulation
 			// Impacts
 			{
 				opack::impact<ActionSelection, Behaviour_Consistent>(world,
-					[](flecs::entity agent, ActionSelection::inputs& inputs)
+					[](flecs::entity agent, auto& inputs)
 					{
 						const auto id = ActionSelection::get_influencer(inputs);
 						auto& actions = ActionSelection::get_choices(inputs);
@@ -446,7 +446,7 @@ struct MedicalSim : opack::Simulation
 								graph.positive_influence(id, a);
 							}
 						}
-						return opack::make_outputs<ActionSelection>();
+						return opack::make_outputs();
 					}
 				);
 			}
@@ -455,7 +455,7 @@ struct MedicalSim : opack::Simulation
 			// Impacts
 			{
 				opack::impact<ActionSelection, Behaviour_Friendship>(world,
-					[](flecs::entity agent, ActionSelection::inputs& inputs)
+					[](flecs::entity agent, auto& inputs)
 					{
 						const auto id = ActionSelection::get_influencer(inputs);
 						auto& actions = ActionSelection::get_choices(inputs);
@@ -468,7 +468,7 @@ struct MedicalSim : opack::Simulation
 								graph.positive_influence(id, a);
 							}
 						}
-						return opack::make_outputs<ActionSelection>();
+						return opack::make_outputs();
 					}
 				);
 			}
@@ -477,7 +477,7 @@ struct MedicalSim : opack::Simulation
 			// Impacts
 			{
 				opack::impact<AnswerSelection, Behaviour_Communicative>(world,
-					[](flecs::entity agent, AnswerSelection::inputs& inputs)
+					[](flecs::entity agent, auto& inputs)
 					{				
 						const auto id	= AnswerSelection::get_influencer(inputs);
 						auto& actions	= AnswerSelection::get_choices(inputs);
@@ -492,7 +492,7 @@ struct MedicalSim : opack::Simulation
 								graph.positive_influence(id, a);
 						}
 
-						return opack::make_outputs<AnswerSelection>();
+						return opack::make_outputs();
 					}
 				);
 			}
@@ -501,7 +501,7 @@ struct MedicalSim : opack::Simulation
 			// Impacts
 			{
 				opack::impact<AnswerSelection, Behaviour_ProActive>(world,
-					[](flecs::entity agent, AnswerSelection::inputs& inputs)
+					[](flecs::entity agent, auto& inputs)
 					{				
 						const auto id	= AnswerSelection::get_influencer(inputs);
 						auto& actions	= AnswerSelection::get_choices(inputs);
@@ -514,12 +514,12 @@ struct MedicalSim : opack::Simulation
 								graph.positive_influence(id, a);
 						}
 
-						return opack::make_outputs<AnswerSelection>();
+						return opack::make_outputs();
 					}
 				);
 				
 				opack::impact<ActionSelection, Behaviour_ProActive>(world,
-					[](flecs::entity agent, ActionSelection::inputs& inputs)
+					[](flecs::entity agent, auto& inputs)
 					{				
 						const auto id	= ActionSelection::get_influencer(inputs);
 						auto& actions	= ActionSelection::get_choices(inputs);
@@ -530,7 +530,7 @@ struct MedicalSim : opack::Simulation
 								graph.positive_influence(id, a);
 						}
 
-						return opack::make_outputs<ActionSelection>();
+						return opack::make_outputs();
 					}
 				);
 			}

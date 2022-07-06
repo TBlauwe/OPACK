@@ -264,6 +264,17 @@ namespace opack
 			.template flow<TFlow>().strategy(), ...);
 	};
 
+	inline std::tuple<> make_outputs()
+	{
+		return std::tuple<>();
+	}
+
+	template<typename... Args>
+	inline std::tuple<Args...> make_outputs(Args&&... args)
+	{
+		return {args...};
+	}
+
 	template<typename T, typename... Args>
 	inline typename T::outputs make_outputs(Args&&... args)
 	{
