@@ -75,6 +75,13 @@ fipa_acl::MessageBuilder::MessageBuilder(flecs::entity entity)
 	opack::internal::organize<opack::world::Messages>(message);
 }
 
+fipa_acl::ReplyBuilder::ReplyBuilder(flecs::entity m)
+	: MessageBuilder(m.world().entity())
+{
+	message.set<ConversationID>({static_cast<int>(m)});
+	message.add<Receiver>(fipa_acl::sender(m));
+}
+
 fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::performative(fipa_acl::Performative performative)
 {
 	message.add(performative);
@@ -139,13 +146,24 @@ bool fipa_acl::has_been_read_by(flecs::entity message, flecs::entity reader)
 	return message.has<fipa_acl::Read>(reader);
 }
 
-flecs::entity fipa_acl::reply(flecs::entity message)
+fipa_acl::MessageBuilder fipa_acl::message(flecs::entity entity)
 {
-	return MessageBuilder(message).conversation_id(conversation_id(message)).receiver(sender(message)).build();
+	return fipa_acl::MessageBuilder(entity).sender(entity);
+}
+
+fipa_acl::ReplyBuilder fipa_acl::reply(flecs::entity message)
+{
+	return fipa_acl::ReplyBuilder(message);
 }
 
 flecs::entity fipa_acl::MessageBuilder::build()
 {
+	return message;
+}
+
+flecs::entity fipa_acl::MessageBuilder::send()
+{ 
+	fipa_acl::send(message);
 	return message;
 }
 

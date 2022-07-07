@@ -22,9 +22,8 @@ TEST_CASE("Basics")
 	auto receiver_2 = opack::agent(sim);
 	auto receiver_3 = opack::agent(sim);
 
-	auto message = fipa_acl::MessageBuilder(sim)
+	auto message = fipa_acl::message(sender)
 		.performative(fipa_acl::Performative::AcceptProposal)
-		.sender(sender)
 		.receiver(receiver_1)
 		.receiver(receiver_2)
 		.build();
@@ -91,10 +90,10 @@ TEST_CASE("Basics")
 	SUBCASE("Reception")
 	{
 		auto m = fipa_acl::receive(receiver_1);
-		auto response = fipa_acl::reply(m);
-		fipa_acl::sender(response, receiver_1);
-		fipa_acl::performative(response, fipa_acl::Performative::Refuse);
-		fipa_acl::send(response);
+		auto response = fipa_acl::reply(m)
+			.sender(receiver_1)
+			.performative(fipa_acl::Performative::Refuse)
+			.send();
 
 		CHECK(fipa_acl::sender(response) == receiver_1);
 		CHECK(fipa_acl::performative(response) == fipa_acl::Performative::Refuse);

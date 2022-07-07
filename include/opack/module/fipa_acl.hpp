@@ -78,14 +78,44 @@ struct fipa_acl
 		MessageBuilder& conversation_id(int id);
 
 		flecs::entity build();
+		flecs::entity send();
 
-	private:
+	protected:
 		flecs::entity message;
 	};
 
+	class ReplyBuilder : public MessageBuilder
+	{
+	public:
+		ReplyBuilder(flecs::entity message);
+	};
+
+	/// <summary>
+	/// Returns a message builder with the sender already initialized to entity.
+	/// </summary>
+	/// <param name="entity">Entity that will send the message.</param>
+	/// <returns></returns>
+	static MessageBuilder message(flecs::entity entity);
+
+	/// <summary>
+	/// Sends the messages, so that other can read it.
+	/// </summary>
+	/// <param name="sender"></param>
 	static void send(flecs::entity sender);
+
+	/// <summary>
+	/// Retrieve the first message adressed to this entity.
+	/// </summary>
+	/// <param name="entity">Entity for which to look at.</param>
+	/// <param name="performative">If specified, only the first message having this performative will be returned.</param>
+	/// <returns></returns>
 	static flecs::entity receive(flecs::entity entity, fipa_acl::Performative performative = fipa_acl::Performative::None);
-	static flecs::entity reply(flecs::entity message);
+	/// <summary>
+	/// Create a reply from given message.
+	/// </summary>
+	/// <param name="message">Reply to this message.</param>
+	/// <returns></returns>
+	static ReplyBuilder reply(flecs::entity message);
 
 	// Setter
 	static flecs::entity& performative(flecs::entity message, fipa_acl::Performative performative);
