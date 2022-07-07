@@ -63,6 +63,7 @@ fipa_acl::MessageBuilder::MessageBuilder(flecs::world& world)
 	: message(world.entity())
 {
 	message.add<Message>();
+	message.set<ConversationID>({static_cast<int>(message)});
 	opack::internal::organize<opack::world::Messages>(message);
 }
 
@@ -70,6 +71,7 @@ fipa_acl::MessageBuilder::MessageBuilder(flecs::entity entity)
 	: message(entity.world().entity())
 {
 	message.add<Message>();
+	message.set<ConversationID>({static_cast<int>(message)});
 	opack::internal::organize<opack::world::Messages>(message);
 }
 
@@ -91,6 +93,57 @@ fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::receiver(flecs::entity recei
 	return *this;
 }
 
+fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::conversation_id(int id)
+{
+	message.set<ConversationID>({ id });
+	return *this;
+}
+
+flecs::entity& fipa_acl::performative(flecs::entity message, fipa_acl::Performative performative)
+{
+	return message.set<fipa_acl::Performative>({performative});
+}
+
+flecs::entity& fipa_acl::sender(flecs::entity message, flecs::entity sender)
+{
+	return message.add<Sender>(sender);
+}
+
+fipa_acl::Performative fipa_acl::performative(flecs::entity message)
+{
+	return *message.get<fipa_acl::Performative>();
+}
+
+flecs::entity fipa_acl::sender(flecs::entity message)
+{
+	return message.get_object<Sender>();
+}
+
+int fipa_acl::conversation_id(flecs::entity message)
+{
+	return message.get<ConversationID>()->value;
+}
+
+float fipa_acl::timestamp(flecs::entity message)
+{
+	return message.get<opack::Timestamp>()->value;
+}
+
+bool fipa_acl::has_receiver(flecs::entity message, flecs::entity receiver)
+{
+	return message.has<fipa_acl::Receiver>(receiver);
+}
+
+bool fipa_acl::has_been_read_by(flecs::entity message, flecs::entity reader)
+{
+	return message.has<fipa_acl::Read>(reader);
+}
+
+flecs::entity fipa_acl::reply(flecs::entity message)
+{
+	return MessageBuilder(message).conversation_id(conversation_id(message)).receiver(sender(message)).build();
+}
+
 flecs::entity fipa_acl::MessageBuilder::build()
 {
 	return message;
@@ -98,6 +151,7 @@ flecs::entity fipa_acl::MessageBuilder::build()
 
 void fipa_acl::send(flecs::entity message)
 {
+	ecs_assert(message.has<Sender>(flecs::Wildcard), ECS_INVALID_PARAMETER, "message has no sender.");
 	message.set<opack::Timestamp>({ message.world().time() });
 }
 

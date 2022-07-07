@@ -23,6 +23,11 @@ struct fipa_acl
 	struct Read {};
 	struct Sender {};
 	struct Receiver {};
+	struct ConversationID 
+	{
+		int value {0};
+	};
+	struct Topic {};
 
 	// --------------------------------------------------------------------------- 
 	// Communicative Acts
@@ -70,6 +75,8 @@ struct fipa_acl
 		MessageBuilder& performative(Performative performative);
 		MessageBuilder& sender(flecs::entity sender);
 		MessageBuilder& receiver(flecs::entity receiver);
+		MessageBuilder& conversation_id(int id);
+
 		flecs::entity build();
 
 	private:
@@ -78,6 +85,19 @@ struct fipa_acl
 
 	static void send(flecs::entity sender);
 	static flecs::entity receive(flecs::entity entity, fipa_acl::Performative performative = fipa_acl::Performative::None);
+	static flecs::entity reply(flecs::entity message);
+
+	// Setter
+	static flecs::entity& performative(flecs::entity message, fipa_acl::Performative performative);
+	static flecs::entity& sender(flecs::entity message, flecs::entity sender);
+
+	// Getter
+	static fipa_acl::Performative performative(flecs::entity message);
+	static flecs::entity sender(flecs::entity message);
+	static int conversation_id(flecs::entity message);
+	static float timestamp(flecs::entity message);
+	static bool has_receiver(flecs::entity message, flecs::entity receiver);
+	static bool has_been_read_by(flecs::entity message, flecs::entity reader);
 
 	struct queries
 	{
