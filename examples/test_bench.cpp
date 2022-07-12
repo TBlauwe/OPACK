@@ -1,17 +1,20 @@
 #include <flecs.h>
 #include <iostream>
 
-enum TileStatus {
-    Free,
-    Occupied
-};
+
+struct A {};
+struct B {};
 
 int main(int, char* [])
 {
     flecs::world ecs;
 
-    ecs.component<TileStatus>().constant("Free", TileStatus::Free); //1
-    auto tile = ecs.entity().add(TileStatus::Free); // 2 Also assert;
-    std::cout << "Tile : " << tile.has<TileStatus>() << "\n";
-    std::cout << "Tile : " << tile.has(TileStatus::Free) << "\n";
+    auto prefab = ecs.prefab().override<A>();
+    auto sub_prefab = ecs.prefab().is_a(prefab).override<B>();
+    auto entity = ecs.entity().is_a(sub_prefab);
+    std::cout << "prefab has A : " << prefab.has<A>() << "\n";
+    std::cout << "sub_prefab has A : " << sub_prefab.has<A>() << "\n";
+    std::cout << "sub_prefab has A : " << sub_prefab.has<B>() << "\n";
+    std::cout << "entity has A : " << entity.has<A>() << "\n";
+    std::cout << "entity has B : " << entity.has<B>() << "\n";
 }

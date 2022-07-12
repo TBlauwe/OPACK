@@ -119,7 +119,6 @@ TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, sim_construction)
 		{
 			CHECK(e.template is_a<Base>());
 			CHECK(e.template has<Base>());
-			CHECK(e.template has<Derived>());
 			return e;
 		};
 

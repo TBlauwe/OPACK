@@ -90,6 +90,22 @@ struct fipa_acl
 		ReplyBuilder(flecs::entity message);
 	};
 
+	static void consume(flecs::entity message, flecs::entity reader);
+
+	/// <summary>
+	/// Allows to retrieve messages from a template. You should not create it manually and use @c fipa_acl::inbox() instead.
+	/// </summary>
+	struct Inbox
+	{
+		flecs::entity entity;
+		flecs::iter_iterable<> iter;
+
+		flecs::entity first();
+		size_t count();
+		void each(std::function<void(flecs::entity)> func);
+		void clear();
+	};
+
 	/// <summary>
 	/// Returns a message builder with the sender already initialized to entity.
 	/// </summary>
@@ -104,12 +120,20 @@ struct fipa_acl
 	static void send(flecs::entity sender);
 
 	/// <summary>
-	/// Retrieve the first message adressed to this entity.
+	/// Return an iterable to retrieve messages matching template. More performant if you need to have multiple calls.
+	/// </summary>
+	static Inbox
+	inbox(flecs::entity entity, fipa_acl::Performative performative = fipa_acl::Performative::None);
+
+	/// <summary>
+	/// Retrieve the first message adressed to this entity matching the template. 
+	/// Shortcut opposed to use directly the inbox, but if you need to receive multiple messages, prefer the use of inbox.
 	/// </summary>
 	/// <param name="entity">Entity for which to look at.</param>
 	/// <param name="performative">If specified, only the first message having this performative will be returned.</param>
 	/// <returns></returns>
 	static flecs::entity receive(flecs::entity entity, fipa_acl::Performative performative = fipa_acl::Performative::None);
+
 	/// <summary>
 	/// Create a reply from given message.
 	/// </summary>

@@ -1,4 +1,5 @@
 #include <opack/module/fipa_acl.hpp>
+#include <unordered_set>
 
 fipa_acl::fipa_acl(flecs::world& world)
 {
@@ -7,6 +8,8 @@ fipa_acl::fipa_acl(flecs::world& world)
 	world.component<Sender>().add(flecs::Exclusive);
 	world.component<Receiver>();
 	world.component<Read>();
+	world.component<ConversationID>();
+	world.component<Topic>();
 	world.component<Performative>()
 		.constant("Accept proposal", static_cast<int>(Performative::AcceptProposal))
 		.constant("Agree", static_cast<int>(Performative::Agree))
@@ -36,7 +39,7 @@ fipa_acl::fipa_acl(flecs::world& world)
 
 	world.system<Message, opack::Timestamp>("System_ConsumeMessageAfterRead")
 		.term<Read>().obj(flecs::Wildcard)
-		.kind(flecs::PostUpdate)
+		.kind(flecs::PreFrame)
 		.iter([](flecs::iter& iter, Message*, opack::Timestamp*)
 			{
 				for (auto i : iter)
@@ -50,7 +53,7 @@ fipa_acl::fipa_acl(flecs::world& world)
 
 	world.system<Message, opack::Timestamp>("System_CleanUp_Leftover_FIPA_ACL_Messages")
 		.term<Receiver>().obj(flecs::Wildcard).oper(flecs::Not)
-		.kind(flecs::PreUpdate)
+		.kind(flecs::PostFrame)
 		.each([](flecs::entity e, Message, opack::Timestamp)
 			{
 				e.destruct();
@@ -169,21 +172,64 @@ flecs::entity fipa_acl::MessageBuilder::send()
 
 void fipa_acl::send(flecs::entity message)
 {
-	ecs_assert(message.has<Sender>(flecs::Wildcard), ECS_INVALID_PARAMETER, "message has no sender.");
+	//ecs_assert(message.has<Sender>(flecs::Wildcard), ECS_INVALID_PARAMETER, "message has no sender.");
 	message.set<opack::Timestamp>({ message.world().time() });
+}
+
+fipa_acl::Inbox fipa_acl::inbox(flecs::entity entity, fipa_acl::Performative performative)
+{
+	auto world = entity.world();
+	auto query = world.get<fipa_acl::queries::Messages>();
+	Inbox inbox{ entity, query->rule.rule.iter().set_var(query->receiver_var, entity) };
+
+	if(performative != fipa_acl::Performative::None)
+		inbox.iter.set_var(query->performative_var, world.id(performative));
+	return inbox;
+}
+
+void fipa_acl::consume(flecs::entity message, flecs::entity reader)
+{
+	if(message.is_valid())
+		message.add<fipa_acl::Read>(reader);
+}
+
+flecs::entity fipa_acl::Inbox::first()
+{
+	auto m = iter.first();
+	fipa_acl::consume(m, entity);
+	return m;
+}
+
+size_t fipa_acl::Inbox::count()
+{
+	return iter.count();
+}
+
+void fipa_acl::Inbox::clear()
+{
+	iter.each([this](flecs::entity message) {fipa_acl::consume(message, entity); });
+}
+
+void fipa_acl::Inbox::each(std::function<void(flecs::entity)> func)
+{
+	std::unordered_set<flecs::entity_t> duplicates;
+	iter.each(
+		[this, &duplicates, &func](flecs::iter& it, size_t index)
+		{
+			auto message = it.entity(index);
+			if (!duplicates.contains(message))
+			{
+				duplicates.insert(message);
+				fipa_acl::consume(message, entity);
+				func(message);
+			}
+		}
+	);
 }
 
 flecs::entity fipa_acl::receive(flecs::entity entity, fipa_acl::Performative performative)
 {
-	auto world = entity.world();
-	auto query = world.get<fipa_acl::queries::Messages>();
-	auto rule = query->rule.rule.iter()
-		.set_var(query->receiver_var, entity);
-
-	if(performative != fipa_acl::Performative::None)
-		rule.set_var(query->performative_var, world.id(performative));
-	;
-
+	auto rule = fipa_acl::inbox(entity, performative);
 	auto m = rule.first();
 	if(m.is_valid())
 		m.add<Read>(entity);

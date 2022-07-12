@@ -117,3 +117,76 @@ TEST_CASE("Basics")
 		CHECK(!fipa_acl::has_been_read_by(response, receiver_3));
 	}
 }
+
+TEST_CASE("In systems")
+{
+
+	auto sim = opack::Simulation();
+	sim.import<fipa_acl>();
+
+	struct Vision : opack::Sense {};
+	struct A {};
+	opack::reg<Vision>(sim);
+	opack::perceive<Vision, opack::Agent>(sim);
+
+	auto a1 = opack::agent(sim, "a1");
+	auto a2 = opack::agent(sim, "a2");
+	auto a3 = opack::agent(sim, "a3");
+	auto a4 = opack::agent(sim, "a4");
+	opack::perceive<Vision>(a1, a2);
+	opack::perceive<Vision>(a1, a3);
+	opack::perceive<Vision>(a2, a3);
+	opack::perceive<Vision>(a3, a4);
+
+	int nb_agents = opack::count<opack::Agent>(sim);
+	int initial_counter = 10;
+	int counter = initial_counter * nb_agents;
+
+	sim.world.system<opack::Agent>()
+		.each([&counter](flecs::entity e, opack::Agent)
+			{
+				if (counter)
+				{
+					opack::each_perceived<opack::Agent>(e,
+						[&e](flecs::entity subject)
+						{
+							auto m = fipa_acl::message(e)
+								.performative(fipa_acl::Performative::AcceptProposal)
+								.receiver(subject)
+								.send();
+						}
+						);
+					counter--;
+				}
+			}
+	);
+
+	int receive_counter{ 0 };
+	sim.world.system<opack::Agent>()
+		.each([&receive_counter](flecs::entity e, opack::Agent)
+			{
+				auto inbox = fipa_acl::inbox(e);
+				inbox.each(
+					[&receive_counter](flecs::entity message)
+					{
+						receive_counter++;
+					}
+				);
+			}
+	);
+
+	int send_counter{ 0 };
+	sim.world.observer<fipa_acl::Message>()
+		.event(flecs::OnAdd)
+		.each([&send_counter](flecs::entity e, fipa_acl::Message) 
+			{
+				send_counter++;
+			}
+	);
+
+	//sim.run_with_webapp();
+	sim.step_n(initial_counter + 1); // Because message are received during next tick.
+	int expected = initial_counter * nb_agents;
+	CHECK(send_counter == expected);
+	CHECK(receive_counter == send_counter);
+}

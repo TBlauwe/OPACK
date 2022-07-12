@@ -22,7 +22,7 @@ namespace opack
 		template<typename T>
 		flecs::entity add_prefab(flecs::world& world)
 		{
-			auto entity = world.prefab().add<T>();
+			auto entity = world.prefab().override<T>();
 			world.entity<T>().template set<flecs::entity>({ entity });
 			return entity;
 		}
