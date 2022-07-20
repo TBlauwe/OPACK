@@ -34,20 +34,20 @@ bool adl::has_children(flecs::entity task)
 	return adl::children_count(task) > 0;
 }
 
-bool adl::is_finished(flecs::entity task)
+bool adl::is_finished(flecs::entity task, flecs::entity agent)
 {
 	bool result{ true };
 	if(adl::has_children(task))
 	{
 		ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a constructor component");
-		task.children([&result](flecs::entity e) {result &= is_finished(e); }); // False if children are not finished 
+		task.children([&agent, &result](flecs::entity e) {result &= is_finished(e, agent); }); // False if children are not finished 
 		switch (task.get<Constructor>()->logical)
 		{
 			case LogicalConstructor::AND:
-				task.children([&result](flecs::entity e) {result |= is_finished(e) && !is_satisfied(e); }); // But true if one is and is not satisfied
+				task.children([&agent, &result](flecs::entity e) {result |= is_finished(e, agent) && !is_satisfied(e, agent); }); // But true if one is and is not satisfied
 				break;
 			case LogicalConstructor::OR:
-				task.children([&result](flecs::entity e) {result |= is_finished(e) && is_satisfied(e); }); // True if one child is finished
+				task.children([&agent, &result](flecs::entity e) {result |= is_finished(e, agent) && is_satisfied(e, agent); }); // True if one child is finished
 				break;
 		}
 	}
@@ -73,9 +73,9 @@ bool adl::has_started(flecs::entity task)
 	return result;
 }
 
-bool adl::in_progress(flecs::entity task)
+bool adl::in_progress(flecs::entity task, flecs::entity agent)
 {
-	return adl::has_started(task) && !adl::is_finished(task);
+	return adl::has_started(task) && !adl::is_finished(task, agent);
 }
 
 size_t adl::order(flecs::entity task)
@@ -100,13 +100,12 @@ flecs::entity adl::parent_of(flecs::entity task)
 	return task.get_object(flecs::ChildOf);
 }
 
-bool adl::check_satisfaction(flecs::entity task)
+bool adl::check_satisfaction(flecs::entity task, flecs::entity agent)
 {
-	// TODO check conditions
-	return task.has<Satisfied>();
+	return (task.has<Satisfied>() && !task.has<SatisfactionCondition>()) || (task.has<SatisfactionCondition>() && task.get<SatisfactionCondition>()->func(task, agent));
 }
 
-bool adl::is_satisfied(flecs::entity task)
+bool adl::is_satisfied(flecs::entity task, flecs::entity agent)
 {
 	bool result{ true };
 	if(adl::has_children(task))
@@ -115,37 +114,42 @@ bool adl::is_satisfied(flecs::entity task)
 		switch (task.get<Constructor>()->logical)
 		{
 			case LogicalConstructor::AND:
-				task.children([&result](flecs::entity e) {result &= is_satisfied(e); }); // False if one child is not satisfied
+				task.children([&agent, &result](flecs::entity e) {result &= is_satisfied(e, agent); }); // False if one child is not satisfied
 				break;
 			case LogicalConstructor::OR:
 				result = false; 
-				task.children([&result](flecs::entity e) {result |= is_satisfied(e); }); // True if one child is satisfied
+				task.children([&agent, &result](flecs::entity e) {result |= is_satisfied(e, agent); }); // True if one child is satisfied
 				break;
 		}
 	}
 	else
 	{
-		result = adl::check_satisfaction(task);
+		result = adl::check_satisfaction(task, agent);
 	}
 	return result;
 }
 
-bool adl::is_potential(flecs::entity task)
+bool adl::is_potential(flecs::entity task, flecs::entity agent)
 {
-	// TODO check conditions
-	return !adl::is_satisfied(task);
+	if (adl::is_satisfied(task, agent) || adl::in_progress(task, agent))
+		return false;
+	else
+		if (task.has<ContextualCondition>())
+			return task.get<ContextualCondition>()->func(task, agent);
+		else
+			return true;
 }
 
-bool adl::has_task_in_progress(flecs::entity task)
+bool adl::has_task_in_progress(flecs::entity task, flecs::entity agent)
 {
 	if(adl::has_children(task))
 	{
 		bool result{ false };
-		task.children([&result](flecs::entity e) {result |= has_task_in_progress(e); }); // False if one child is not satisfied
+		task.children([&agent, &result](flecs::entity e) {result |= has_task_in_progress(e, agent); }); // False if one child is not satisfied
 		return result;
 	}
 	else
 	{
-		return adl::in_progress(task);
+		return adl::in_progress(task, agent);
 	}
 }

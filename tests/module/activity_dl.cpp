@@ -32,6 +32,65 @@ TEST_CASE("Basics")
 	CHECK(!adl::is_satisfied(instance));
 }
 
+struct ReadyA {};
+struct ReadyB {};
+TEST_CASE("Conditions")
+{
+	auto sim = opack::Simulation();
+	sim.import<adl>();
+	sim.world.component<ReadyA>();
+	sim.world.component<ReadyB>();
+
+	// Define actions
+	// ===============
+	struct Action1 : opack::Action {};
+	opack::register_action<Action1>(sim);
+
+	auto root = adl::activity<Activity_A>(sim);
+	root.emplace<adl::ContextualCondition>([](flecs::entity task, flecs::entity agent) {return agent.has<ReadyA>(); });
+	CHECK(adl::children_count(root) == 0);
+	CHECK(adl::size(root) == 1);
+
+	auto task_1 = adl::action<Action1>(root);
+	task_1.emplace<adl::ContextualCondition>([](flecs::entity task, flecs::entity agent) {return agent.has<ReadyB>();});
+	CHECK(adl::has_children(root));
+	CHECK(adl::children_count(root) == 1);
+	CHECK(adl::size(root) == 2);
+
+	auto agent = opack::agent(sim);
+	auto instance = adl::instantiate<Activity_A>(sim);
+	CHECK(adl::children_count(instance) == 1);
+	CHECK(!adl::is_satisfied(instance));
+
+	std::vector<flecs::entity> actions{};
+
+	SUBCASE("0 possible actions because agent is not ready yet") 
+	{
+		auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
+		CHECK(actions.size() == 0);
+		CHECK(!success);
+		CHECK(!adl::has_task_in_progress(root));
+	}
+
+	agent.add<ReadyA>();
+	SUBCASE("0 possible actions because agent is not ready yet") 
+	{
+		auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
+		CHECK(actions.size() == 0);
+		CHECK(!success);
+		CHECK(!adl::has_task_in_progress(root));
+	}
+
+	agent.add<ReadyB>();
+	SUBCASE("1 possible actions since agent is ready") 
+	{
+		auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
+		CHECK(actions.size() == 1);
+		CHECK(!success);
+		CHECK(!adl::has_task_in_progress(root));
+	}
+}
+
 struct Activity_B : adl::Activity {};
 TEST_CASE("Composition")
 {
@@ -81,7 +140,7 @@ TEST_CASE("Reasonning")
 		}
 
 		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
-		SUBCASE("Fail because there are still potential actions") // Since task is not finished
+		SUBCASE("Fail because are still potential actions") // Since task is not finished
 		{
 			auto success = adl::potential_actions(root, std::back_inserter(actions));
 			CHECK(actions.size() == 0);

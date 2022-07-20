@@ -44,11 +44,17 @@ struct adl
 		TemporalConstructor temporal{ TemporalConstructor::IND };
 	};
 
-	struct ContextualCondition {};
-	struct FavorableCondition {};
-	struct NomologicalCondition {};
-	struct RegulatoryCondition {};
-	struct SatisfactionCondition {};
+	struct Condition
+	{
+		Condition() { };
+		Condition(std::function<bool(flecs::entity task, flecs::entity entity)>&& f) : func(std::move(f)) { }
+		std::function<bool(flecs::entity task, flecs::entity entity)> func;
+	};
+	struct ContextualCondition : public Condition { using Condition::Condition; };
+	struct FavorableCondition : public Condition { using Condition::Condition; };
+	struct NomologicalCondition : public Condition { using Condition::Condition; };
+	struct RegulatoryCondition : public Condition { using Condition::Condition; };
+	struct SatisfactionCondition : public Condition { using Condition::Condition; };
 
 	struct Satisfied {};
 
@@ -61,9 +67,9 @@ struct adl
 	 */
 	static bool has_children(flecs::entity task);
 
-	static bool is_finished(flecs::entity task);
+	static bool is_finished(flecs::entity task, flecs::entity agent = flecs::entity::null());
 	static bool has_started(flecs::entity task);
-	static bool in_progress(flecs::entity task);
+	static bool in_progress(flecs::entity task, flecs::entity agent = flecs::entity::null());
 
 	static size_t order(flecs::entity task);
 
@@ -72,10 +78,10 @@ struct adl
 
 	static flecs::entity parent_of(flecs::entity task);
 
-	static bool is_satisfied(flecs::entity task);
-	static bool check_satisfaction(flecs::entity task);
-	static bool is_potential(flecs::entity task);
-	static bool has_task_in_progress(flecs::entity task);
+	static bool is_satisfied(flecs::entity task, flecs::entity agent = flecs::entity::null());
+	static bool check_satisfaction(flecs::entity task, flecs::entity agent = flecs::entity::null());
+	static bool is_potential(flecs::entity task, flecs::entity agent = flecs::entity::null());
+	static bool has_task_in_progress(flecs::entity task, flecs::entity agent = flecs::entity::null());
 
 	/**
 	 *  Create an activity model refered as @c T.
@@ -145,15 +151,15 @@ struct adl
 	);
 
 	template<typename OutputIterator>
-	static bool potential_actions(flecs::entity task, OutputIterator out)
+	static bool potential_actions(flecs::entity task, OutputIterator out, flecs::entity agent = flecs::entity::null())
 	{
 		if (adl::is_finished(task))
-			return adl::is_satisfied(task);
+			return adl::is_satisfied(task, agent);
 
 		if (!adl::has_children(task))
 		{
 			ecs_assert(task.has<opack::Action>(), ECS_INVALID_PARAMETER, "Leaf task is not an action.");
-			if (!adl::has_started(task))
+			if (adl::is_potential(task, agent))
 				*out++ = task;
 		}
 		else
@@ -174,7 +180,7 @@ struct adl
 			bool has_active_task{ false };
 			for (auto [order, subtask] : subtasks)
 			{
-				has_active_task |= adl::has_started(subtask) && !adl::is_finished(subtask);
+				has_active_task |= adl::has_started(subtask) && !adl::is_finished(subtask, agent);
 			}
 
 			// 3. Determine, based on temporal constructor, which potential actions are added.
@@ -186,24 +192,24 @@ struct adl
 			case TemporalConstructor::IND: // Every potential actions are added, even if another isn't finished.
 				for (auto [order, subtask] : subtasks)
 				{
-					succeeded |= potential_actions(subtask, out);
+					succeeded |= potential_actions(subtask, out, agent);
 				}
 				break;
 			case TemporalConstructor::SEQ: // Every potential actions are added, if last one is finished
 				for (auto [order, subtask] : subtasks)
 				{
-					if (!has_active_task && !adl::is_satisfied(subtask))
+					if (!has_active_task && !adl::is_satisfied(subtask, agent))
 					{
-						succeeded |= potential_actions(subtask, out);
+						succeeded |= potential_actions(subtask, out, agent);
 					}
 				}
 				break;
 			case TemporalConstructor::SEQ_ORD: // First non satisfied task is next, if last one is finished.
 				for (auto [order, subtask] : subtasks)
 				{
-					if (!has_active_task && first && (!adl::is_satisfied(subtask) && !adl::is_finished(subtask)))
+					if (!has_active_task && first && (!adl::is_satisfied(subtask, agent) && !adl::is_finished(subtask, agent)))
 					{
-						succeeded |= potential_actions(subtask, out);
+						succeeded |= potential_actions(subtask, out, agent);
 						first = false;
 					}
 				}
@@ -211,9 +217,9 @@ struct adl
 			case TemporalConstructor::ORD: // First non satisfied task is next, even if last one isn't finished.
 				for (auto [order, subtask] : subtasks)
 				{
-					if (first && (!adl::is_satisfied(subtask) && !adl::has_started(subtask)))
+					if (first && (!adl::is_satisfied(subtask, agent) && !adl::has_started(subtask)))
 					{
-						succeeded |= potential_actions(subtask, out);
+						succeeded |= potential_actions(subtask, out, agent);
 						first = false;
 					}
 				}
