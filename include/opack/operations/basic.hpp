@@ -7,6 +7,7 @@
  *********************************************************************/
 #pragma once
 
+#include <iterator> // Needed for MSVC
 #include <flecs.h>
 #include <opack/core/types.hpp>
 
