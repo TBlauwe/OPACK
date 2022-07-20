@@ -21,7 +21,7 @@ adl::adl(flecs::world& world)
 
 flecs::entity adl::task(const char* name, flecs::entity parent, LogicalConstructor logical, TemporalConstructor temporal, size_t arity_max, size_t arity_min)
 {
-	auto entity = parent.world().entity(name);
+	auto entity = parent.world().prefab(name);
 	entity.child_of(parent);
 	entity.set<Order>({adl::children_count(parent)});
 	entity.set<Constructor>({logical, temporal});
