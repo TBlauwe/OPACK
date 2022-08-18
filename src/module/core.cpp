@@ -99,7 +99,7 @@ opack::dynamics::dynamics(flecs::world& world)
 	world.import<concepts>();
 
 	world.system<Action>("CleanActions")
-		.term<By>().obj(flecs::Wildcard).oper(flecs::Not)
+		.term<By>().second(flecs::Wildcard).oper(flecs::Not)
 		.term<Knowledge>().oper(flecs::Not)
 		.iter([](flecs::iter& iter)
 			{

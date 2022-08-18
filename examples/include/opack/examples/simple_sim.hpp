@@ -80,7 +80,7 @@ struct SimpleSim : opack::Simulation
 		// Step II : Additional dynamism
 		// -----------------------------
 		//world.observer("OnAdd_Hearing")
-		//	.term<Hearing>().obj(flecs::Wildcard)
+		//	.term<Hearing>().second(flecs::Wildcard)
 		//	.event(flecs::OnAdd)
 		//	.iter(
 		//		[](flecs::iter& iter)
@@ -96,7 +96,7 @@ struct SimpleSim : opack::Simulation
 		//);
 
 		//world.observer("OnRemove_Hearing")
-		//	.term<Hearing>().obj(flecs::Wildcard)
+		//	.term<Hearing>().second(flecs::Wildcard)
 		//	.event(flecs::OnRemove)
 		//	.iter(
 		//		[](flecs::iter& iter)
@@ -109,7 +109,7 @@ struct SimpleSim : opack::Simulation
 
 		world.system<const Help>("ActionHelpEffect")
 			.term<opack::Delay>().oper(flecs::Not)
-			.term<opack::By>().obj(flecs::Wildcard)
+			.term<opack::By>().second(flecs::Wildcard)
 			.iter(
 				[](flecs::iter& iter)
 				{
@@ -141,7 +141,7 @@ struct SimpleSim : opack::Simulation
 		//		//opack::each_perceived_relation<opack::Sense, Act>(agent,
 		//		//	[](flecs::entity subject, flecs::entity object)
 		//		//	{
-		//		//		std::cout << " - " << subject.doc_name() << " is acting on " << object.get_object<On>().doc_name() << "\n";
+		//		//		std::cout << " - " << subject.doc_name() << " is acting on " << object.target<On>().doc_name() << "\n";
 		//		//	}
 		//		//);
 		//	}

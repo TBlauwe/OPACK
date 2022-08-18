@@ -3,7 +3,11 @@
 set(SOURCE_LIST 
 	"main.cpp"
     "simulation.cpp"
- "module/activity_dl.cpp" "algorithm/influence_graph.cpp" "operation.cpp" "module/fipa_acl.cpp")
+    "operation.cpp" 
+    "algorithm/influence_graph.cpp" 
+    #"module/activity_dl.cpp"
+    #"module/fipa_acl.cpp"
+    )
 
 # Dependencies
 # ============

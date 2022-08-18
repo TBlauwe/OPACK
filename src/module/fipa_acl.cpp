@@ -38,7 +38,7 @@ fipa_acl::fipa_acl(flecs::world& world)
 	world.emplace<queries::Messages>(world);
 
 	world.system<Message, opack::Timestamp>("System_ConsumeMessageAfterRead")
-		.term<Read>().obj(flecs::Wildcard)
+		.term<Read>().second(flecs::Wildcard)
 		.kind(flecs::PreFrame)
 		.iter([](flecs::iter& iter, Message*, opack::Timestamp*)
 			{
@@ -52,7 +52,7 @@ fipa_acl::fipa_acl(flecs::world& world)
 	);
 
 	world.system<Message, opack::Timestamp>("System_CleanUp_Leftover_FIPA_ACL_Messages")
-		.term<Receiver>().obj(flecs::Wildcard).oper(flecs::Not)
+		.term<Receiver>().second(flecs::Wildcard).not_()
 		.kind(flecs::PostFrame)
 		.each([](flecs::entity e, Message, opack::Timestamp)
 			{
@@ -126,7 +126,7 @@ fipa_acl::Performative fipa_acl::performative(flecs::entity message)
 
 flecs::entity fipa_acl::sender(flecs::entity message)
 {
-	return message.get_object<Sender>();
+	return message.target<Sender>();
 }
 
 int fipa_acl::conversation_id(flecs::entity message)
@@ -241,9 +241,9 @@ fipa_acl::queries::Messages::Messages(flecs::world& world)
 {
 	world.rule_builder<Message>()
 	.expr("$Performative(This)")
-	.term<Sender>().obj().var("Sender")
-	.term<Receiver>().obj().var("Receiver")
-	.term<Read>().obj().var("Receiver").oper(flecs::Not)
+	.term<Sender>().second().var("Sender")
+	.term<Receiver>().second().var("Receiver")
+	.term<Read>().second().var("Receiver").oper(flecs::Not)
 	.build()
 },
 sender_var{ rule.rule.find_var("Sender") },

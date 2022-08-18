@@ -162,20 +162,20 @@ struct MedicalSim : opack::Simulation
 
 			world.system<const Examine>("ExamineEffect")
 				.kind(flecs::PreUpdate)
-				.term<opack::By>().obj(flecs::Wildcard)
-				.term<opack::On>().obj(flecs::Wildcard)
-				.term<adl::Satisfied>().inout(flecs::Out).set(flecs::Nothing)
+				.term<opack::By>().second(flecs::Wildcard)
+				.term<opack::On>().second(flecs::Wildcard)
+				.term<adl::Satisfied>().write()
 				.term<opack::End, opack::Timestamp>().oper(flecs::Not)
-				.term<opack::End, opack::Timestamp>().inout(flecs::Out).set(flecs::Nothing)
+				.term<opack::End, opack::Timestamp>().write()
 				.iter(
 					[](flecs::iter& iter)
 					{
 						for (auto i : iter)
 						{
 							auto action = iter.entity(i);
-							auto initiator = action.get_object<opack::By>();
-							auto patient = action.get_object<opack::On>();
-							std::cout << initiator.doc_name() << " is doing " << action.doc_name() << " on " << action.get_object<opack::On>().doc_name() << "\n";
+							auto initiator = action.target<opack::By>();
+							auto patient = action.target<opack::On>();
+							std::cout << initiator.doc_name() << " is doing " << action.doc_name() << " on " << action.target<opack::On>().doc_name() << "\n";
 							action.set<opack::End, opack::Timestamp>({iter.world().time()});
 							action.add<adl::Satisfied>();
 							initiator.mut(iter).remove<Body>(action);
@@ -185,21 +185,21 @@ struct MedicalSim : opack::Simulation
 
 			world.system<const Treat>("TreatEffect")
 				.kind(flecs::PreUpdate)
-				.term<opack::By>().obj(flecs::Wildcard)
-				.term<opack::On>().obj(flecs::Wildcard)
-				.term<adl::Satisfied>().inout(flecs::Out).set(flecs::Nothing)
+				.term<opack::By>().second(flecs::Wildcard)
+				.term<opack::On>().second(flecs::Wildcard)
+				.term<adl::Satisfied>().write()
 				.term<opack::End, opack::Timestamp>().oper(flecs::Not)
-				.term<opack::End, opack::Timestamp>().inout(flecs::Out).set(flecs::Nothing)
+				.term<opack::End, opack::Timestamp>().write()
 				.iter(
 					[](flecs::iter& iter)
 					{
 						for (auto i : iter)
 						{
 							auto action = iter.entity(i);
-							auto initiator = action.get_object<opack::By>();
-							auto patient = action.get_object<opack::On>();
+							auto initiator = action.target<opack::By>();
+							auto patient = action.target<opack::On>();
 							patient.remove<UnWell>();
-							std::cout << initiator.doc_name() << " is doing " << action.doc_name() << " on " << action.get_object<opack::On>().doc_name() << "\n";
+							std::cout << initiator.doc_name() << " is doing " << action.doc_name() << " on " << action.target<opack::On>().doc_name() << "\n";
 							action.set<opack::End, opack::Timestamp>({iter.world().time()});
 							action.add<adl::Satisfied>();
 							initiator.mut(iter).remove<Body>(action);
@@ -209,15 +209,15 @@ struct MedicalSim : opack::Simulation
 
 			world.system<const Comply>("ComplyAnswer")
 				.kind(flecs::PreUpdate)
-				.term<opack::By>().obj(flecs::Wildcard)
-				.term<opack::End, opack::Timestamp>().inout(flecs::Out).set(flecs::Nothing)
+				.term<opack::By>().second(flecs::Wildcard)
+				.term<opack::End, opack::Timestamp>().write()
 				.iter(
 					[](flecs::iter& iter)
 					{
 						for (auto i : iter)
 						{
 							auto action = iter.entity(i);
-							auto initiator = action.get_object<opack::By>();
+							auto initiator = action.target<opack::By>();
 							std::cout << initiator.doc_name() << " complied with order to treat " << initiator.get_mut<Order>()->patient.doc_name() << "\n";
 							action.set<opack::End, opack::Timestamp>({iter.world().time()});
 							initiator.add<FollowOrder>();
@@ -228,14 +228,14 @@ struct MedicalSim : opack::Simulation
 
 			world.system<const Ignore>("IgnoreAnswer")
 				.kind(flecs::PreUpdate)
-				.term<opack::By>().obj(flecs::Wildcard)
+				.term<opack::By>().second(flecs::Wildcard)
 				.iter(
 					[](flecs::iter& iter)
 					{
 						for (auto i : iter)
 						{
 							auto action = iter.entity(i);
-							auto initiator = action.get_object<opack::By>();
+							auto initiator = action.target<opack::By>();
 							std::cout << initiator.doc_name() << " is not communicating\n";
 							action.destruct();
 						}
@@ -244,14 +244,14 @@ struct MedicalSim : opack::Simulation
 
 			world.system<const Contest>("ContestAnswer")
 				.kind(flecs::PreUpdate)
-				.term<opack::By>().obj(flecs::Wildcard)
+				.term<opack::By>().second(flecs::Wildcard)
 				.iter(
 					[](flecs::iter& iter)
 					{
 						for (auto i : iter)
 						{
 							auto action = iter.entity(i);
-							auto initiator = action.get_object<opack::By>();
+							auto initiator = action.target<opack::By>();
 							std::cout << initiator.doc_name() << " is contesting order to treat " << initiator.get_mut<Order>()->patient.doc_name() << "\n";
 							action.destruct();
 						}
@@ -330,7 +330,7 @@ struct MedicalSim : opack::Simulation
 					opack::each_perceived<Patient>(agent,
 						[&inputs, agent](flecs::entity subject)
 						{
-							auto activity = agent.get_object(subject);
+							auto activity = agent.target(subject);
 							if (activity)
 							{
 								std::vector<flecs::entity> actions{};
@@ -439,8 +439,8 @@ struct MedicalSim : opack::Simulation
 						auto& graph = ActionSelection::get_graph(inputs);
 						for (auto& a : actions)
 						{
-							auto patient = a.get_object<opack::On>();
-							auto procedure = agent.get_object(patient);
+							auto patient = a.target<opack::On>();
+							auto procedure = agent.target(patient);
 							if (adl::in_progress(procedure))
 							{
 								graph.positive_influence(id, a);
@@ -462,7 +462,7 @@ struct MedicalSim : opack::Simulation
 						auto& graph = ActionSelection::get_graph(inputs);
 						for (auto& a : actions)
 						{
-							auto patient = a.get_object<opack::On>();
+							auto patient = a.target<opack::On>();
 							if (agent.has<is_friend>(patient))
 							{
 								graph.positive_influence(id, a);

@@ -5,7 +5,7 @@ opack::queries::perception::Component::Component(flecs::world& world)
 {
 	world.rule_builder()
 	.expr("$Sense($Observer, $Subject), $Predicate($Subject)")
-	.term<opack::Sense>().subj().var("Sense").obj().var("Predicate")
+	.term<opack::Sense>().src().var("Sense").second().var("Predicate")
 	.build()
 },
 observer_var{ rule.rule.find_var("Observer") },
@@ -19,7 +19,7 @@ opack::queries::perception::Relation::Relation(flecs::world& world)
 {
 	world.rule_builder()
 	.expr("$Sense($Observer, $Subject), $Predicate($Subject, $Object)")
-	.term<opack::Sense>().subj().var("Sense").obj().var("Predicate")
+	.term<opack::Sense>().src().var("Sense").second().var("Predicate")
 	.build()
 },
 observer_var{ rule.rule.find_var("Observer") },

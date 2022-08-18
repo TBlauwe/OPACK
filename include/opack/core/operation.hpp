@@ -36,7 +36,7 @@ namespace opack
 
 		auto launcher = world.system<TInputs ...>()
 			.template term<const opack::Agent>()
-			.template term<Active, TBeh>().inout(flecs::Out).set(flecs::Nothing)
+			.template term<Active, TBeh>().write()
 			.kind(flecs::PreUpdate)
 			.iter(
 				[f = std::forward<TFunc>(func)](flecs::iter& it, TInputs * ... args)
@@ -100,7 +100,7 @@ namespace opack
 		{
 			world.component<T>().template child_of<world::Flows>();
 
-			flow_system.template term<T, Begin>().inout(flecs::Out).set(flecs::Nothing);
+			flow_system.template term<T, Begin>().write();
 			flow_system.kind(flecs::PreUpdate);
 
 			auto cleaner = world.system<const T>()
@@ -130,7 +130,7 @@ namespace opack
 		template<typename Condition>
 		FlowBuilder<T>& has()
 		{
-			flow_system.template term<Condition>().inout(flecs::InOutFilter);
+			flow_system.template term<Condition>().inout(flecs::InOutNone);
 			return *this;
 		}
 
@@ -200,7 +200,7 @@ namespace opack
 			//(world.template component<df<TOper, TInput>>().template member<TInput>("value") , ...); // BUG Doesn't work with templated class ?
 			operation.child_of<world::Operations>();
 			system_builder.kind(flecs::OnUpdate);
-			(system_builder.template term<df<TOper,TOutput>>().inout(flecs::Out).set(flecs::Nothing),...);
+			(system_builder.template term<df<TOper,TOutput>>().write(),...);
 			//system_builder.multi_threaded(true); // BUG doesn't seem to work with monitor
 		}
 
@@ -224,7 +224,7 @@ namespace opack
 		template<typename ... Args>
 		OperationBuilder& output()
 		{
-			(system_builder.template term<Args>().inout(flecs::Out).set(flecs::Nothing), ...);
+			(system_builder.template term<Args>().write(), ...);
 			return *this;
 		}
 

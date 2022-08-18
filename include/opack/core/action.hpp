@@ -39,7 +39,7 @@ namespace opack
 	template<std::derived_from<Actuator> T>
 	flecs::entity current_action(flecs::entity entity)
 	{
-		return entity.get_object<T>();
+		return entity.target<T>();
 	}
 
 	/**
@@ -61,7 +61,7 @@ namespace opack
 
 		// Action without initiator are cleaned up, so we need to remove relation from previous action.
 		auto world = initiator.world();
-		auto last_action = initiator.get_object<T>();
+		auto last_action = initiator.target<T>();
 		if (last_action)
 		{
 			last_action.mut(world).template set<End, Timestamp>({world.time()});

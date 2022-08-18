@@ -97,7 +97,7 @@ size_t adl::size(flecs::entity task)
 
 flecs::entity adl::parent_of(flecs::entity task)
 {
-	return task.get_object(flecs::ChildOf);
+	return task.target(flecs::ChildOf);
 }
 
 bool adl::check_satisfaction(flecs::entity task, flecs::entity agent)

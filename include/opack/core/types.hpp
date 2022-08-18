@@ -160,7 +160,7 @@ namespace opack
 				agent.each<Active>(
 					[&](flecs::entity object)
 					{
-						auto impact = object.get_w_object<TOper, impact_t>();
+						auto impact = object.get_second<TOper, impact_t>();
 						if (impact)
 							impacts.push_back(impact);
 					}
