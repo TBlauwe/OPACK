@@ -95,7 +95,7 @@ struct adl
 		size_t arity_min = 1
 	)
 	{
-		return opack::internal::add_prefab<T>(world)
+		return opack::prefab<T>(world)
 			.template set<Constructor>({ logical, temporal })
 			.template set<opack::Arity>({ arity_min, arity_max })
 			.template child_of<adl_::world::prefab::Activities>();

@@ -8,8 +8,8 @@
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "installDir": "${sourceDir}/out/install/${presetName}",
             "cacheVariables": {
-                "OPACK_BUILD_BENCHMARKS": "ON",
-                "OPACK_BUILD_EXAMPLES": "ON",
+                "OPACK_BUILD_BENCHMARKS": "OFF",
+                "OPACK_BUILD_EXAMPLES": "OFF",
                 "OPACK_BUILD_TESTS": "ON",
                 "OPACK_DEVELOPPER_WARNINGS": "ON",
                 "CPM_SOURCE_CACHE": "C:/dev/.cache"

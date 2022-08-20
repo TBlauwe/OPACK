@@ -1,4 +1,3 @@
-#include <iostream>
 #include <opack/module/core.hpp>
 #include <opack/core/perception.hpp>
 
@@ -9,9 +8,6 @@ opack::concepts::concepts(flecs::world& world)
 
 	// Organisation
 	// ------------
-	world.entity("::opack::queries").add(flecs::Module);
-	world.entity("::modules").add(flecs::Module);
-
 	world.entity("::world").add(flecs::Module);
 	world.entity("::world::prefab").add(flecs::Module);
 	world.entity<world::prefab::Actions>("::world::prefab::Actions").add(flecs::Module);
@@ -29,6 +25,10 @@ opack::concepts::concepts(flecs::world& world)
 	world.entity<world::Behaviours>("::world::Behaviours").add(flecs::Module);
 	world.entity<world::Dynamics>("::world::Dynamics").add(flecs::Module);
 
+	world.entity("::opack::queries").add(flecs::Module);
+	world.entity("::modules").add(flecs::Module);
+
+
 	// Operation
 	// ---------
 	world.component<Flow>();
@@ -38,21 +38,20 @@ opack::concepts::concepts(flecs::world& world)
 
 	// MAS
 	// ---
-	world.component<Agent>();
-	world.component<Artefact>();
-	world.component<Action>();
+	opack::prefab<Agent>(world)
+		.child_of<world::prefab::Agents>();
+	opack::prefab<Artefact>(world)
+		.child_of<world::prefab::Artefacts>();
 	world.component<Actuator>();
 	world.component<Message>();
 	world.component<Sense>();
 
-	opack::internal::add_prefab<Agent>(world)
-		.child_of<world::prefab::Agents>();
-
-	opack::internal::add_prefab<Artefact>(world)
-		.child_of<world::prefab::Artefacts>();
-
 	// Action
 	// ------
+	auto action = opack::prefab<Action>(world)
+		.add<Arity>()
+		.child_of<world::prefab::Actions>();
+
 	world.component<Arity>()
 		.member<size_t>("min")
 		.member<size_t>("max")
@@ -63,19 +62,14 @@ opack::concepts::concepts(flecs::world& world)
 		.member<float, flecs::units::duration::Seconds>("value")
 		;
 
-	auto action = opack::internal::add_prefab<Action>(world)
-		.add<Arity>()
-		.child_of<world::prefab::Actions>();
-
-	world.component<Actuator>()
+	opack::prefab<Actuator>(world)
 		.add(flecs::Exclusive)
 		.add(flecs::OneOf, action)
 		;
 
 	// Perception
 	// ----------
-	world.component<Sense>()
-		;
+	opack::prefab<Sense>(world);
 
 	world.entity("::opack::queries::perception").add(flecs::Module);
 	world.emplace<queries::perception::Component>(world);

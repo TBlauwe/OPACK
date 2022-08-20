@@ -26,6 +26,7 @@ option(OPACK_BUILD_EXAMPLES       "Build examples." OFF)
 option(OPACK_BUILD_TESTS          "Build tests." OFF)
 option(OPACK_BUILD_BENCHMARKS     "Build benchmarks using google benchmarks." OFF)
 option(OPACK_DEVELOPPER_WARNINGS  "Enable more warnings" OFF)
+option(OPACK_OPTIMIZE             "Disable some code (mainly organisation for explorer) for faster usage" OFF)
 
 
 # Dependencies
@@ -57,23 +58,30 @@ set_target_properties(flecs_static PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORI
 # OPACK Library
 # =============
 set(HEADER_LIST 
-	"include/opack/core.hpp"
-	"include/opack/core/operation.hpp"
 	"include/opack/utils/type_map.hpp"
-	
+    "include/opack/utils/flecs_helper.hpp" 
     "include/opack/utils/type_name.hpp"
     "include/opack/core/types.hpp"
+    "include/opack/core/world.hpp"
+	"include/opack/core/operation.hpp"
     "include/opack/core/perception.hpp"
-    "include/opack/utils/flecs_helper.hpp" 
     "include/opack/core/action.hpp" 
-    "include/opack/module/activity_dl.hpp"
- "include/opack/module/core.hpp" "include/opack/operations/basic.hpp" "include/opack/operations/influence_graph.hpp" "include/opack/module/fipa_acl.hpp")
+	"include/opack/core.hpp"
+    "include/opack/operations/basic.hpp" 
+    "include/opack/operations/influence_graph.hpp" 
+    "include/opack/module/core.hpp" 
+    #"include/opack/module/activity_dl.hpp"
+    #"include/opack/module/fipa_acl.hpp" 
+    )
 
 set(SOURCE_LIST 
+    "src/core/world.cpp"
+    "src/module/core.cpp" 
 	"src/core/simulation.cpp"
     "src/core/perception.cpp" 
-    "src/module/activity_dl.cpp"
- "src/module/core.cpp" "src/module/fipa_acl.cpp")
+    #"src/module/activity_dl.cpp"
+    #"src/module/fipa_acl.cpp" 
+    )
 
 
 # Target : opack

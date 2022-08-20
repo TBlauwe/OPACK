@@ -30,88 +30,6 @@
 namespace opack {
 
 	/**
-	Create a new agent prefab. You may create agent from this type now.
-	*/
-	template<std::derived_from<Agent> T, std::derived_from<Agent> TDerived = Agent>
-	inline flecs::entity register_agent(flecs::world& world)
-	{
-		if (opack::internal::has_prefab<T>(world))
-			return opack::prefab<T>(world);
-		else
-		{
-			world.component<T>().template child_of<opack::concepts>();
-			return opack::internal::add_prefab<T>(world)
-				.is_a(prefab<TDerived>(world))
-				.template child_of<world::prefab::Agents>();
-		}
-	}
-
-	/**
-	Create a new artefact prefab. You may create artefact from this type now.
-	*/
-	template<std::derived_from<Artefact> T, std::derived_from<Artefact> TDerived = Artefact>
-	inline flecs::entity register_artefact(flecs::world& world)
-	{
-		if (opack::internal::has_prefab<T>(world))
-			return opack::prefab<T>(world);
-		else
-		{
-			world.component<T>().template child_of<opack::concepts>();
-			return opack::internal::add_prefab<T>(world)
-				.is_a(prefab<TDerived>(world))
-				.template child_of<world::prefab::Artefacts>();
-		}
-	}
-
-	/**
-	Create a new action prefab that you may instantiate.
-	*/
-	template<std::derived_from<Action> T, std::derived_from<Action> TDerived = Action>
-	inline flecs::entity register_action(flecs::world& world)
-	{
-		if (opack::internal::has_prefab<T>(world))
-			return opack::prefab<T>(world);
-		else
-		{
-			world.component<T>().template child_of<opack::concepts>();
-			return opack::internal::add_prefab<T>(world)
-				.is_a(prefab<TDerived>(world))
-				.template child_of<world::prefab::Actions>();
-		}
-	}
-
-	/**
-	Create a new sense. You may now use the type to perceive components of others entities,
-	by adding a relation YourSense(Observer, Subject)
-	*/
-	template<std::derived_from<Sense> T>
-	inline flecs::entity register_sense(flecs::world& world)
-	{
-		return world.component<T>()
-			.template is_a<Sense>()
-			.template child_of<world::Senses>();
-	}
-
-	/**
-	Create a new actuator. You may now use the type to operate actions.
-	*/
-	template<std::derived_from<Actuator> T>
-	inline flecs::entity register_actuator(flecs::world& world)
-	{
-		return world.component<T>()
-			.add(flecs::Exclusive)
-			.template is_a<Actuator>()
-			.template child_of<world::Actuators>();
-	}
-
-	template<typename T>
-	bool is_a(flecs::entity entity)
-	{
-		auto world = entity.world();
-		return entity.has(flecs::IsA, prefab<T>(world));
-	}
-
-	/**
 	Automatically register type based on its inheritance.
 	*/
 	template<typename T, typename TDerived = T>
@@ -232,15 +150,6 @@ namespace opack {
 	inline flecs::id id(const flecs::world& world)
 	{
 		return world.id<T>();
-	}
-
-	/**
-	Returns entity of type @c.
-	*/
-	template<typename T>
-	inline flecs::entity entity(const flecs::world& world)
-	{
-		return world.entity<T>();
 	}
 
 	template<typename T>

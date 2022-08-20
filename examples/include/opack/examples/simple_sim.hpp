@@ -60,7 +60,7 @@ struct SimpleSim : opack::Simulation
 		// Step I : Register types
 		// -----------------------
 		// --- Actuator
-		opack::register_actuator<Act>(world);
+		opack::register_actuator<struct Act>(world);
 		world.component<Stress>().member<float>("value");
 
 		// --- Actions

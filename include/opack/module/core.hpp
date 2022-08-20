@@ -8,6 +8,7 @@
 
 #include <flecs.h>
 #include <opack/core/types.hpp>
+#include <opack/core/world.hpp>
 
 namespace opack
 {

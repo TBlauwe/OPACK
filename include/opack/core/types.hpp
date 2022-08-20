@@ -1,8 +1,9 @@
-/*********************************************************************
+/*****************************************************************//**
  * \file   types.hpp
- * \brief  Basic types used as a foundation.
- * \author Tristan
- * \date   May 2022
+ * \brief  API types.
+ * 
+ * \author Tristan 
+ * \date   August 2022
  *********************************************************************/
 #pragma once
 
@@ -15,66 +16,95 @@
 
 #include <opack/utils/type_map.hpp>
 
+/**
+@brief Define a new type named @c name to identify a tag.
+
+@param name Type's name
+
+Usage :
+@code{.cpp}
+OPACK_TAG(MyTag);
+//can be used as a regular type, eg:
+opack::has<MyTag>(some_entity); 
+@endcode
+*/
+#define OPACK_TAG(name) struct name {}
+
+/**
+@brief Define a new type named @c name to identify a prefab.
+
+@param name Type's name
+
+Usage :
+@code{.cpp}
+OPACK_PREFAB(A);
+//can be then used to identify a prefab anywhere in code, eg:
+opack::prefab<A>(world); 
+@endcode
+*/
+#define OPACK_PREFAB(name) struct name {}
+
+/**
+@brief Define a new type named @c name to identify a prefab.
+@brief Define a new type named @c name to identify a prefab instanciated from a prefab named @c base.
+
+@param name Type's name
+@param base Prefab type's name, from which to inherit.
+
+Usage :
+@code{.cpp}
+OPACK_PREFAB(A);
+OPACK_SUB_PREFAB(B, A);
+//can be then used to identify a prefab anywhere in code, eg:
+opack::prefab<A>(world); 
+opack::init<B>(world); 
+@endcode
+*/
+#define OPACK_SUB_PREFAB(name, base) struct name : public base {using base_t = base;}
+
+/**
+@brief Library namespace.
+*/
 namespace opack
 {
-	namespace internal
-	{
-		template<typename T>
-		flecs::entity add_prefab(flecs::world& world)
-		{
-			auto entity = world.prefab().override<T>();
-			world.entity<T>().template set<flecs::entity>({ entity });
-			return entity;
-		}
+	/** @addtogroup Flecs 
 
-		template<typename T>
-		bool has_prefab(flecs::world& world)
-		{
-			return world.entity<T>().template has<flecs::entity>();
-		}
+	OPACK is built around flecs. To ensure minimal friction, we do not want to encapsulate its basic types. 
+	There is currently no reason to do it. However, this library is build with two users in mind : student and pro-user.
+	Pro-user refers to those who already know flecs. Student refers to those who may not know flecs, or even c++.
+	For this reason, we try to be as easy to use as possible (given the scope) to newcomers, while not impending pro-users.
+	Hence the use of a typedef.
 
-		template<typename T>
-		void organize(flecs::entity& entity)
-		{
-#ifndef OPACK_OPTIMIZATION
-			entity.child_of<T>();
-#endif
-		}
-
-		template<typename T>
-		void doc_name(flecs::entity& entity, const char * name)
-		{
-#ifndef OPACK_OPTIMIZATION
-			entity.set_doc_name(name);
-#endif
-		}
-
-		template<typename T>
-		void doc_brief(flecs::entity& entity, const char * brief)
-		{
-#ifndef OPACK_OPTIMIZATION
-			entity.set_doc_brief(brief);
-#endif
-		}
-	}
+	@{
+	*/
 
 	/**
-	 * Get prefab of type @c T.
-	 */
-	template<typename T>
-	flecs::entity prefab(flecs::world& world)
-	{
-		return *world.entity<T>().template get_mut<flecs::entity>();
-	}
+	@brief A world store all information. 
+	See https://flecs.docsforge.com/master/quickstart/#world.
+	*/
+	using World = flecs::world;
 
-	// Used only to structure hierarchy
+	/**
+	@brief An entity is an unique id, to which are associated components. 
+	See https://flecs.docsforge.com/master/quickstart/#entity
+	*/
+	using Entity = flecs::entity;
+
+	/**
+	@brief An entity_view is an immutable entity handle. 
+	See https://flecs.docsforge.com/master/api-cpp/flecs/entity_view/
+	*/
+	using Entity_view = flecs::entity_view;
+
+	/** @}*/ //End of group
+
 	namespace world 
 	{
 		struct Agents {};
 		struct Artefacts {};
 		struct Actuators {};	
-		struct Messages {};	
 		struct Senses {};
+		struct Messages {};	
 		struct Actions {};
 		struct Flows {};
 		struct Operations {};
@@ -211,4 +241,27 @@ namespace opack
 
 	struct Begin {};
 	struct End {};
+
+	// Concepts
+	//--------------
+	template<typename T>
+	concept SubPrefab = requires { T::base_t; };
+
+	template<typename T>
+	concept NotSubPrefab = requires { !SubPrefab<T>; };
+
+	template<typename T>
+	concept AgentPrefab = SubPrefab<T> && std::derived_from<T, Agent>;
+
+	template<typename T>
+	concept ArtefactPrefab = SubPrefab<T> && std::derived_from<T, Artefact>;
+
+	template<typename T>
+	concept ActionPrefab = SubPrefab<T> && std::derived_from<T, Action>;
+
+	template<typename T>
+	concept ActuatorPrefab = SubPrefab<T> && std::derived_from<T, Actuator>;
+
+	template<typename T>
+	concept SensePrefab = SubPrefab<T> && std::derived_from<T, Sense>;
 }
