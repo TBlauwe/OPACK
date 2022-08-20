@@ -15,7 +15,7 @@ set(SOURCE_LIST
 CPMAddPackage(
         NAME doctest
         GITHUB_REPOSITORY onqtam/doctest
-        GIT_TAG v2.4.8
+        GIT_TAG v2.4.9
 )
 
 add_executable(opack_tests ${SOURCE_LIST})

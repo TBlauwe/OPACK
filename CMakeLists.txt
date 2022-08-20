@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.13...3.23)
 # Project information
 # ===================
 project(OPACK
-        VERSION 0.4.0
+        VERSION 0.5.0
         DESCRIPTION "C++ library to simulate cognitive agents."
         HOMEPAGE_URL "https://github.com/tblauwe/opack"
         LANGUAGES C CXX
