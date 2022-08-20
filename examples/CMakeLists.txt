@@ -23,6 +23,7 @@ set_target_properties(manual_console PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OPAC
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	add_executable(test_bench "test_bench.cpp")
+	target_compile_features(test_bench PRIVATE cxx_std_20)
 	target_link_libraries(test_bench PRIVATE flecs_static)
 	set_target_properties(test_bench PROPERTIES OUTPUT_NAME test_bench_${CMAKE_PROJECT_VERSION}_$<CONFIG>_${CMAKE_CXX_COMPILER_ID})
 	set_target_properties(test_bench PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OPACK_SOURCE_DIR}/bin/examples")
