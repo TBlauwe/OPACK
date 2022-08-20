@@ -103,9 +103,9 @@ namespace opack
     @endcode
     */
     template<typename T>
-    Entity spawn(World& env, const char * name)
+    Entity spawn(World& world, const char * name)
     {
-        return env.entity(name).template is_a<T>();
+        return world.entity(name).template is_a<T>();
     }
 
     /** 
@@ -140,10 +140,10 @@ namespace opack
     @endcode
     */
 	template<SubPrefab T>
-	Entity init(World& env)
+	Entity init(World& world)
 	{
-        auto e = prefab<T>(env);
-        e.template is_a<typename T::base_t>(env);
+        auto e = prefab<T>(world);
+        e.template is_a<typename T::base_t>();
 #ifndef OPACK_OPTIMIZE
         if constexpr (ActionPrefab<T>)
             e.template child_of<world::prefab::Actions>();
@@ -151,18 +151,38 @@ namespace opack
 			e.template child_of<world::prefab::Agents>();
         else if constexpr (ArtefactPrefab<T>)
 			e.template child_of<world::prefab::Artefacts>();
-        else
-			e.template child_of<world::prefab>();
 #endif
         return e;
 	}
 
-    /**
-     * Returns true if @c entity is .
-     */
+    /** 
+    @brief Returns true if given entity is an instance of given prefab
+
+    @tparam T Prefab's type
+    @param entity 
+    @return A prefab entity instanted from prefab @c T.
+
+    TODO Maybe use a rule, so we can infer from multiple level of inheritance.
+
+    Usage :
+
+    @code{.cpp}
+    OPACK_PREFAB(A); // expands to struct A {};
+    OPACK_SUB_PREFAB(B, A); // expands to struct B : public A {using base_t = A; };
+    auto a = opack::prefab<A>(world);
+    auto b = opack::init<B>(world);
+    // customize prefab a ...
+    auto e1 = opack::spawn<A>(world, "Arthur");
+    auto e2 = opack::spawn<B>(world, "Bob");
+    opack::is_a<A>(e1); // true
+    opack::is_a<B>(e2); // true
+    opack::is_a<A>(e2); // false
+    @endcode
+    */
 	template<typename T>
 	bool is_a(Entity entity)
 	{
-		return entity.has(flecs::IsA, prefab<T>(entity));
+        auto world = entity.world();
+		return entity.has(flecs::IsA, prefab<T>(world));
 	}
 }

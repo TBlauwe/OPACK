@@ -245,7 +245,7 @@ namespace opack
 	// Concepts
 	//--------------
 	template<typename T>
-	concept SubPrefab = requires { T::base_t; };
+	concept SubPrefab = requires { typename T::base_t; };
 
 	template<typename T>
 	concept NotSubPrefab = requires { !SubPrefab<T>; };
