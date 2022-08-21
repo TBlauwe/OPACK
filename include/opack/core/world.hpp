@@ -90,7 +90,7 @@ namespace opack
     @tparam T Any type that matches a prefab.
     @param world 
     @param name Must be unique (in current scope). 
-    @return A entity instanted from prefab @c T.
+    @return A entity instantiated from prefab @c T
 
     Usage :
 
@@ -105,7 +105,7 @@ namespace opack
     template<typename T>
     Entity spawn(World& world, const char * name)
     {
-        return world.entity(name).template is_a<T>();
+        return world.entity(name).is_a<T>();
     }
 
     /** 
@@ -113,7 +113,7 @@ namespace opack
 
     @tparam T Any type that matches a sub-prefab.
     @param world 
-    @return A prefab entity instanted from prefab @c T.
+    @return A prefab entity instantiated from prefab @c T.
 
     A sub-prefab is a prefab based on another one. This function ensures that this link
     is formed.
@@ -121,7 +121,7 @@ namespace opack
     Afterwards, you can retrieve any prefab (sub-prefab also) by calling @ref prefab.
 
     We do not need to specify from which prefab the sub-prefab inherits. It should be
-    already specified in its definition. It is done automaticaly with the helper macro
+    already specified in its definition. It is done automatically with the helper macro
     @ref OPACK_SUB_PREFAB(name, base). Or manually, by adding the static typename member @c base_t
     equal to the type of the inheriting prefab (see below).
 
@@ -160,9 +160,7 @@ namespace opack
 
     @tparam T Prefab's type
     @param entity 
-    @return A prefab entity instanted from prefab @c T.
-
-    TODO Maybe use a rule, so we can infer from multiple level of inheritance.
+    @return A prefab entity instantiated from prefab @c T.
 
     Usage :
 
