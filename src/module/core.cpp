@@ -8,18 +8,13 @@ opack::concepts::concepts(flecs::world& world)
 
 	// Organisation
 	// ------------
-	world.entity("::world").add(flecs::Module);
+	world.entity("opack::world").add(flecs::Module);
 	world.entity("::world::prefab").add(flecs::Module);
-	world.entity<world::prefab::Actions>("::world::prefab::Actions").add(flecs::Module);
-	world.entity<world::prefab::Artefacts>("::world::prefab::Artefacts").add(flecs::Module);
-	world.entity<world::prefab::Agents>("::world::prefab::Agents").add(flecs::Module);
-	world.entity<world::prefab::Messages>("::world::prefab::Messages").add(flecs::Module);
-	world.entity<world::Agents>("::world::Agents").add(flecs::Module);
+	_::create_module_entity<Agent>(world);
+	_::create_module_entity<Artefact>(world);
+	_::create_module_entity<Action>(world);
 	world.entity<world::Artefacts>("::world::Artefacts").add(flecs::Module);
-	world.entity<world::Actions>("::world::Actions").add(flecs::Module);
-	world.entity<world::Actuators>("::world::Actuators").add(flecs::Module);
 	world.entity<world::Messages>("::world::Messages").add(flecs::Module);
-	world.entity<world::Senses>("::world::Senses").add(flecs::Module);
 	world.entity<world::Flows>("::world::Flows").add(flecs::Module);
 	world.entity<world::Operations>("::world::Operations").add(flecs::Module);
 	world.entity<world::Behaviours>("::world::Behaviours").add(flecs::Module);
@@ -39,9 +34,9 @@ opack::concepts::concepts(flecs::world& world)
 	// MAS
 	// ---
 	opack::prefab<Agent>(world)
-		.child_of<world::prefab::Agents>();
+		.child_of<Agent::prefabs_folder_t>();
 	opack::prefab<Artefact>(world)
-		.child_of<world::prefab::Artefacts>();
+		.child_of<Artefact::prefabs_folder_t>();
 	world.component<Actuator>();
 	world.component<Message>();
 	world.component<Sense>();
@@ -50,7 +45,7 @@ opack::concepts::concepts(flecs::world& world)
 	// ------
 	auto action = opack::prefab<Action>(world)
 		.add<Arity>()
-		.child_of<world::prefab::Actions>();
+		.child_of<Action::prefabs_folder_t>();
 
 	world.component<Arity>()
 		.member<size_t>("min")

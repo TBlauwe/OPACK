@@ -6,7 +6,7 @@ OPACK_PREFAB(A);
 OPACK_SUB_PREFAB(B, A); 
 OPACK_SUB_PREFAB(C, B); 
 
-TEST_CASE("Environment API")
+TEST_CASE("World & Entity API")
 {
 	opack::World world;
 
@@ -14,11 +14,12 @@ TEST_CASE("Environment API")
     auto b = opack::entity<B>(world);
     auto c = opack::entity<C>(world);
 
+
     REQUIRE(a != b);
     REQUIRE(a != c);
     REQUIRE(b != c);
 
-    a.add<V>();
+    opack::add<V>(a);
 
     REQUIRE(a.has<V>());
     REQUIRE(!b.has<V>());

@@ -45,8 +45,6 @@ void opack::Simulation::run_with_webapp() {world.app().enable_rest().enable_moni
 
 void opack::Simulation::run() { world.app().run(); }
 
-void opack::name(flecs::entity e, const char* name) { e.set_doc_name(name); }
-
 bool opack::step(flecs::world& world, float delta_time) { return world.progress(delta_time); }
 
 void opack::stop(flecs::world& world) { world.quit(); }

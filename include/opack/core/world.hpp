@@ -12,11 +12,41 @@
 #include <opack/core/types.hpp>
 namespace opack
 {
+    namespace _
+    {
+        template<typename T>
+        requires (HasRoot<T> && HasFolder<typename T::root_t>)
+        void organize_entity(Entity& entity)
+        {
+#ifndef OPACK_OPTIMIZE
+            entity.child_of<typename T::root_t::entities_folder_t>();
+#endif
+        }
+
+        template<typename T>
+        requires (HasRoot<T> && HasFolder<typename T::root_t>)
+        void organize_prefab(Entity& entity)
+        {
+#ifndef OPACK_OPTIMIZE
+            entity.child_of<typename T::root_t::prefabs_folder_t>();
+#endif
+        }
+
+        template<HasFolder T>
+        void create_module_entity(World& world)
+        {
+#ifndef OPACK_OPTIMIZE
+	    world.entity<typename T::entities_folder_t>().add(flecs::Module);
+	    world.entity<typename T::prefabs_folder_t>().add(flecs::Module);
+#endif
+        }
+    }
+
     /** 
     @brief Retrieve (or create) an entity from given type @c T.
 
     @tparam T Any type.
-    @param world 
+    @param world explicit.
     @return Entity associated with @c T.
 
     When no entity are associated with this type, a new entity will be spawned.
@@ -40,7 +70,7 @@ namespace opack
     @brief Retrieve (or create) a prefab associated with given type @c T.
 
     @tparam T Any type.
-    @param world 
+    @param world explicit.
     @return A prefab entity associated with type @c T.
 
     See also @ref spawn to instantiate an entity from this prefab.
@@ -65,8 +95,8 @@ namespace opack
     @brief Spawn a new entity instantiated from prefab @c T.
 
     @tparam T Any type that matches a prefab.
-    @param world 
-    @return A entity instanted from prefab @c T.
+    @param world explicit.
+    @return A entity instantiated from prefab @c T.
 
     Usage :
 
@@ -81,14 +111,16 @@ namespace opack
     template<typename T>
     Entity spawn(World& world)
     {
-        return world.entity().is_a<T>();
+        auto e = world.entity().is_a<T>();
+        _::organize_entity<T>(e);
+        return e;
     }
 
     /** 
     @brief Spawn a new entity with name @c name, instantiated from prefab @c T.
 
     @tparam T Any type that matches a prefab.
-    @param world 
+    @param world explicit.
     @param name Must be unique (in current scope). 
     @return A entity instantiated from prefab @c T
 
@@ -105,14 +137,16 @@ namespace opack
     template<typename T>
     Entity spawn(World& world, const char * name)
     {
-        return world.entity(name).is_a<T>();
+        auto e = world.entity(name).is_a<T>();
+        _::organize_entity<T>(e);
+        return e;
     }
 
     /** 
     @brief Initialize a sub-prefab, so it correctly inherits its parent.
 
     @tparam T Any type that matches a sub-prefab.
-    @param world 
+    @param world explicit.
     @return A prefab entity instantiated from prefab @c T.
 
     A sub-prefab is a prefab based on another one. This function ensures that this link
@@ -144,43 +178,7 @@ namespace opack
 	{
         auto e = prefab<T>(world);
         e.template is_a<typename T::base_t>();
-#ifndef OPACK_OPTIMIZE
-        if constexpr (ActionPrefab<T>)
-            e.template child_of<world::prefab::Actions>();
-        else if constexpr (AgentPrefab<T>)
-			e.template child_of<world::prefab::Agents>();
-        else if constexpr (ArtefactPrefab<T>)
-			e.template child_of<world::prefab::Artefacts>();
-#endif
+        _::organize_prefab<T>(e);
         return e;
-	}
-
-    /** 
-    @brief Returns true if given entity is an instance of given prefab
-
-    @tparam T Prefab's type
-    @param entity 
-    @return A prefab entity instantiated from prefab @c T.
-
-    Usage :
-
-    @code{.cpp}
-    OPACK_PREFAB(A); // expands to struct A {};
-    OPACK_SUB_PREFAB(B, A); // expands to struct B : public A {using base_t = A; };
-    auto a = opack::prefab<A>(world);
-    auto b = opack::init<B>(world);
-    // customize prefab a ...
-    auto e1 = opack::spawn<A>(world, "Arthur");
-    auto e2 = opack::spawn<B>(world, "Bob");
-    opack::is_a<A>(e1); // true
-    opack::is_a<B>(e2); // true
-    opack::is_a<A>(e2); // false
-    @endcode
-    */
-	template<typename T>
-	bool is_a(Entity entity)
-	{
-        auto world = entity.world();
-		return entity.has(flecs::IsA, prefab<T>(world));
 	}
 }

@@ -72,7 +72,7 @@ set(HEADER_LIST
     "include/opack/module/core.hpp" 
     #"include/opack/module/activity_dl.hpp"
     #"include/opack/module/fipa_acl.hpp" 
-    )
+     "include/opack/core/entity.hpp" "include/opack/core/common.hpp")
 
 set(SOURCE_LIST 
     "src/core/world.cpp"

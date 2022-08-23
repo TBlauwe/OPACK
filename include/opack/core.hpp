@@ -8,7 +8,9 @@
 #pragma once
 
 #include <opack/core/types.hpp>
+#include <opack/core/common.hpp>
 #include <opack/core/world.hpp>
+#include <opack/core/entity.hpp>
 #include <opack/module/core.hpp>
 #include <opack/core/operation.hpp>
 #include <opack/core/action.hpp>

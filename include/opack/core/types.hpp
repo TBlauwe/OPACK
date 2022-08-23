@@ -10,11 +10,23 @@
 #include <functional>
 #include <unordered_map>
 #include <map>
-#include <typeindex>
+#include <concepts>
 
 #include <flecs.h>
 
-#include <opack/utils/type_map.hpp>
+/**
+@brief Helper macro to define additional structs to organize entities in explorer.
+@param name Folder's name.
+*/
+#define OPACK_FOLDERS_STRUCT(name) namespace world { struct name { struct prefabs {}; };  }
+
+/**
+@brief Helper macro to define adequate typedefs for organization.
+@param name Type's name.
+*/
+#define OPACK_FOLDERS_TYPEDEF(name) \
+    using entities_folder_t = world::name; \
+    using prefabs_folder_t = world::name::prefabs
 
 /**
 @brief Define a new type named @c name to identify a tag.
@@ -46,7 +58,7 @@ opack::prefab<A>(world);
 
 /**
 @brief Define a new type named @c name to identify a prefab.
-@brief Define a new type named @c name to identify a prefab instanciated from a prefab named @c base.
+@brief Define a new type named @c name to identify a prefab instantiated from a prefab named @c base.
 
 @param name Type's name
 @param base Prefab type's name, from which to inherit.
@@ -67,6 +79,14 @@ opack::init<B>(world);
 */
 namespace opack
 {
+	namespace _
+	{
+		template<typename T>
+	    struct root
+		{
+			using root_t = T;
+		};
+	}
 	/** @addtogroup Flecs 
 
 	OPACK is built around flecs. To ensure minimal friction, we do not want to encapsulate its basic types. 
@@ -80,13 +100,13 @@ namespace opack
 
 	/**
 	@brief A world store all information. 
-	See https://flecs.docsforge.com/master/quickstart/#world.
+	See https://www.flecs.dev/flecs/#/docs/Quickstart?id=world
 	*/
-	using World = flecs::world;
+    using World = flecs::world;
 
 	/**
 	@brief An entity is an unique id, to which are associated components. 
-	See https://flecs.docsforge.com/master/quickstart/#entity
+	See https://www.flecs.dev/flecs/#/docs/Quickstart?id=entity
 	*/
 	using Entity = flecs::entity;
 
@@ -98,35 +118,55 @@ namespace opack
 
 	/** @}*/ //End of group
 
+	/**
+	 *@brief Namespace used to organize entities in explorer. If @c OPACK_OPTIMIZE is defined,
+	 * then it will be ignored.
+	 */
 	namespace world 
 	{
-		struct Agents {};
-		struct Artefacts {};
-		struct Actuators {};	
-		struct Senses {};
 		struct Messages {};	
-		struct Actions {};
 		struct Flows {};
 		struct Operations {};
 		struct Behaviours {};
 		struct Dynamics {};
-		namespace prefab
+
+		/**
+		 *@brief Namespace to regroup prefab entities.*/
+		namespace prefabs
 		{
-			struct Actions {};
-			struct Agents {};
-			struct Artefacts {};
-			struct Messages {};	
+			struct Message {};	
+			struct Actuator {};	
+			struct Sense {};	
+		    struct Flow {};
 		};
 	};
 
 	// MAS - Multi-agent systems
 	//--------------------------
-	struct Agent {};
-	struct Artefact {};
+    OPACK_FOLDERS_STRUCT(Agents);
+	struct Agent : public _::root<Agent>
+	{
+        OPACK_FOLDERS_TYPEDEF(Agents);
+	};
+
+    OPACK_FOLDERS_STRUCT(Artefacts);
+	struct Artefact
+	{
+        OPACK_FOLDERS_TYPEDEF(Artefacts);
+	};
+
+    OPACK_FOLDERS_STRUCT(Actions);
+	struct Action 
+	{
+        OPACK_FOLDERS_TYPEDEF(Actions);
+	};
 
 	// O - Operation
 	//--------------
-	struct Flow {};
+	struct Flow
+	{
+		using folder_t = world::Agents;
+	};
 	struct Operation {};
 	struct Active {};
 	struct Behaviour {};
@@ -211,7 +251,6 @@ namespace opack
 	// A - Action
 	//-----------
 	struct Actuator {};	
-	struct Action {};
 	using Actions_t = std::vector<flecs::entity>;
 	using Action_t = flecs::entity;
 	enum ActionType {Ponctual, Continuous};
@@ -244,6 +283,31 @@ namespace opack
 
 	// Concepts
 	//--------------
+	template<typename T>
+	concept DefaultConstructible = std::is_default_constructible_v<T>;
+
+	template<typename T, typename U>
+	concept Composable = requires (T t, U u)
+	{
+		{ t.template add<U>() };
+		{ t.template set<U>({u}) };
+		{ t.template get<U>() } -> std::same_as<const U*>;
+		{ t.template get_mut<U>() } -> std::same_as<U*>;
+	};
+
+	template<typename T>
+	concept HasFolder = requires 
+    {
+        typename T::entities_folder_t;
+        typename T::prefabs_folder_t;
+    };
+
+	template<typename T>
+	concept HasRoot = requires
+	{
+	    typename T::root_t;
+	};
+
 	template<typename T>
 	concept SubPrefab = requires { typename T::base_t; };
 

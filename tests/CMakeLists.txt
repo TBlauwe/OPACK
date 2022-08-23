@@ -3,13 +3,13 @@
 set(SOURCE_LIST 
 	"main.cpp"
     "core/types.cpp"
-    "core/world.cpp"
+    "core/basic.cpp"
     #"simulation.cpp"
     #"operation.cpp" 
     #"algorithm/influence_graph.cpp" 
     #"module/activity_dl.cpp"
     #"module/fipa_acl.cpp"
- )
+  )
 
 # Dependencies
 # ============
