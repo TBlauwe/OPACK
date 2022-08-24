@@ -10,27 +10,6 @@
 #include <opack/core/api_types.hpp>
 
 namespace opack {
-	/**
-	@brief Advance simulation by one-step and specify elapsed time.
-	@param world explicit.
-	@param delta_time How much time elapsed between two cycles. If 0 (default), then it is automatically measured;
-	@return False if application should stop.
-	*/
-	bool step(World& world, float delta_time = 0.0f);
-
-	/**
-	@brief Advance simulation by @c n step and specify elapsed time between each step.
-	@param world explicit.
-	@param n number of steps
-	@param delta_time How much time elapsed between two cycles. If 0 (default), then it is automatically measured;
-	*/
-	void step_n(World& world, size_t n, float delta_time = 0.0f);
-
-	/**
-	@brief Stop simulation after current cycle
-	@param world explicit.
-	*/
-	void stop(World& world);
 
 	/**
 	@brief Count number of entities matching the pattern.
@@ -67,87 +46,68 @@ namespace opack {
 	*/
 	size_t count(const World& world, const Entity rel, const Entity obj);
 
-	struct Simulation
-	{
-		Simulation(int argc = 0, char* argv[] = nullptr);
+    /**
+    @brief Return target fps.
+    */
+    float target_fps(const World& world);
 
-		operator flecs::world& () { return world; }
+    /**
+    @brief Set target fps.
+    */
+    void target_fps(World& world, float value);
 
-		// Configuration
-		// -------------
-		/**
-		@brief Return target fps.
-		*/
-		float target_fps() const;
+    /**
+    @brief Return time scale.
+    */
+    float time_scale(World& world);
 
-		/**
-		@brief Set target fps.
-		*/
-		void target_fps(float value);
+    /**
+    @brief Set time scale.
+    */
+    void time_scale(World& world, float value);
 
-		/**
-		@brief Return time scale.
-		*/
-		float time_scale() const;
+    /** Return number of elapsed ticks. */
+    int32_t tick(const World& world);
 
-		/**
-		@brief Set time scale.
-		*/
-		void time_scale(float value);
+    /** Returns last reported delta time (elapsed time between two cycles). Affected by time scale. */
+    float delta_time(const World& world);
 
-		// Status
-		// ------
-		/**
-		@brief Return number of elapsed ticks.
-		*/
-		int32_t tick();
+    /** Returns total elapsed simulation time. */
+    float time(const World& world);
 
-		/**
-		@brief Return last reported delta time (elapsed time between two cycles). Affected by time scale.
-		*/
-		float delta_time();
-
-		/**
-		@brief Return total elapsed simulation time.
-		*/
-		float time();
-
-		/**
-		 * Import a module @c T and return corresponding entity.
-		 */
-		template<typename T>
-		inline flecs::entity import()
-		{
-			return world.import<T>();
-		}
+    /** Imports a module @c T and return corresponding entity. */
+    template<typename T>
+    Entity import(World& world)
+    {
+        return world.import<T>();
+    }
 
 
-		// Controls
-		// --------
-		/**
-		@brief Advance simulation by one-step and specify elapsed time.
-		@param elapsed_time time elapsed. If 0 (default), then it is automatically measured. Affected by time scale.
-		@return False, if application should stop.
-		*/
-		bool step(float elapsed_time = 0.0f);
+    /**
+    @brief Advance simulation by one-step and specify elapsed time.
+    @param elapsed_time time elapsed. If 0 (default), then it is automatically measured. Affected by time scale.
+    @return False, if application should stop.
+    */
+    bool step(World& world, float elapsed_time = 0.0f);
 
-		/**
-		@brief Advance simulation by @c n step and specify elapsed time between each step.
-		@param n number of steps
-		@param elapsed_time time elapsed. If 0 (default), then it is automatically measured. Affected by time scale. 
-		*/
-		void step_n(size_t n, float elapsed_time = 0.0f);
+    /**
+    @brief Advance simulation by @c n step and specify elapsed time between each step.
+    @param n number of steps
+    @param elapsed_time time elapsed. If 0 (default), then it is automatically measured. Affected by time scale. 
+    */
+    void step_n(World& world, size_t n, float elapsed_time = 0.0f);
 
-		/**
-		 * Run the simulation with rest enabled,
-		 * so that you can inspect underlying world from a web application.
-		 * See: https://www.flecs.dev/explorer/?remote=true.
-		 */
-		void run_with_webapp();
+    /**
+     * Run the simulation with a rest app enabled.
+     * You can inspect the world with following url :
+     * https://www.flecs.dev/explorer/?remote=true.
+     */
+    void run_with_webapp(World& world);
 
-		/** Run the simulation. */
-		void run();
+    /** Run the simulation. */
+    void run(World& world);
 
-		World world;
-	};
+	/** Stop simulation after current cycle. */
+	void stop(World& world);
+
 } // namespace opack

@@ -20,7 +20,7 @@ int32_t opack::Simulation::tick()
 	return world.tick();
 }
 
-float opack::Simulation::delta_time()
+float opack::Simulation::delta_time() const
 {
 	return world.delta_time();
 }

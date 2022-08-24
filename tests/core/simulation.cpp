@@ -1,12 +1,9 @@
 #include <doctest/doctest.h>
 #include <opack/core.hpp>
-#include <opack/examples/all.hpp>
 #include <string.h> // For const char * comparisons
 
-TEST_SUITE_BEGIN("Simulation");
 
-template<std::derived_from<opack::Simulation> T>
-void test_step(T& sim, size_t n = 1, float delta_time = 1.0f, float time_scale = 1.0f)
+void test_step(opack::World& world, size_t n = 1, float delta_time = 1.0f, float time_scale = 1.0f)
 {
 	float total_time{ n * (delta_time * time_scale) };
 	sim.time_scale(time_scale);
@@ -19,9 +16,9 @@ void test_step(T& sim, size_t n = 1, float delta_time = 1.0f, float time_scale =
 	CHECK(sim.time() >= total_time);
 }
 
-TEST_CASE_TEMPLATE_DEFINE("Simulation construction", T, sim_construction)
+TEST_CASE("Simulation API")
 {
-	auto sim = T();
+	opack::Simulation sim;
 	REQUIRE(sim.tick() == 0);
 	REQUIRE(sim.time() == 0.0f);
 
