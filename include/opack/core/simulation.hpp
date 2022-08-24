@@ -1,69 +1,77 @@
 /*********************************************************************
- * \file   simulation.hpp
- * \brief
+ * \file  simulation.hpp
+ * \brief API to control the simulation.
  *
  * \author Tristan
  * \date   April 2022
  *********************************************************************/
 #pragma once
 
-#include <flecs.h>
-
 #include <opack/core/api_types.hpp>
 
 namespace opack {
-	// Simulation control
-	// ==================
 	/**
 	@brief Advance simulation by one-step and specify elapsed time.
+	@param world explicit.
 	@param delta_time How much time elapsed between two cycles. If 0 (default), then it is automatically measured;
-	@return False, if application should stop.
+	@return False if application should stop.
 	*/
-	bool step(flecs::world& world, float delta_time = 0.0f);
+	bool step(World& world, float delta_time = 0.0f);
 
 	/**
 	@brief Advance simulation by @c n step and specify elapsed time between each step.
+	@param world explicit.
 	@param n number of steps
 	@param delta_time How much time elapsed between two cycles. If 0 (default), then it is automatically measured;
 	*/
-	void step_n(flecs::world& world, size_t n, float delta_time = 0.0f);
+	void step_n(World& world, size_t n, float delta_time = 0.0f);
 
 	/**
 	@brief Stop simulation after current cycle
+	@param world explicit.
 	*/
-	void stop(flecs::world& world);
+	void stop(World& world);
 
-	// Simulation stats
-	// ================
 	/**
 	@brief Count number of entities matching the pattern.
+	@param world explicit.
+	@return Numbers of entities having @c T.
+
+    WARNING ! Do not works with prefabs, e.g. : @c count<Agent>(world).
+	Use @ref count(World& world, Entity rel, Entity obj).
 	*/
 	template<typename T>
-	inline size_t count(flecs::world& world)
+	size_t count(const World& world)
 	{
 		return static_cast<size_t>(world.count<T>());
 	}
 
 	/**
 	@brief Count number of entities matching the pattern.
+	@param world explicit.
+	@param obj Match following pattern : entity--T-->obj.
+	@return Numbers of matching pattern : entity--T-->obj.
 	*/
 	template<typename T>
-	size_t count(flecs::world& world, const flecs::entity_t obj)
+	size_t count(const World& world, const Entity obj)
 	{
 		return static_cast<size_t>(world.count<T>(obj));
 	}
 
 	/**
 	@brief Count number of entities matching the pattern.
+	@param world explicit.
+	@param rel Relation entity.
+	@param obj Object entity.
+	@return Numbers of matching pattern : entity--rel-->obj.
 	*/
-	size_t count(flecs::world& world, flecs::entity_t rel, flecs::entity_t obj);
+	size_t count(const World& world, const Entity rel, const Entity obj);
 
 	struct Simulation
 	{
 		Simulation(int argc = 0, char* argv[] = nullptr);
 
-		inline operator flecs::world& () { return world; }
-
+		operator flecs::world& () { return world; }
 
 		// Configuration
 		// -------------
@@ -131,24 +139,15 @@ namespace opack {
 		void step_n(size_t n, float elapsed_time = 0.0f);
 
 		/**
-		 * Run the simulation with rest enable,
+		 * Run the simulation with rest enabled,
 		 * so that you can inspect underlying world from a web application.
 		 * See: https://www.flecs.dev/explorer/?remote=true.
 		 */
 		void run_with_webapp();
 
-		/**
-		 * Run the simulation.
-		 */
+		/** Run the simulation. */
 		void run();
 
-		// Internal
-		// --------
-		flecs::world world;
+		World world;
 	};
-
-	namespace internal
-	{
-		flecs::world world(int argc = 0, char* argv[] = nullptr);
-	}
 } // namespace opack

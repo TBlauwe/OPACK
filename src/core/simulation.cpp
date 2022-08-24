@@ -1,5 +1,11 @@
 #include <opack/core/simulation.hpp>
-#include <iostream>
+#include <opack/core.hpp>
+
+opack::Simulation::Simulation(int argc, char* argv[])
+    : world{argc, argv}
+{
+	opack::import_opack(world);
+}
 
 float opack::Simulation::target_fps() const { return world.get_target_fps(); }
 
@@ -32,13 +38,16 @@ void opack::Simulation::run_with_webapp() {world.app().enable_rest().enable_moni
 
 void opack::Simulation::run() { world.app().run(); }
 
-bool opack::step(flecs::world& world, float delta_time) { return world.progress(delta_time); }
+bool opack::step(World& world, float delta_time) { return world.progress(delta_time); }
 
-void opack::stop(flecs::world& world) { world.quit(); }
+void opack::stop(World& world) { world.quit(); }
 
-size_t opack::count(flecs::world& world, flecs::entity_t rel, flecs::entity_t obj) { return static_cast<size_t>(world.count(rel, obj)); }
+size_t opack::count(const World& world, const Entity rel, const Entity obj)
+{
+    return static_cast<size_t>(world.count(rel, obj));
+}
 
-void opack::step_n(flecs::world& world, size_t n, float delta_time)
+void opack::step_n(World& world, size_t n, float delta_time)
 {
 	bool should_continue = true;
 	for (size_t i{ 0 }; i < n && should_continue; i++) {

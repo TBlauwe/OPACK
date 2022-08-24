@@ -66,7 +66,5 @@ TEST_CASE("World & Entity API")
             CHECK(inst.has<V>());                   
         }
     }
-
-    world.app().enable_rest().run();
 }
 
