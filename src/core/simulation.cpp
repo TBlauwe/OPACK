@@ -1,19 +1,6 @@
 #include <opack/core/simulation.hpp>
 #include <iostream>
 
-flecs::world opack::internal::world(int argc, char* argv[])
-{
-	flecs::world world{ argc, argv };
-	world.import<opack::concepts>();
-	return world;
-}
-
-opack::Simulation::Simulation(int argc, char* argv[]) : world{ internal::world(argc, argv) }
-{
-	world.import<opack::dynamics>();
-}
-
-
 float opack::Simulation::target_fps() const { return world.get_target_fps(); }
 
 void opack::Simulation::target_fps(float value) { world.set_target_fps(value); }

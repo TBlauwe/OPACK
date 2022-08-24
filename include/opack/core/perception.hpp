@@ -12,7 +12,7 @@
 #include <functional>
 
 #include <flecs.h>
-#include <opack/core/types.hpp>
+#include <opack/core/api_types.hpp>
 #include <opack/utils/flecs_helper.hpp>
 
 namespace opack

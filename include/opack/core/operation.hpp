@@ -13,9 +13,8 @@
 
 #include <flecs.h>
 
-#include <opack/core/types.hpp>
-#include <opack/core/simulation.hpp>
-#include <opack/module/core.hpp>
+#include <opack/core/api_types.hpp>
+#include <opack/utils/type_name.hpp>
 
 namespace opack
 {
@@ -52,7 +51,7 @@ namespace opack
 				}
 		);
 		launcher.set_doc_name("System_CheckBehaviour");
-		launcher.template child_of<opack::dynamics>();
+		launcher.template child_of<opack::world::dynamics>();
 		return behaviour;
 	}
 
@@ -87,7 +86,6 @@ namespace opack
 
 	/**
 	@brief Create a flow named @c T that represents part of the agent model.
-	@param @c world 
 	@param @c rate how much time per second
 	*/
 	template<std::derived_from<Flow> T>
@@ -98,7 +96,7 @@ namespace opack
 			world{ world },
 			flow_system { world.system<const T>() }
 		{
-			world.component<T>().template child_of<world::Flows>();
+			world.component<T>().template child_of<world::flows>();
 
 			flow_system.template term<T, Begin>().write();
 			flow_system.kind(flecs::PreUpdate);
@@ -115,9 +113,9 @@ namespace opack
 						}
 					}
 			);
-			internal::organize<opack::dynamics>(cleaner);
-			internal::doc_name<opack::dynamics>(cleaner, "System_CleanFlowLeftOver");
-			internal::doc_brief<opack::dynamics>(cleaner, type_name_cstr<T>());
+			//internal::organize<opack::dynamics>(cleaner);
+			//internal::doc_name<opack::dynamics>(cleaner, "System_CleanFlowLeftOver");
+			//internal::doc_brief<opack::dynamics>(cleaner, type_name_cstr<T>());
 		}
 
 		template<typename Condition>
@@ -159,7 +157,7 @@ namespace opack
 			);
 			launcher.set_doc_name("System_LaunchFlow");
 			launcher.set_doc_brief(type_name_cstr<T>());
-			launcher.template child_of<opack::dynamics>();
+			launcher.template child_of<opack::world::dynamics>();
 		}
 
 	private:
@@ -198,7 +196,7 @@ namespace opack
 			system_builder {world.system<TInput...>(type_name_cstr<TOper>())}
 		{
 			//(world.template component<df<TOper, TInput>>().template member<TInput>("value") , ...); // BUG Doesn't work with templated class ?
-			operation.child_of<world::Operations>();
+			operation.child_of<world::operations>();
 			system_builder.kind(flecs::OnUpdate);
 			(system_builder.template term<df<TOper,TOutput>>().write(),...);
 			//system_builder.multi_threaded(true); // BUG doesn't seem to work with monitor
@@ -231,7 +229,7 @@ namespace opack
 		template<typename T>
 		flecs::entity build(T&& func)
 		{
-			system_builder.each(func).template child_of<opack::dynamics>();
+			system_builder.each(func).template child_of<opack::world::dynamics>();
 			return operation;
 		}
 
@@ -247,7 +245,7 @@ namespace opack
 						(e.set<df<TOper, TOutput>>({std::get<TOutput>(result)}), ...); 
 					}
 				}
-			).template child_of<opack::dynamics>();
+			).template child_of<opack::world::dynamics>();
 			return operation;
 		}
 

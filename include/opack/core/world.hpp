@@ -9,11 +9,15 @@
 
 #include <flecs.h>
 
-#include <opack/core/types.hpp>
+#include <opack/core/api_types.hpp>
+
 namespace opack
 {
     namespace _
     {
+        template<typename T>
+        void organize_entity(Entity& entity){}
+
         template<typename T>
         requires (HasRoot<T> && HasFolder<typename T::root_t>)
         void organize_entity(Entity& entity)
@@ -22,6 +26,9 @@ namespace opack
             entity.child_of<typename T::root_t::entities_folder_t>();
 #endif
         }
+
+        template<typename T>
+        void organize_prefab(Entity& entity){}
 
         template<typename T>
         requires (HasRoot<T> && HasFolder<typename T::root_t>)
@@ -88,6 +95,36 @@ namespace opack
     template<typename T>
     Entity prefab(World& world)
     {
+        auto prefab = world.prefab<T>();
+        prefab.template child_of<world::prefabs>();
+        return world.prefab<T>();
+    }
+
+    /** 
+    @brief Retrieve (or create) a prefab associated with given type @c T.
+
+    @tparam T Any type.
+    @param world explicit.
+    @return A prefab entity associated with type @c T.
+
+    See also @ref spawn to instantiate an entity from this prefab.
+
+    Usage :
+
+    @code{.cpp}
+    struct A {};
+    auto prefab = opack::prefab<A>(world);
+    // customize prefab ...
+    auto e = opack::spawn<A>(world);
+    opack::is_a<A>(e); // true
+    @endcode
+    */
+    template<typename T>
+    requires HasRoot<T> && HasFolder<typename T::root_t>
+    Entity prefab(World& world)
+    {
+        auto prefab = world.prefab<T>();
+        prefab.template child_of<typename T::root_t::prefabs_folder_t>();
         return world.prefab<T>();
     }
     

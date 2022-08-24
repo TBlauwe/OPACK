@@ -1,5 +1,5 @@
 /*****************************************************************//**
- * \file   types.hpp
+ * \file   api_types.hpp
  * \brief  API types.
  * 
  * \author Tristan 
@@ -120,54 +120,78 @@ namespace opack
 
 	/**
 	 *@brief Namespace used to organize entities in explorer. If @c OPACK_OPTIMIZE is defined,
-	 * then it will be ignored.
+	 * then it will not be used.
 	 */
 	namespace world 
 	{
-		struct Messages {};	
-		struct Flows {};
-		struct Operations {};
-		struct Behaviours {};
-		struct Dynamics {};
+		/** @brief Scope to regroup dynamic entities (systems, observer, trigger, etc.).*/
+		struct dynamics {};
 
-		/**
-		 *@brief Namespace to regroup prefab entities.*/
-		namespace prefabs
-		{
-			struct Message {};	
-			struct Actuator {};	
-			struct Sense {};	
-		    struct Flow {};
-		};
+		/** @brief Scope to regroup behaviours.*/
+		struct behaviours {};
+
+		/** @brief Scope to regroup prefab entities.*/
+		struct prefabs {};
+
+		/** @brief Scope to regroup rules/query entities.*/
+		struct rules {};
+
+		/** @brief Scope to regroup modules.*/
+		struct modules {};
 	};
 
 	// MAS - Multi-agent systems
 	//--------------------------
-    OPACK_FOLDERS_STRUCT(Agents);
+    OPACK_FOLDERS_STRUCT(agents);
 	struct Agent : public _::root<Agent>
 	{
-        OPACK_FOLDERS_TYPEDEF(Agents);
+        OPACK_FOLDERS_TYPEDEF(agents);
 	};
 
-    OPACK_FOLDERS_STRUCT(Artefacts);
-	struct Artefact
+    OPACK_FOLDERS_STRUCT(artefacts);
+	struct Artefact : public _::root<Artefact>
 	{
-        OPACK_FOLDERS_TYPEDEF(Artefacts);
+        OPACK_FOLDERS_TYPEDEF(artefacts);
 	};
 
-    OPACK_FOLDERS_STRUCT(Actions);
-	struct Action 
+    OPACK_FOLDERS_STRUCT(actions);
+	struct Action : public _::root<Action>
 	{
-        OPACK_FOLDERS_TYPEDEF(Actions);
+        OPACK_FOLDERS_TYPEDEF(actions);
+	};
+
+    OPACK_FOLDERS_STRUCT(messages);
+	struct Message : public _::root<Message>
+	{
+        OPACK_FOLDERS_TYPEDEF(messages);
+	};
+
+    OPACK_FOLDERS_STRUCT(actuators);
+	struct Actuator : public _::root<Actuator>
+	{
+        OPACK_FOLDERS_TYPEDEF(actuators);
+	};
+
+    OPACK_FOLDERS_STRUCT(senses);
+	struct Sense : public _::root<Sense>
+	{
+        OPACK_FOLDERS_TYPEDEF(actuators);
+	};
+
+    OPACK_FOLDERS_STRUCT(flows);
+	struct Flow : public _::root<Flow>
+	{
+        OPACK_FOLDERS_TYPEDEF(flows);
+	};
+
+    OPACK_FOLDERS_STRUCT(operations);
+	struct Operation : public _::root<Operation>
+	{
+        OPACK_FOLDERS_TYPEDEF(operations);
 	};
 
 	// O - Operation
 	//--------------
-	struct Flow
-	{
-		using folder_t = world::Agents;
-	};
-	struct Operation {};
 	struct Active {};
 	struct Behaviour {};
 	using DefaultBehaviour = flecs::pair<Active, Behaviour>;
@@ -242,28 +266,10 @@ namespace opack
 		};
 	};
 
-	// P - Perception
-	//--------------
-	struct Sense {};
-	// Percept are expressed as relation between two entities
-	// e.g : agent --Sense--> artefact
-
 	// A - Action
 	//-----------
-	struct Actuator {};	
 	using Actions_t = std::vector<flecs::entity>;
 	using Action_t = flecs::entity;
-	enum ActionType {Ponctual, Continuous};
-	// An action is performed by someones
-	struct By {};
-	// An action is performed on something
-	struct On {};	
-	struct Arity { size_t min{ 1 }; size_t max{ 1 };};
-	struct Delay { float value{ 1 }; };
-
-	// C - Caracteristics
-	//-------------------
-	// C <==> Components
 
 	// K - Knowledge
 	//--------------
@@ -272,14 +278,6 @@ namespace opack
 
 	// MISC
 	//-----
-	struct Message {};
-	struct Timestamp
-	{
-		float value {0.0f};
-	};
-
-	struct Begin {};
-	struct End {};
 
 	// Concepts
 	//--------------

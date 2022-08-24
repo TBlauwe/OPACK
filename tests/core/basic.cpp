@@ -8,7 +8,7 @@ OPACK_SUB_PREFAB(C, B);
 
 TEST_CASE("World & Entity API")
 {
-	opack::World world;
+	opack::World world = opack::create_world();
 
     auto a = opack::entity<A>(world);
     auto b = opack::entity<B>(world);
@@ -66,5 +66,7 @@ TEST_CASE("World & Entity API")
             CHECK(inst.has<V>());                   
         }
     }
+
+    world.app().enable_rest().run();
 }
 

@@ -7,7 +7,7 @@
  *********************************************************************/
 #pragma once
 
-#include <opack/core/types.hpp>
+#include <opack/core/api_types.hpp>
 
 namespace opack
 {
