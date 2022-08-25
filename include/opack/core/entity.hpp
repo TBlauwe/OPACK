@@ -39,6 +39,6 @@ namespace opack
 	bool is_a(Entity entity)
 	{
         auto world = entity.world();
-		return entity.has(flecs::IsA, prefab<T>(world));
+		return entity.has(flecs::IsA, opack::entity<T>(world));
 	}
 }

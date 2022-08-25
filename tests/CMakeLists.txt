@@ -4,7 +4,7 @@ set(SOURCE_LIST
 	"main.cpp"
     "core/types.cpp"
     "core/basic.cpp"
-    #"simulation.cpp"
+    "core/simulation.cpp"
     #"operation.cpp" 
     #"algorithm/influence_graph.cpp" 
     #"module/activity_dl.cpp"

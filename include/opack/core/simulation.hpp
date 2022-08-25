@@ -11,40 +11,6 @@
 
 namespace opack {
 
-	/**
-	@brief Count number of entities matching the pattern.
-	@param world explicit.
-	@return Numbers of entities having @c T.
-
-    WARNING ! Do not works with prefabs, e.g. : @c count<Agent>(world).
-	Use @ref count(World& world, Entity rel, Entity obj).
-	*/
-	template<typename T>
-	size_t count(const World& world)
-	{
-		return static_cast<size_t>(world.count<T>());
-	}
-
-	/**
-	@brief Count number of entities matching the pattern.
-	@param world explicit.
-	@param obj Match following pattern : entity--T-->obj.
-	@return Numbers of matching pattern : entity--T-->obj.
-	*/
-	template<typename T>
-	size_t count(const World& world, const Entity obj)
-	{
-		return static_cast<size_t>(world.count<T>(obj));
-	}
-
-	/**
-	@brief Count number of entities matching the pattern.
-	@param world explicit.
-	@param rel Relation entity.
-	@param obj Object entity.
-	@return Numbers of matching pattern : entity--rel-->obj.
-	*/
-	size_t count(const World& world, const Entity rel, const Entity obj);
 
     /**
     @brief Return target fps.
@@ -59,7 +25,7 @@ namespace opack {
     /**
     @brief Return time scale.
     */
-    float time_scale(World& world);
+    float time_scale(const World& world);
 
     /**
     @brief Set time scale.

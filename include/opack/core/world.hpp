@@ -218,4 +218,52 @@ namespace opack
         _::organize_prefab<T>(e);
         return e;
 	}
+
+	/**
+	@brief Count number of entities matching the pattern.
+	@param world explicit.
+	@return Numbers of entities having @c T.
+
+    WARNING ! Do not works with prefabs, e.g. : @c count<Agent>(world).
+	Use @ref count(World& world, Entity rel, Entity obj).
+	*/
+	template<typename T>
+	size_t count(const World& world)
+	{
+		return static_cast<size_t>(world.count<T>());
+	}
+
+	/**
+	@brief Count number of entities matching the pattern.
+	@param world explicit.
+	@param obj Match following pattern : entity--T-->obj.
+	@return Numbers of matching pattern : entity--T-->obj.
+	*/
+	template<typename T>
+	size_t count(const World& world, const Entity obj)
+	{
+		return static_cast<size_t>(world.count<T>(obj));
+	}
+
+	/**
+	@brief Count number of instance of type @c T.
+    @tparam T Prefab's type
+	@param world explicit.
+	@return Numbers of instances of prefab @c T.
+	*/
+	template<typename T>
+	size_t count_instance(World& world)
+	{
+		return static_cast<size_t>(world.count(flecs::IsA, opack::entity<T>(world)));
+	}
+
+	/**
+	@brief Count number of entities matching the pattern.
+	@param world explicit.
+	@param rel Relation entity.
+	@param obj Object entity.
+	@return Numbers of matching pattern : entity--rel-->obj.
+	*/
+	size_t count(const World& world, const Entity rel, const Entity obj);
+
 }

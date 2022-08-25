@@ -38,6 +38,7 @@ TEST_CASE("World & Entity API")
         CHECK(inst != a);                       // Should be different entities.
         CHECK(opack::is_a<A>(inst));            // Should be recognized as an instance of "A" ...
         CHECK(inst.has<V>());                   // ..., so with "V".
+        CHECK(opack::count_instance<A>(world) == 1);
     }
 
     SUBCASE("SubPrefab")
@@ -55,6 +56,9 @@ TEST_CASE("World & Entity API")
             CHECK(opack::is_a<B>(inst));          
             CHECK(!opack::is_a<C>(inst));           
             CHECK(inst.has<V>());                 
+            CHECK(opack::count_instance<A>(world) == 0);
+            CHECK(opack::count_instance<B>(world) == 1);
+            CHECK(opack::count_instance<C>(world) == 0);
         }
 
         SUBCASE("Level 3")
@@ -64,6 +68,9 @@ TEST_CASE("World & Entity API")
             CHECK(opack::is_a<B>(inst));            
             CHECK(opack::is_a<C>(inst));           
             CHECK(inst.has<V>());                   
+            CHECK(opack::count_instance<A>(world) == 0);
+            CHECK(opack::count_instance<B>(world) == 0);
+            CHECK(opack::count_instance<C>(world) == 1);
         }
     }
 }
