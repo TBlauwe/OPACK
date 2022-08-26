@@ -1,10 +1,10 @@
-/*********************************************************************
+/*****************************************************************//**
  * \file   core.hpp
- * \brief  Header to include all necessary headers for basic usage
- * and to import opack into flecs.
- * 
- * \author Tristan
- * \date   April 2022
+ * \brief  Header to include all necessary headers for basic usage and
+ * also necessary functions to import opack into a flecs.
+
+ * \author Tristan 
+ * \date   August 2022
  *********************************************************************/
 #pragma once
 

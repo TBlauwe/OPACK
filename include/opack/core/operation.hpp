@@ -31,7 +31,7 @@ namespace opack
 	flecs::entity behaviour(flecs::world& world, TFunc&& func)
 	{
 		auto behaviour = world.entity<TBeh>();
-		behaviour.template child_of<world::Behaviours>();
+		behaviour.template child_of<world::behaviours>();
 
 		auto launcher = world.system<TInputs ...>()
 			.template term<const opack::Agent>()

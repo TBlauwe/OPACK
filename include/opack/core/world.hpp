@@ -97,7 +97,7 @@ namespace opack
     {
         auto prefab = world.prefab<T>();
         prefab.template child_of<world::prefabs>();
-        return world.prefab<T>();
+        return prefab;
     }
 
     /** 
@@ -125,7 +125,7 @@ namespace opack
     {
         auto prefab = world.prefab<T>();
         prefab.template child_of<typename T::root_t::prefabs_folder_t>();
-        return world.prefab<T>();
+        return prefab;
     }
     
     /** 
@@ -180,7 +180,7 @@ namespace opack
     }
 
     /** 
-    @brief Initialize a sub-prefab, so it correctly inherits its parent.
+    @brief Initialize a sub-prefab according to its type and  correctly inherits its parent.
 
     @tparam T Any type that matches a sub-prefab.
     @param world explicit.
@@ -217,6 +217,28 @@ namespace opack
         e.template is_a<typename T::base_t>();
         _::organize_prefab<T>(e);
         return e;
+	}
+
+    /** 
+    @brief Calls @ref init for each passed types.
+    Use this if you want to initialize multiples types at once and you
+    do not care to customize each entity.
+    You can always customize each entity later.
+    Order does not matter.
+
+    @tparam T Parameter pack of type you which to initialize.
+    @param world explicit.
+
+    Usage :
+
+    @code{.cpp}
+    opack::batch_init<MyType1, MyType2, ...>(world);
+    @endcode
+    */
+	template<SubPrefab... T>
+	void batch_init(World& world)
+	{
+        (init<T>(world), ...);
 	}
 
 	/**

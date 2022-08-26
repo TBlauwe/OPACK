@@ -1,9 +1,9 @@
-/*********************************************************************
- * \file  simulation.hpp
- * \brief API to control the simulation.
- *
- * \author Tristan
- * \date   April 2022
+/*****************************************************************//**
+ * \file   simulation.hpp
+ * \brief  API to controls the simulation.
+ * 
+ * \author Hyperenor
+ * \date   August 2022
  *********************************************************************/
 #pragma once
 

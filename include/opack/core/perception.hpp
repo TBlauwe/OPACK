@@ -1,85 +1,267 @@
-/*********************************************************************
+/*****************************************************************//**
  * \file   perception.hpp
- * \brief  File containing related class/utilities for perception.
- *
+ * \brief  API for perception capabilities.
+ * 
  * \author Tristan
- * \date   May 2022
+ * \date   August 2022
  *********************************************************************/
 #pragma once
 
-#include <vector>
-#include <unordered_set>
-#include <functional>
+#include <optional>
 
 #include <flecs.h>
 #include <opack/core/api_types.hpp>
+#include <opack/core/world.hpp>
+#include <opack/core/entity.hpp>
 #include <opack/utils/flecs_helper.hpp>
 
 namespace opack
 {
 	/**
-	@brief A percept represents a perceivable entity with a component or relation.
-	*/
-	struct Percept
+	 *@brief Add sense @c T to entity @c prefab
+	 *Usage:
+	 *@code{.cpp}
+	 OPACK_SUB_PREFAB(MyAgent, opack::Agent)
+	 OPACK_SUB_PREFAB(MySense, opack::Sense)
+     //...
+     opack::add_sense<MySense, MyAgent>(world); 
+	 *@endcode 
+	 */
+	template<SensePrefab TSense, std::derived_from<Agent> TAgent>
+	void add_sense(World& world)
 	{
-		enum class Type { Component, Relation };
-		Type type{ Type::Component };
+		// Waiting for fix : https://github.com/SanderMertens/flecs/issues/791
+		// NOTE : also need to template sense !
+		//opack::prefab<TSense>(world)
+		//	.child_of<TAgent>()
+	    //  .slot();
+		world.observer()
+			.event(flecs::OnAdd)
+			.term(flecs::IsA).second<TAgent>()
+			.each(
+				[](flecs::entity e)
+				{
+					auto child = e.world().entity().is_a<TSense>().child_of(e);
+					e.add<TSense>(child);
+				}
+		).template child_of<world::dynamics>();
+	}
 
-		flecs::entity_view	sense;
-		flecs::entity_view	subject;
-		flecs::entity_view	predicate;
-		flecs::entity_view	object; // Only set if @c type is equal to @c Type::Component.
+	template<typename TSense>
+	Entity sense(const Entity& entity)
+	{
+		return entity.target<TSense>();
+	}
 
-		Percept(flecs::entity_view _sense, flecs::entity_view _subject, flecs::entity_view _predicate) :
-			type{ Type::Component }, sense{ _sense }, subject{ _subject }, predicate{ _predicate }, object{}
-		{}
+	/**
+	@brief @c T sense is now able to perceive @c U component.
+	@return entity of @c U component;
 
-		Percept(flecs::entity_view _sense, flecs::entity_view _subject, flecs::entity_view _predicate, flecs::entity_view _object) :
-			type{ Type::Relation }, sense{ _sense }, subject{ _subject }, predicate{ _predicate }, object{ _object }
-		{}
+    Usage:
+    @code{.cpp}
+    opack::perceive<MySense, MyData, MyOtherData, ...>(world);
+    @endcode
+	*/
+	template<std::derived_from<Sense> T = Sense, typename... Us>
+	Entity perceive(World& world)
+	{
+		return (opack::entity<T>(world).add<Sense, Us>(), ...);
+	}
 
-		/**
-		@brief Return true if percept is using given sense @c T.
-		*/
-		template<std::derived_from<Sense> T = Sense>
-		inline bool with_sense() { return sense == sense.world().id<T>(); }
+	/**
+	@brief @c observer is now able to perceive @c subject through @c T sense.
 
-		/**
-		@brief Return true if subject is equal to @c _subject.
-		*/
-		inline bool subject_is(flecs::entity _subject) { return subject == _subject; }
+    Usage:
+    @code{.cpp}
+    opack::perceive<MySense>(observer, subject);
+    @endcode
+	*/
+	template<std::derived_from<Sense> ... T>
+	void perceive(Entity observer, Entity subject)
+	{
+		(opack::sense<T>(observer).add(subject), ...);
+	}
 
-		/**
-		@brief Return true if predicate is of type @c T .
-		*/
-		template<typename T>
-		inline bool predicate_is() { return predicate == predicate.world().id<T>(); }
+	/**
+	@brief @c source is now not able to perceive @c target through @c T sense.
+	*/
+	template<std::derived_from<Sense> ...T>
+	void conceal(Entity observer, Entity subject)
+	{
+		(opack::sense<T>(observer).remove(subject), ...);
+	}
 
-		/**
-		@brief Return true if object is equal to @c _object.
-		*/
-		inline bool object_is(flecs::entity _object) { return object == _object; }
+	struct perception 
+	{
+		perception(Entity observer) : observer{observer}{}
 
-		/**
-		@brief Return true if percept is a relation of type @c R with object @c object.
-		*/
-		template<typename R>
-		inline bool is_relation(flecs::entity object)
-		{
-			auto world = subject.world();
-			return world.pair<R>(object) == world.pair(predicate, object);
+		template<std::derived_from<Sense> T = opack::Sense>
+	    bool perceive(const Entity subject) const
+        {
+			if constexpr (!std::same_as<T, opack::Sense>)
+				return opack::sense<T>(observer).has(subject);
+			else
+				return false;
 		}
 
-		/**
-		@brief Retrieve the current value from the perceived entity.
-		Pointer stability is not guaranteed. Copy value if you need to keep it.
-		Does not check if @c T is indeed accessible from this sense and if @c target do have it.
-		Use @c is() if you wish to check this beforehand.
-		*/
-		template<typename T>
-		inline const T* value() { return subject.get<T>(); }
+		template<std::derived_from<Sense> T = opack::Sense, typename C>
+	    bool perceive(const Entity subject) const
+        {
+			if constexpr (!std::same_as<T, opack::Sense>)
+			{
+                if (!opack::sense<T>(observer).template has<C>())
+                    return false;
+				return perceive<T>(subject) && subject.has<C>();
+			}
+			else
+			{
+				//TODO
+			}
+		    return false;
+		}
+
+		template<std::derived_from<Sense> T = opack::Sense>
+	    bool perceive(const Entity subject, const Entity object) const
+        {
+			if constexpr (!std::same_as<T, opack::Sense>)
+			{
+                if (!opack::sense<T>(observer).has(object))
+                    return false;
+				return perceive<T>(subject) && subject.has(object);
+			}
+			else
+			{
+			    //TODO 	    
+			}
+		    return false;
+        }
+
+		template<std::derived_from<Sense> T = opack::Sense, typename R>
+	    bool perceive(const Entity subject, const Entity object) const
+        {
+			if constexpr (!std::same_as<T, opack::Sense>)
+			{
+                if (!opack::sense<T>(observer).template has<R>())
+                    return false;
+			    if (opack::is_a<Artefact>(object) || opack::is_a<Agent>(object))
+					return perceive<T>(subject) && perceive<T>(object) && subject.has<R>(object);
+			    return perceive<T>(subject) && subject.has<R>(object);
+			}
+			else
+			{
+		        //TODO 	    
+			}
+		    return false;
+		}
+
+		template<std::derived_from<Sense> T = opack::Sense, typename C>
+	    std::optional<const C&> value(const Entity subject) const
+        {
+			if constexpr (!std::same_as<T, opack::Sense>)
+			{
+			    if(perceive<T, C>(subject))
+				    return std::make_optional<const C&>(*subject.get<C>());
+			}
+			else
+			{
+		        //TODO 	    
+			}
+		    return {};
+		}
+
+		Entity observer;
 	};
-	using Percepts = std::vector<Percept>;
+
+    //template<typename R = void, std::derived_from<Sense> T = opack::Sense>
+	//bool does_perceive(Entity observer, Entity subject, Entity object)
+	//{
+	//	auto world = observer.world();
+	//	if (!does_perceive<void, T>(observer, object))
+	//		return false;
+
+	//	{
+	//		auto query = world.get<queries::perception::Relation>();
+	//		auto rule = query->rule.rule.iter()
+	//			.set_var(query->observer_var, observer)
+	//			.set_var(query->subject_var, subject)
+	//			.set_var(query->object_var, object)
+	//			;
+	//		if constexpr (!std::is_same<T, opack::Sense>::value)
+	//		{
+	//			rule.set_var(query->sense_var, world.id<T>());
+	//		}
+	//		if constexpr (!std::is_same<R, void>::value)
+	//		{
+	//			rule.set_var(query->predicate_var, world.id<R>());
+	//		}
+	//		return rule.is_true();
+	//	}
+	//}
+
+
+	///**
+	//@brief A percept represents a perceivable entity with a component or relation.
+	//*/
+	//struct Percept
+	//{
+	//	enum class Type { Component, Relation };
+	//	Type type{ Type::Component };
+
+	//	EntityView	sense;
+	//	EntityView	subject;
+	//	EntityView	predicate;
+	//	EntityView	object; // Only set if @c type is equal to @c Type::Component.
+
+	//	Percept(EntityView _sense, EntityView _subject, EntityView _predicate) :
+	//		type{ Type::Component }, sense{ _sense }, subject{ _subject }, predicate{ _predicate }, object{}
+	//	{}
+
+	//	Percept(EntityView _sense, EntityView _subject, EntityView _predicate, EntityView _object) :
+	//		type{ Type::Relation }, sense{ _sense }, subject{ _subject }, predicate{ _predicate }, object{ _object }
+	//	{}
+
+	//	/**
+	//	@brief Return true if percept is using given sense @c T.
+	//	*/
+	//	template<std::derived_from<Sense> T = Sense>
+	//	bool with_sense() { return sense == sense.world().id<T>(); }
+
+	//	/**
+	//	@brief Return true if subject is equal to @c _subject.
+	//	*/
+	//	bool subject_is(const Entity _subject) const { return subject == _subject; }
+
+	//	/**
+	//	@brief Return true if predicate is of type @c T .
+	//	*/
+	//	template<typename T>
+	//	bool predicate_is() { return predicate == predicate.world().id<T>(); }
+
+	//	/**
+	//	@brief Return true if object is equal to @c _object.
+	//	*/
+	//	bool object_is(Entity _object) { return object == _object; }
+
+	//	/**
+	//	@brief Return true if percept is a relation of type @c R with object @c object.
+	//	*/
+	//	template<typename R>
+	//	bool is_relation(Entity object)
+	//	{
+	//		auto world = subject.world();
+	//		return world.pair<R>(object) == world.pair(predicate, object);
+	//	}
+
+	//	/**
+	//	@brief Retrieve the current value from the perceived entity.
+	//	Pointer stability is not guaranteed. Copy value if you need to keep it.
+	//	Does not check if @c T is indeed accessible from this sense and if @c target do have it.
+	//	Use @c is() if you wish to check this beforehand.
+	//	*/
+	//	template<typename T>
+	//	const T* value() { return subject.get<T>(); }
+	//};
+	//using Percepts = std::vector<Percept>;
 
 	namespace queries::perception
 	{
@@ -96,7 +278,7 @@ namespace opack
 			int32_t sense_var;
 			int32_t subject_var;
 			int32_t predicate_var;
-			Component(flecs::world& world);
+			Component(World& world);
 		};
 
 		/**
@@ -113,235 +295,206 @@ namespace opack
 			int32_t subject_var;
 			int32_t predicate_var;
 			int32_t object_var;
-			Relation(flecs::world& world);
+			Relation(World& world);
 		};
 	}
 
-	/**
-	@brief @c T sense is now able to perceive @c U component.
-	@param agent Which agent perceives this
-	@return entity of @c U component;
-	*/
-	template<std::derived_from<Sense> T = Sense, typename... Us>
-	inline flecs::entity perceive(flecs::world& world)
-	{
-		return (world.component<T>().template add<Sense, Us>(), ...);
-	}
+	///**
+	// Iterate all currently perceived entities with sense @c T, or any if unspecified, with component @c U.
+	// @param observer From which perserpective this should be checked.
+	// @param func if @c U is not a tag void(Entity subject, const U& value). Otherwise:  void(Entity);
 
-	/**
-	@brief @c observer is now able to perceive @c subject through @c T sense.
-	*/
-	template<std::derived_from<Sense> ... T>
-	inline void perceive(flecs::entity observer, flecs::entity subject)
-	{
-		(observer.add<T>(subject), ...);
-	}
+	// TODO For some reasons, it doesn't work with components from a prefab.
+	// */
+	//template<typename U, std::derived_from<Sense> T = opack::Sense, typename TFunc>
+	//void each_perceived(Entity observer, TFunc&& func)
+	//{
+	//	auto world = observer.world();
+	//	auto query = world.get<queries::perception::Component>();
+	//	auto rule = query->rule.rule.iter()
+	//		.set_var(query->observer_var, observer)
+	//		.set_var(query->predicate_var, world.id<U>());
+	//	;
+	//	if constexpr (!std::is_same<T, opack::Sense>::value)
+	//	{
+	//		rule.set_var(query->sense_var, world.id<T>());
+	//	}
 
-	/**
-	@brief @c source is now not able to perceive @c target through @c T sense.
-	*/
-	template<std::derived_from<Sense> ...T>
-	inline void conceal(flecs::entity source, flecs::entity target)
-	{
-		(source.remove<T>(target), ...);
-	}
+	//	std::unordered_set<Entity_t> hide{};
+	//	rule.iter(
+	//		[&](flecs::iter& it)
+	//		{
+	//			auto subject = it.get_var(query->subject_var);
+	//			if (!hide.contains(subject))
+	//			{
+	//				if constexpr (std::is_empty_v<U>)
+	//					func(subject);
+	//				else
+	//					func(subject, *subject.get<U>());
+	//				hide.emplace(subject);
+	//			}
+	//		}
+	//	);
+	//}
 
-	/**
-	 Iterate all currently perceived entities with sense @c T, or any if unspecified, with component @c U.
-	 @param observer From which perserpective this should be checked.
-	 @param func if @c U is not a tag void(flecs::entity subject, const U& value). Otherwise:  void(flecs::entity);
+	///**
+	// Iterate all currently perceived entities with sense @c T, or any if unspecified, with relation @c R.
+	// @param observer From which perserpective this should be checked.
+	// @param func Signature is : void(Entity subject, Entity object)
+	// */
+	//template<typename R, std::derived_from<Sense> T = opack::Sense>
+	//void each_perceived_relation(Entity observer, std::function<void(Entity, Entity)> func)
+	//{
+	//	auto world = observer.world();
+	//	auto query = world.get<queries::perception::Relation>();
+	//	auto rule = query->rule.rule.iter()
+	//		.set_var(query->observer_var, observer)
+	//		.set_var(query->predicate_var, world.id<R>());
+	//	;
+	//	if constexpr (!std::is_same<T, opack::Sense>::value)
+	//	{
+	//		rule.set_var(query->sense_var, world.id<T>());
+	//	}
 
-	 TODO For some reasons, it doesn't work with components from a prefab.
-	 */
-	template<typename U, std::derived_from<Sense> T = opack::Sense, typename TFunc>
-	void each_perceived(flecs::entity observer, TFunc&& func)
-	{
-		auto world = observer.world();
-		auto query = world.get<queries::perception::Component>();
-		auto rule = query->rule.rule.iter()
-			.set_var(query->observer_var, observer)
-			.set_var(query->predicate_var, world.id<U>());
-		;
-		if constexpr (!std::is_same<T, opack::Sense>::value)
-		{
-			rule.set_var(query->sense_var, world.id<T>());
-		}
+	//	std::unordered_set<Entity_t> hide{};
+	//	rule.iter(
+	//		[&](flecs::iter& it)
+	//		{
+	//			auto subject = it.get_var(query->subject_var);
+	//			if (!hide.contains(subject))
+	//			{
+	//				func(subject, it.get_var(query->object_var));
+	//				hide.emplace(subject);
+	//			}
+	//		}
+	//	);
+	//}
 
-		std::unordered_set<flecs::entity_t> hide{};
-		rule.iter(
-			[&](flecs::iter& it)
-			{
-				auto subject = it.get_var(query->subject_var);
-				if (!hide.contains(subject))
-				{
-					if constexpr (std::is_empty_v<U>)
-						func(subject);
-					else
-						func(subject, *subject.get<U>());
-					hide.emplace(subject);
-				}
-			}
-		);
-	}
+	///**
+	// * Return true if @c observer is currently perceiving @c subject trough sense @c T, or any sense, if @c T is not specified.
+	// @param observer From which perserpective this should be checked.
+	// @param
+	// */
+	//template<typename U = void, std::derived_from<Sense> T = opack::Sense>
+	//bool does_perceive(World& world, Entity observer, Entity subject)
+	//{
+	//	{
+	//		auto query = world.get<queries::perception::Component>();
+	//		auto rule = query->rule.rule.iter()
+	//			.set_var(query->observer_var, observer)
+	//			.set_var(query->subject_var, subject)
+	//			;
+	//		if constexpr (!std::is_same<T, opack::Sense>::value)
+	//		{
+	//			rule.set_var(query->sense_var, world.id<T>());
+	//		}
+	//		if constexpr (!std::is_same<U, void>::value)
+	//		{
+	//			rule.set_var(query->predicate_var, world.id<U>());
+	//		}
 
-	/**
-	 Iterate all currently perceived entities with sense @c T, or any if unspecified, with relation @c R.
-	 @param observer From which perserpective this should be checked.
-	 @param func Signature is : void(flecs::entity subject, flecs::entity object)
-	 */
-	template<typename R, std::derived_from<Sense> T = opack::Sense>
-	void each_perceived_relation(flecs::entity observer, std::function<void(flecs::entity, flecs::entity)> func)
-	{
-		auto world = observer.world();
-		auto query = world.get<queries::perception::Relation>();
-		auto rule = query->rule.rule.iter()
-			.set_var(query->observer_var, observer)
-			.set_var(query->predicate_var, world.id<R>());
-		;
-		if constexpr (!std::is_same<T, opack::Sense>::value)
-		{
-			rule.set_var(query->sense_var, world.id<T>());
-		}
+	//		if (rule.is_true())
+	//			return true;
+	//	}
+	//	{
+	//		auto query = world.get<queries::perception::Relation>();
+	//		auto rule = query->rule.rule.iter()
+	//			.set_var(query->observer_var, observer)
+	//			.set_var(query->subject_var, subject)
+	//			;
+	//		if constexpr (!std::is_same<T, opack::Sense>::value)
+	//		{
+	//			rule.set_var(query->sense_var, world.id<T>());
+	//		}
+	//		if constexpr (!std::is_same<U, void>::value)
+	//		{
+	//			rule.set_var(query->predicate_var, world.id<U>());
+	//		}
+	//		return rule.is_true();
+	//	}
+	//}
 
-		std::unordered_set<flecs::entity_t> hide{};
-		rule.iter(
-			[&](flecs::iter& it)
-			{
-				auto subject = it.get_var(query->subject_var);
-				if (!hide.contains(subject))
-				{
-					func(subject, it.get_var(query->object_var));
-					hide.emplace(subject);
-				}
-			}
-		);
-	}
+	//template<typename U = void, std::derived_from<Sense> T = opack::Sense>
+	//bool does_perceive(Entity observer, Entity subject)
+	//{
+	//	auto world = observer.world();
+	//	return does_perceive<U, T>(world, observer, subject);
+	//}
 
-	/**
-	 * Return true if @c observer is currently perceiving @c subject trough sense @c T, or any sense, if @c T is not specified.
-	 @param observer From which perserpective this should be checked.
-	 @param
-	 */
-	template<typename U = void, std::derived_from<Sense> T = opack::Sense>
-	bool does_perceive(flecs::world& world, flecs::entity observer, flecs::entity subject)
-	{
-		{
-			auto query = world.get<queries::perception::Component>();
-			auto rule = query->rule.rule.iter()
-				.set_var(query->observer_var, observer)
-				.set_var(query->subject_var, subject)
-				;
-			if constexpr (!std::is_same<T, opack::Sense>::value)
-			{
-				rule.set_var(query->sense_var, world.id<T>());
-			}
-			if constexpr (!std::is_same<U, void>::value)
-			{
-				rule.set_var(query->predicate_var, world.id<U>());
-			}
+	///**
+	// * Return true if @c observer is currently perceiving relation @c R of @c subject with @c object trough sense @c T.
+	// * Return false if @c object is not perceived by @c observer with identical sense @c T.
+	// */
+	//template<typename R = void, std::derived_from<Sense> T = opack::Sense>
+	//bool does_perceive(Entity observer, Entity subject, Entity object)
+	//{
+	//	auto world = observer.world();
+	//	if (!does_perceive<void, T>(observer, object))
+	//		return false;
 
-			if (rule.is_true())
-				return true;
-		}
-		{
-			auto query = world.get<queries::perception::Relation>();
-			auto rule = query->rule.rule.iter()
-				.set_var(query->observer_var, observer)
-				.set_var(query->subject_var, subject)
-				;
-			if constexpr (!std::is_same<T, opack::Sense>::value)
-			{
-				rule.set_var(query->sense_var, world.id<T>());
-			}
-			if constexpr (!std::is_same<U, void>::value)
-			{
-				rule.set_var(query->predicate_var, world.id<U>());
-			}
-			return rule.is_true();
-		}
-	}
+	//	{
+	//		auto query = world.get<queries::perception::Relation>();
+	//		auto rule = query->rule.rule.iter()
+	//			.set_var(query->observer_var, observer)
+	//			.set_var(query->subject_var, subject)
+	//			.set_var(query->object_var, object)
+	//			;
+	//		if constexpr (!std::is_same<T, opack::Sense>::value)
+	//		{
+	//			rule.set_var(query->sense_var, world.id<T>());
+	//		}
+	//		if constexpr (!std::is_same<R, void>::value)
+	//		{
+	//			rule.set_var(query->predicate_var, world.id<R>());
+	//		}
+	//		return rule.is_true();
+	//	}
+	//}
 
-	template<typename U = void, std::derived_from<Sense> T = opack::Sense>
-	bool does_perceive(flecs::entity observer, flecs::entity subject)
-	{
-		auto world = observer.world();
-		return does_perceive<U, T>(world, observer, subject);
-	}
+	///**
+	//Query all percepts for a specific agent.
 
-	/**
-	 * Return true if @c observer is currently perceiving relation @c R of @c subject with @c object trough sense @c T.
-	 * Return false if @c object is not perceived by @c observer with identical sense @c T.
-	 */
-	template<typename R = void, std::derived_from<Sense> T = opack::Sense>
-	bool does_perceive(flecs::entity observer, flecs::entity subject, flecs::entity object)
-	{
-		auto world = observer.world();
-		if (!does_perceive<void, T>(observer, object))
-			return false;
+	//TODO With default type @c opack::Sense no perception are retrieved since there is no percepts retrievable with this Sense.
+	//Maybe specialize function to return all percepts ?
 
-		{
-			auto query = world.get<queries::perception::Relation>();
-			auto rule = query->rule.rule.iter()
-				.set_var(query->observer_var, observer)
-				.set_var(query->subject_var, subject)
-				.set_var(query->object_var, object)
-				;
-			if constexpr (!std::is_same<T, opack::Sense>::value)
-			{
-				rule.set_var(query->sense_var, world.id<T>());
-			}
-			if constexpr (!std::is_same<R, void>::value)
-			{
-				rule.set_var(query->predicate_var, world.id<R>());
-			}
-			return rule.is_true();
-		}
-	}
-
-	/**
-	Query all percepts for a specific agent.
-
-	TODO With default type @c opack::Sense no perception are retrieved since there is no percepts retrievable with this Sense.
-	Maybe specialize function to return all percepts ?
-
-	@return A vector of all percepts of this type, perceived by the agent.
-	*/
-	template<std::derived_from<Sense> T = opack::Sense>
-	Percepts query_percepts(flecs::entity observer)
-	{
-		auto world = observer.world();
-		auto sense = world.id<T>();
-		Percepts percepts{};
-		{
-			auto query = world.get<queries::perception::Component>();
-			auto rule = query->rule.rule;
-			{
-				rule.iter()
-					.set_var(query->observer_var, observer)
-					.set_var(query->sense_var, sense)
-					.iter(
-						[&](flecs::iter& it)
-						{
-							percepts.push_back(Percept{ it.get_var(query->sense_var), it.get_var(query->subject_var), it.get_var(query->predicate_var) });
-						}
-					)
-					;
-			}
-		}
-		{
-			auto query = world.get<queries::perception::Relation>();
-			auto rule = query->rule.rule;
-			rule.iter()
-				.set_var(query->observer_var, observer)
-				.set_var(query->sense_var, sense)
-				.iter(
-					[&](flecs::iter& it)
-					{
-						percepts.push_back(Percept{ it.get_var(query->sense_var), it.get_var(query->subject_var), it.get_var(query->predicate_var), it.get_var(query->object_var) });
-					}
-				)
-				;
-		}
-		return percepts;
-	}
+	//@return A vector of all percepts of this type, perceived by the agent.
+	//*/
+	//template<std::derived_from<Sense> T = opack::Sense>
+	//Percepts query_percepts(Entity observer)
+	//{
+	//	auto world = observer.world();
+	//	auto sense = world.id<T>();
+	//	Percepts percepts{};
+	//	{
+	//		auto query = world.get<queries::perception::Component>();
+	//		auto rule = query->rule.rule;
+	//		{
+	//			rule.iter()
+	//				.set_var(query->observer_var, observer)
+	//				.set_var(query->sense_var, sense)
+	//				.iter(
+	//					[&](flecs::iter& it)
+	//					{
+	//						percepts.push_back(Percept{ it.get_var(query->sense_var), it.get_var(query->subject_var), it.get_var(query->predicate_var) });
+	//					}
+	//				)
+	//				;
+	//		}
+	//	}
+	//	{
+	//		auto query = world.get<queries::perception::Relation>();
+	//		auto rule = query->rule.rule;
+	//		rule.iter()
+	//			.set_var(query->observer_var, observer)
+	//			.set_var(query->sense_var, sense)
+	//			.iter(
+	//				[&](flecs::iter& it)
+	//				{
+	//					percepts.push_back(Percept{ it.get_var(query->sense_var), it.get_var(query->subject_var), it.get_var(query->predicate_var), it.get_var(query->object_var) });
+	//				}
+	//			)
+	//			;
+	//	}
+	//	return percepts;
+	//}
 }

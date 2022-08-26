@@ -43,11 +43,8 @@ TEST_CASE("World & Entity API")
 
     SUBCASE("SubPrefab")
     {
-        CHECK(opack::prefab<B>(world) == b);	
-        CHECK(opack::prefab<C>(world) == c);	
-
-        opack::init<B>(world);
-        opack::init<C>(world);
+        CHECK(opack::init<B>(world) == b);	
+        CHECK(opack::init<C>(world) == c);	
 
         SUBCASE("Level 2")
         {

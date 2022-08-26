@@ -57,7 +57,6 @@ opack::prefab<A>(world);
 #define OPACK_PREFAB(name) struct name {}
 
 /**
-@brief Define a new type named @c name to identify a prefab.
 @brief Define a new type named @c name to identify a prefab instantiated from a prefab named @c base.
 
 @param name Type's name
@@ -114,7 +113,7 @@ namespace opack
 	@brief An entity_view is an immutable entity handle. 
 	See https://flecs.docsforge.com/master/api-cpp/flecs/entity_view/
 	*/
-	using Entity_view = flecs::entity_view;
+	using EntityView = flecs::entity_view;
 
 	/** @}*/ //End of group
 
@@ -175,7 +174,7 @@ namespace opack
     OPACK_FOLDERS_STRUCT(senses);
 	struct Sense : public _::root<Sense>
 	{
-        OPACK_FOLDERS_TYPEDEF(actuators);
+        OPACK_FOLDERS_TYPEDEF(senses);
 	};
 
     OPACK_FOLDERS_STRUCT(flows);
