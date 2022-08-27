@@ -10,6 +10,7 @@
 #include <flecs.h>
 
 #include <opack/core/api_types.hpp>
+#include <opack/utils/assert.hpp>
 
 namespace opack
 {
@@ -23,6 +24,7 @@ namespace opack
         void organize_entity(Entity& entity)
         {
 #ifndef OPACK_OPTIMIZE
+            entity.set_doc_name(type_name_cstr<T>());
             entity.child_of<typename T::root_t::entities_folder_t>();
 #endif
         }
@@ -164,7 +166,6 @@ namespace opack
 	{
         auto e = prefab<T>(world);
         e.template is_a<typename T::base_t>();
-        _::organize_prefab<T>(e);
         return e;
 	}
 
@@ -210,10 +211,7 @@ namespace opack
     template<typename T>
     Entity spawn(World& world)
     {
-#ifdef OPACK_DEBUG
-        ecs_assert(!opack::entity<T>(world).has(flecs::Prefab), ECS_INVALID_PARAMETER, "Tried to spawn entity from a non-registered type");
-#endif
-
+        _::check_type<T>(world);
         auto e = world.entity().is_a<T>();
         _::organize_entity<T>(e);
         return e;
@@ -240,6 +238,7 @@ namespace opack
     template<typename T>
     Entity spawn(World& world, const char * name)
     {
+        _::check_type<T>(world);
         auto e = world.entity(name).is_a<T>();
         _::organize_entity<T>(e);
         return e;

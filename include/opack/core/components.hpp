@@ -37,9 +37,6 @@ namespace opack
 	struct Timestamp
 	{
 		float value {0.0f};
-		Timestamp(float v) : value{ v } {}
-		Timestamp(World& world) : value{ world.time() } {}
-		Timestamp(Entity& entity) : value{ entity.world().time()} {}
 	};
 
 	struct Begin {};

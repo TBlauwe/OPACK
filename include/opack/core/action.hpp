@@ -55,6 +55,7 @@ namespace opack
 				[](flecs::entity e)
 				{
 					auto child = e.world().entity().is_a<TActuator>().child_of(e);
+					_::name_entity_after_type<TActuator>(e);
 					e.add<TActuator>(child);
 				}
 		).template child_of<world::dynamics>();
@@ -70,9 +71,9 @@ namespace opack
 	Entity actuator(const Entity& entity)
 	{
 #ifdef OPACK_DEBUG
-		auto sense = entity.target<T>();
-		ecs_assert(sense.is_valid(), ECS_INVALID_OPERATION, "No sense for given entity. Make sure to add sense to its prefab (or to it directly");
-		return sense;
+		auto actuator = entity.target<T>();
+		ecs_assert(actuator.is_valid(), ECS_INVALID_OPERATION, "No actuator for given entity. Make sure to add actuator to its prefab (or to it directly).");
+		return actuator;
 #else 
 		return entity.target<T>();
 #endif
@@ -106,7 +107,7 @@ namespace opack
 
 		// Action without initiator are cleaned up, so we need to remove relation from previous action.
 		auto world = initiator.world();
-		auto actuator = opack::actuator<T>(initiator).template target<T>();
+		auto actuator = opack::actuator<T>(initiator);
 		auto last_action = actuator.template target<Act>();
 		if (last_action)
 		{
@@ -118,6 +119,6 @@ namespace opack
 		action.mut(world)
 			.add<By>(initiator)
 			.set<Begin, Timestamp>({ world.time() });
-		actuator.template add<T>(action);
+		actuator.template add<Act>(action);
 	}
 }

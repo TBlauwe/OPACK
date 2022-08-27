@@ -13,6 +13,10 @@ namespace impl
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wlanguage-extension-token"
 #endif
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wlanguage-extension-token"
+#endif
     template <typename T>
     [[nodiscard]] constexpr std::string_view RawTypeName()
     {
@@ -22,8 +26,11 @@ namespace impl
         return __FUNCSIG__;
         #endif
     }
-#ifndef _MSC_VER
+#ifndef _MSC_VER 
 #pragma GCC diagnostic pop
+#endif
+#ifdef __clang__
+#pragma clang diagnostic pop
 #endif
 
     struct TypeNameFormat

@@ -54,6 +54,15 @@ CPMAddPackage(
 )
 set_target_properties(flecs_static PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:flecs_static,INTERFACE_INCLUDE_DIRECTORIES>)
 
+# A modern formatting library
+CPMAddPackage(
+        NAME fmt 
+        GITHUB_REPOSITORY fmtlib/fmt
+        GIT_TAG 9.0.0
+        OPTIONS
+)
+set_target_properties(fmt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:fmt,INTERFACE_INCLUDE_DIRECTORIES>)
+
 
 # OPACK Library
 # =============
@@ -88,7 +97,7 @@ set(SOURCE_LIST
 # ==============
 add_library (opack STATIC ${SOURCE_LIST} ${HEADER_LIST})
 target_include_directories(opack PUBLIC include)
-target_link_libraries(opack PUBLIC flecs_static)
+target_link_libraries(opack PUBLIC flecs_static fmt::fmt)
 target_compile_features(opack PUBLIC cxx_std_20)
 target_compile_definitions(opack PUBLIC "$<$<CONFIG:DEBUG>:OPACK_DEBUG>")
 if(OPACK_DEVELOPPER_WARNINGS)

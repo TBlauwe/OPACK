@@ -10,6 +10,10 @@
 #include <flecs.h>
 
 #include <opack/core/api_types.hpp>
+#include <opack/utils/type_name.hpp>
+#ifndef OPACK_OPTIMIZE
+#include <fmt/compile.h>
+#endif
 
 namespace opack
 {
@@ -40,5 +44,16 @@ namespace opack
 	{
         auto world = entity.world();
 		return entity.has(flecs::IsA, opack::entity<T>(world));
+	}
+
+    namespace _
+	{
+        template<typename T>
+        void name_entity_after_type(Entity entity)
+        {
+    #ifndef OPACK_OPTIMIZE
+            entity.set_doc_name(type_name_cstr<T>());
+    #endif
+        }
 	}
 }

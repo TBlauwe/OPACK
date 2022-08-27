@@ -40,6 +40,7 @@ namespace opack
 				[](flecs::entity e)
 				{
 					auto child = e.world().entity().is_a<TSense>().child_of(e);
+					_::name_entity_after_type<TSense>(e);
 					e.add<TSense>(child);
 				}
 		).template child_of<world::dynamics>();
@@ -56,7 +57,7 @@ namespace opack
 	{
 #ifdef OPACK_DEBUG
 		auto sense = entity.target<T>();
-		ecs_assert(sense.is_valid(), ECS_INVALID_OPERATION, "No sense for given entity. Make sure to add sense to its prefab (or to it directly");
+		ecs_assert(sense.is_valid(), ECS_INVALID_OPERATION, "No sense for given entity. Make sure to add sense to its prefab (or to it directly).");
 		return sense;
 #else 
 		return entity.target<T>();
