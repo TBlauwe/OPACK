@@ -86,7 +86,6 @@ namespace opack
 
 	/**
 	@brief Create a flow named @c T that represents part of the agent model.
-	@param @c rate how much time per second
 	*/
 	template<std::derived_from<Flow> T>
 	class FlowBuilder

@@ -51,7 +51,7 @@ namespace opack
 	 * WARNING : If you want to retrieve the sense prefab, identified by
 	 * @c T, use @ref entity<T>.
 	 */
-	template<SubPrefab T>
+	template<SensePrefab T>
 	Entity sense(const Entity& entity)
 	{
 #ifdef OPACK_DEBUG
@@ -86,7 +86,7 @@ namespace opack
     opack::perceive<MySense>(observer, subject);
     @endcode
 	*/
-	template<std::derived_from<Sense> ... T>
+	template<SensePrefab ... T>
 	void perceive(Entity observer, Entity subject)
 	{
 		(opack::sense<T>(observer).add(subject), ...);
@@ -95,7 +95,7 @@ namespace opack
 	/**
 	@brief @c source is now not able to perceive @c target through @c T sense.
 	*/
-	template<std::derived_from<Sense> ...T>
+	template<SensePrefab ...T>
 	void conceal(Entity observer, Entity subject)
 	{
 		(opack::sense<T>(observer).remove(subject), ...);
@@ -115,7 +115,7 @@ namespace opack
 	 */
 	struct perception 
 	{
-		perception(Entity observer) : observer{observer}{}
+		perception(Entity _observer) : observer{_observer}{}
 
 		/**
 		 *@brief Check if @c observer is perceiving @c subject with sense @c T.

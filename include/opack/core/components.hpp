@@ -17,6 +17,11 @@ namespace opack
 	/** Relation between an action and an entity.
 	 * Action "X" is done "By" entity "Y".
 	 */
+	struct Act {};
+
+	/** Relation between an action and an entity.
+	 * Action "X" is done "By" entity "Y".
+	 */
 	struct By {};
 
 	/** Relation between an action and an entity.

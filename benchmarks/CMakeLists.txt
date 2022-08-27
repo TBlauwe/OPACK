@@ -2,8 +2,8 @@
 # ==============
 set(SOURCE_LIST 
 	"core/world.cpp"
-	#"basic.cpp"
- "core/perception.cpp")
+    "core/perception.cpp"
+)
 
 # Dependencies
 # ============

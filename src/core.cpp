@@ -47,8 +47,6 @@ void opack::import_opack(World& world)
 	opack::prefab<Action>(world)
 		.add<Arity>();
 	opack::prefab<Actuator>(world)
-		.add(flecs::Exclusive)
-		.add(flecs::OneOf, entity<Action>(world))
 		;
 	opack::prefab<Sense>(world);
 
@@ -62,6 +60,11 @@ void opack::import_opack(World& world)
 	world.component<Arity>()
 		.member<size_t>("min")
 		.member<size_t>("max")
+		;
+
+	world.component<Act>()
+		.add(flecs::Exclusive)
+		.add(flecs::OneOf, entity<Action>(world))
 		;
 	world.component<By>();
 	world.component<On>();

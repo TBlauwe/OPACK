@@ -96,7 +96,7 @@ namespace opack
     Entity prefab(World& world)
     {
         auto prefab = world.prefab<T>();
-        prefab.template child_of<world::prefabs>();
+        _::organize_prefab<T>(prefab);
         return prefab;
     }
 
@@ -124,59 +124,8 @@ namespace opack
     Entity prefab(World& world)
     {
         auto prefab = world.prefab<T>();
-        prefab.template child_of<typename T::root_t::prefabs_folder_t>();
+        _::organize_prefab<T>(prefab);
         return prefab;
-    }
-    
-    /** 
-    @brief Spawn a new entity instantiated from prefab @c T.
-
-    @tparam T Any type that matches a prefab.
-    @param world explicit.
-    @return A entity instantiated from prefab @c T.
-
-    Usage :
-
-    @code{.cpp}
-    struct A {};
-    auto prefab = opack::prefab<A>(world);
-    // customize prefab ...
-    auto e = opack::spawn<A>(world);
-    opack::is_a<A>(e); // true
-    @endcode
-    */
-    template<typename T>
-    Entity spawn(World& world)
-    {
-        auto e = world.entity().is_a<T>();
-        _::organize_entity<T>(e);
-        return e;
-    }
-
-    /** 
-    @brief Spawn a new entity with name @c name, instantiated from prefab @c T.
-
-    @tparam T Any type that matches a prefab.
-    @param world explicit.
-    @param name Must be unique (in current scope). 
-    @return A entity instantiated from prefab @c T
-
-    Usage :
-
-    @code{.cpp}
-    struct A {};
-    auto prefab = opack::prefab<A>(world);
-    // customize prefab ...
-    auto e = opack::spawn<A>(world, "Arthur");
-    opack::is_a<A>(e); // true
-    @endcode
-    */
-    template<typename T>
-    Entity spawn(World& world, const char * name)
-    {
-        auto e = world.entity(name).is_a<T>();
-        _::organize_entity<T>(e);
-        return e;
     }
 
     /** 
@@ -240,6 +189,61 @@ namespace opack
 	{
         (init<T>(world), ...);
 	}
+
+    /** 
+    @brief Spawn a new entity instantiated from prefab @c T.
+
+    @tparam T Any type that matches a prefab.
+    @param world explicit.
+    @return A entity instantiated from prefab @c T.
+
+    Usage :
+
+    @code{.cpp}
+    struct A {};
+    auto prefab = opack::prefab<A>(world);
+    // customize prefab ...
+    auto e = opack::spawn<A>(world);
+    opack::is_a<A>(e); // true
+    @endcode
+    */
+    template<typename T>
+    Entity spawn(World& world)
+    {
+#ifdef OPACK_DEBUG
+        ecs_assert(!opack::entity<T>(world).has(flecs::Prefab), ECS_INVALID_PARAMETER, "Tried to spawn entity from a non-registered type");
+#endif
+
+        auto e = world.entity().is_a<T>();
+        _::organize_entity<T>(e);
+        return e;
+    }
+
+    /** 
+    @brief Spawn a new entity with name @c name, instantiated from prefab @c T.
+
+    @tparam T Any type that matches a prefab.
+    @param world explicit.
+    @param name Must be unique (in current scope). 
+    @return A entity instantiated from prefab @c T
+
+    Usage :
+
+    @code{.cpp}
+    struct A {};
+    auto prefab = opack::prefab<A>(world);
+    // customize prefab ...
+    auto e = opack::spawn<A>(world, "Arthur");
+    opack::is_a<A>(e); // true
+    @endcode
+    */
+    template<typename T>
+    Entity spawn(World& world, const char * name)
+    {
+        auto e = world.entity(name).is_a<T>();
+        _::organize_entity<T>(e);
+        return e;
+    }
 
 	/**
 	@brief Count number of entities matching the pattern.

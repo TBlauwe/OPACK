@@ -1,9 +1,9 @@
-/*********************************************************************
+/*****************************************************************//**
  * \file   action.hpp
- * \brief  API for manipulating actions
+ * \brief  Action API.
  * 
- * \author Tristan
- * \date   May 2022
+ * \author Hyperenor
+ * \date   August 2022
  *********************************************************************/
 #pragma once
 
@@ -12,45 +12,90 @@
 #include <opack/core/api_types.hpp>
 #include <opack/utils/type_name.hpp>
 
+/**
+@brief Shorthand for OPACK_SUB_PREFAB(name, opack::Action)
+*/
+#define OPACK_ACTION(name) OPACK_SUB_PREFAB(name, opack::Action)
+
+/**
+@brief Identical to OPACK_SUB_PREFAB(name, base)
+*/
+#define OPACK_SUB_ACTION(name, base) OPACK_SUB_PREFAB(name, base)
+
+/**
+@brief Shorthand for OPACK_SUB_PREFAB(name, opack::Actuator)
+*/
+#define OPACK_ACTUATOR(name) OPACK_SUB_PREFAB(name, opack::Actuator)
+
+/**
+@brief Identical to OPACK_SUB_PREFAB(name, base)
+*/
+#define OPACK_SUB_ACTUATOR(name, base) OPACK_SUB_PREFAB(name, base)
+
 namespace opack
 {
 	/**
-	@brief Create an action of type @c T. Compose the action as required, before having entites acting on it.
-	*/
-	template<std::derived_from<Action> T>
-	flecs::entity action(flecs::world& world)
+	 *@brief Add actuator @c T to entity @c prefab
+	 *Usage:
+	 *@code{.cpp}
+	 OPACK_SUB_PREFAB(MyAgent, opack::Agent)
+	 OPACK_SUB_PREFAB(MyActuator, opack::Actuator)
+     //...
+     opack::add_actuator<MyActuator, MyAgent>(world); 
+	 *@endcode 
+	 */
+	template<ActuatorPrefab TActuator, std::derived_from<Agent> TAgent>
+	void add_actuator(World& world)
 	{
-		return world.entity().is_a(prefab<T>(world)).set_doc_name(type_name_cstr<T>()).template child_of<world::actions>();
+		// Waiting for fix : https://github.com/SanderMertens/flecs/issues/791
+		world.observer()
+			.event(flecs::OnAdd)
+			.term(flecs::IsA).second<TAgent>()
+			.each(
+				[](flecs::entity e)
+				{
+					auto child = e.world().entity().is_a<TActuator>().child_of(e);
+					e.add<TActuator>(child);
+				}
+		).template child_of<world::dynamics>();
 	}
 
 	/**
-	@brief Create an action of type @c T. Compose the action as required, before having entites acting on it.
-	*/
-	template<std::derived_from<Action> T>
-	flecs::entity action(flecs::entity entity)
+	 * @brief Retrieve instanced actuator @c T for current entity.
+	 *
+	 * WARNING : If you want to retrieve the sense prefab, identified by
+	 * @c T, use @ref entity<T>.
+	 */
+	template<ActuatorPrefab T>
+	Entity actuator(const Entity& entity)
 	{
-		auto world = entity.world();
-		return action<T>(world);
+#ifdef OPACK_DEBUG
+		auto sense = entity.target<T>();
+		ecs_assert(sense.is_valid(), ECS_INVALID_OPERATION, "No sense for given entity. Make sure to add sense to its prefab (or to it directly");
+		return sense;
+#else 
+		return entity.target<T>();
+#endif
 	}
 
 	/**
 	@brief Return current action done by @c entity with actuator @c T
 	*/
-	template<std::derived_from<Actuator> T>
-	flecs::entity current_action(flecs::entity entity)
+	template<ActuatorPrefab T>
+	Entity current_action(Entity entity)
 	{
-		return entity.target<T>();
+		return opack::actuator<T>(entity).template target<T>();
 	}
 
 	/**
 	@brief @c initiator is now acting with actuator @c to accomplish given @c action.
 	*/
-	template<std::derived_from<Actuator> T>
-	void act(flecs::entity initiator, flecs::entity action)
+	template<ActuatorPrefab T>
+	void act(Entity initiator, Entity action)
 	{
 		//size_t count{ 0 };
-		//flecs::entity last;
-		//action.each<By>([&count, &last](flecs::entity object) {count++; last = object; });
+		//Entity last;
+		//action.each<By>([&count, &last](Entity object) {count++; last = object; });
 
 		//if (count >= action.get<Arity>()->value)
 		//{
@@ -61,16 +106,18 @@ namespace opack
 
 		// Action without initiator are cleaned up, so we need to remove relation from previous action.
 		auto world = initiator.world();
-		auto last_action = initiator.target<T>();
+		auto actuator = opack::actuator<T>(initiator).template target<T>();
+		auto last_action = actuator.template target<Act>();
 		if (last_action)
 		{
-			last_action.mut(world).template set<End, Timestamp>({world.time()});
-			last_action.mut(world).template remove<By>(initiator);
+			last_action.mut(world)
+		        .template set<End, Timestamp>({world.time()})
+			    .template remove<By>(initiator);
 		}
 		
-		action.mut(world).add<By>(initiator);
-		action.mut(world).set<Begin, Timestamp>({world.time()});
-		action.mut(world).remove<End, Timestamp>();
-		initiator.add<T>(action);
+		action.mut(world)
+			.add<By>(initiator)
+			.set<Begin, Timestamp>({ world.time() });
+		actuator.template add<T>(action);
 	}
 }
