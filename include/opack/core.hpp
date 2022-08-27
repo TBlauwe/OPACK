@@ -13,10 +13,10 @@
 #include <opack/core/common.hpp>
 #include <opack/core/world.hpp>
 #include <opack/core/entity.hpp>
-#include <opack/core/operation.hpp>
 #include <opack/core/action.hpp>
 #include <opack/core/perception.hpp>
 #include <opack/core/simulation.hpp>
+#include <opack/core/operation.hpp>
 
 namespace opack
 {

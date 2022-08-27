@@ -5,7 +5,7 @@ OPACK_SUB_PREFAB(MyAgent, opack::Agent);
 OPACK_ACTUATOR(MyActuator);
 OPACK_ACTION(MoveTo);
 
-struct Location { opack::Entity value; };
+struct Done {};
 
 TEST_CASE("Action API")
 {
@@ -20,6 +20,14 @@ TEST_CASE("Action API")
 
     auto action = opack::spawn<MoveTo>(world);
     opack::act<MyActuator>(e1, action);
+    CHECK(opack::current_action<MyActuator>(e1) == action);
 
-    opack::run_with_webapp(world);
+    opack::on_action_begin<MoveTo>(world, [](opack::Entity agent, opack::Entity actuator, opack::Entity action)
+        {
+            agent.add<Done>();
+        }
+    );
+
+    opack::step(world);
+    CHECK(e1.has<Done>());
 }

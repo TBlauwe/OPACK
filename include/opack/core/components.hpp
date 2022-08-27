@@ -15,7 +15,7 @@ namespace opack
     struct DoNotClean {};
 
 	/** Relation between an action and an entity.
-	 * Action "X" is done "By" entity "Y".
+	 * Actuator "X" is doing action "Y".
 	 */
 	struct Act {};
 
@@ -31,7 +31,12 @@ namespace opack
 
 	/** Indicates the minimum and maximum of entities needed by an action. */
 	struct Arity { size_t min{ 1 }; size_t max{ 1 };};
+
+	/** Indicates how much time is left, before action is started. */
 	struct Delay { float value{ 1 }; };
+
+	/** Measure since how long it has been added. */
+	struct Duration { float value{ 0.0 }; };
 
 	/** Holds simulation time. */
 	struct Timestamp

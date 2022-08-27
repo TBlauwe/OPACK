@@ -12,6 +12,8 @@
 #include <opack/core/api_types.hpp>
 #include <opack/utils/type_name.hpp>
 
+#include <functional>
+
 /**
 @brief Shorthand for OPACK_SUB_PREFAB(name, opack::Action)
 */
@@ -85,7 +87,7 @@ namespace opack
 	template<ActuatorPrefab T>
 	Entity current_action(Entity entity)
 	{
-		return opack::actuator<T>(entity).template target<T>();
+		return opack::actuator<T>(entity).template target<Act>();
 	}
 
 	/**
@@ -118,7 +120,25 @@ namespace opack
 		
 		action.mut(world)
 			.add<By>(initiator)
-			.set<Begin, Timestamp>({ world.time() });
+			.add<Actuator>(actuator);
 		actuator.template add<Act>(action);
+	}
+
+	template<ActionPrefab T>
+	void on_action_begin(World& world, std::function<void(Entity, Entity, Entity)> func)
+	{
+		world.system<Begin, flecs::pair<Begin, Timestamp>>()
+			.kind(flecs::PostUpdate)
+			.term(flecs::IsA).second<T>()
+			.each([func](flecs::entity action, Begin, Timestamp& value)
+				{
+					func(action.target<By>(), action.target<Actuator>(), action);
+				}).template child_of<world::dynamics>();
+	}
+
+	template<ActionPrefab T>
+	void on_action_end(World& world, std::function<void(Entity, Entity, Entity)> func)
+	{
+		//TODO
 	}
 }

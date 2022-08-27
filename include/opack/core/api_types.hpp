@@ -139,7 +139,8 @@ namespace opack
 		struct modules {};
 	};
 
-	// MAS - Multi-agent systems
+	//--------------------------
+	// Foundational types
 	//--------------------------
     OPACK_FOLDERS_STRUCT(agents);
 	struct Agent : public _::root<Agent>
