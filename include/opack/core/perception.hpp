@@ -54,7 +54,13 @@ namespace opack
 	template<SubPrefab T>
 	Entity sense(const Entity& entity)
 	{
+#ifdef OPACK_DEBUG
+		auto sense = entity.target<T>();
+		ecs_assert(sense.is_valid(), ECS_INVALID_OPERATION, "No sense for given entity. Make sure to add sense to its prefab (or to it directly");
+		return sense;
+#else 
 		return entity.target<T>();
+#endif
 	}
 
 	/**
