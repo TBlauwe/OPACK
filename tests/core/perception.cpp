@@ -1,11 +1,12 @@
 #include <doctest/doctest.h>
 #include <opack/core.hpp>
-#include <iostream>
-
 
 OPACK_SUB_PREFAB(MyAgent, opack::Agent);
-
 OPACK_SUB_PREFAB(MySense, opack::Sense);
+
+struct Test { float value{ 1.0 }; };
+struct B {};
+struct R {};
 
 TEST_CASE("Perception API")
 {
@@ -35,23 +36,21 @@ TEST_CASE("Perception API")
     CHECK(opack::is_a<MySense>(e3.target<MySense>() ));
 
     opack::perceive<MySense>(e1, e2);
-    CHECK(opack::perception(e1).perceive<MySense>(e2));
+    auto p = opack::perception(e1);
+    CHECK(p.perceive<MySense>(e2));
 
-    auto rule = world.rule_builder()
-        .term(flecs::ChildOf).src().var("Sense").second().var("Agent")
-        .term(flecs::IsA).src().var("Sense").second<opack::Sense>()
-        //.expr("$R($Agent, $Sense)")
-    .build();
+    opack::perceive<MySense, Test, R>(world);
 
-    std::cout << "Rule : " << rule.count() << " !\n";
-    auto var = rule.find_var("Agent");
-    std::cout << "Rule : " << rule.iter().set_var(var, e1).count() << " !\n";
-    rule.iter().set_var(var, e1).iter([](flecs::iter& iter)
-        {
-            auto e = iter.get_var("Sense");
-            std::cout << "Hello from entity : " << e.path() << " !\n";
-        }
-    );
+    CHECK(!p.perceive<MySense, Test>(e2));
+    e2.set<Test>({2.0});
 
-    opack::run_with_webapp(world);
+    CHECK(p.perceive<MySense, Test>(e2));
+    CHECK(p.value<MySense, Test>(e2) != nullptr);
+    CHECK(p.value<MySense, Test>(e2)->value == 2.0);
+
+    CHECK(!p.perceive<MySense, R>(e2));
+    e2.add<R>(e3);
+    CHECK(!p.perceive<MySense, R>(e2, e3));
+    opack::perceive<MySense>(e1, e3);
+    CHECK(p.perceive<MySense, R>(e2, e3));
 }

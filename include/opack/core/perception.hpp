@@ -7,8 +7,6 @@
  *********************************************************************/
 #pragma once
 
-#include <optional>
-
 #include <flecs.h>
 #include <opack/core/api_types.hpp>
 #include <opack/core/world.hpp>
@@ -47,10 +45,16 @@ namespace opack
 		).template child_of<world::dynamics>();
 	}
 
-	template<typename TSense>
+	/**
+	 * @brief Retrieve instanced sense @c T for current entity.
+	 *
+	 * WARNING : If you want to retrieve the sense prefab, identified by
+	 * @c T, use @ref entity<T>.
+	 */
+	template<SubPrefab T>
 	Entity sense(const Entity& entity)
 	{
-		return entity.target<TSense>();
+		return entity.target<T>();
 	}
 
 	/**
@@ -65,7 +69,7 @@ namespace opack
 	template<std::derived_from<Sense> T = Sense, typename... Us>
 	Entity perceive(World& world)
 	{
-		return (opack::entity<T>(world).add<Sense, Us>(), ...);
+		return (opack::entity<T>(world).template add<Sense, Us>(), ...);
 	}
 
 	/**
@@ -91,10 +95,31 @@ namespace opack
 		(opack::sense<T>(observer).remove(subject), ...);
 	}
 
+	/**
+	 *@brief Struct to query perceptive abilities for an entity
+	 *
+	 Usage :
+	 @code{.cpp}
+	 auto p = opack::perception(observer);
+	 p.perceive<MySense>(subject); 
+	 p.perceive<MySense, MyValue>(subject);
+	 p.value<MySense, MyValue>(subject);
+	 //etc.
+	 @endcode
+	 */
 	struct perception 
 	{
 		perception(Entity observer) : observer{observer}{}
 
+		/**
+		 *@brief Check if @c observer is perceiving @c subject with sense @c T.
+		 *@return True, if @c subject is perceived, false otherwise.
+
+        If no sense type is specified, it defaults to @c opack::Sense.
+        Which means it asks, whether the observer perceive @c subject, with any sense.
+        In order to do so, a more complex call is required, which is more expensive.
+        When possible, you should specify a sense.
+		 */
 		template<std::derived_from<Sense> T = opack::Sense>
 	    bool perceive(const Entity subject) const
         {
@@ -104,12 +129,21 @@ namespace opack
 				return false;
 		}
 
+		/**
+		 *@brief Check if @c observer is perceiving component @c C from @c subject with sense @c T.
+		 *@return True, if component @c C and @c subject is perceived with sense @c T, false otherwise.
+
+        If no sense type is specified, it defaults to @c opack::Sense.
+        Which means it asks, whether the observer perceive @c subject, with any sense.
+        In order to do so, a more complex call is required, which is more expensive.
+        When possible, you should specify a sense.
+		 */
 		template<std::derived_from<Sense> T = opack::Sense, typename C>
 	    bool perceive(const Entity subject) const
         {
 			if constexpr (!std::same_as<T, opack::Sense>)
 			{
-                if (!opack::sense<T>(observer).template has<C>())
+                if (!opack::sense<T>(observer).template has<Sense, C>())
                     return false;
 				return perceive<T>(subject) && subject.has<C>();
 			}
@@ -120,12 +154,21 @@ namespace opack
 		    return false;
 		}
 
+		/**
+		 *@brief Check if @c observer is perceiving component @c object from @c subject with sense @c T.
+		 *@return True, if component @c object and @c subject is perceived with sense @c T, false otherwise.
+
+        If no sense type is specified, it defaults to @c opack::Sense.
+        Which means it asks, whether the observer perceive @c subject, with any sense.
+        In order to do so, a more complex call is required, which is more expensive.
+        When possible, you should specify a sense.
+		 */
 		template<std::derived_from<Sense> T = opack::Sense>
 	    bool perceive(const Entity subject, const Entity object) const
         {
 			if constexpr (!std::same_as<T, opack::Sense>)
 			{
-                if (!opack::sense<T>(observer).has(object))
+                if (!opack::sense<T>(observer).template has<Sense>(object))
                     return false;
 				return perceive<T>(subject) && subject.has(object);
 			}
@@ -136,12 +179,22 @@ namespace opack
 		    return false;
         }
 
+		/**
+		 *@brief Check if @c observer is perceiving a relation @c R with @c object from @c subject with sense @c T.
+		 *@return True, if @c observer perceive @c subject and the relation @c R with @c object, through sense @c T, false otherwise.
+		 *If @c object is an agent or an artefact, @c object must also be perceived by @c observer.
+
+        If no sense type is specified, it defaults to @c opack::Sense.
+        Which means it asks, whether the observer perceive @c subject, with any sense.
+        In order to do so, a more complex call is required, which is more expensive.
+        When possible, you should specify a sense.
+		 */
 		template<std::derived_from<Sense> T = opack::Sense, typename R>
 	    bool perceive(const Entity subject, const Entity object) const
         {
 			if constexpr (!std::same_as<T, opack::Sense>)
 			{
-                if (!opack::sense<T>(observer).template has<R>())
+                if (!opack::sense<T>(observer).template has<Sense, R>())
                     return false;
 			    if (opack::is_a<Artefact>(object) || opack::is_a<Agent>(object))
 					return perceive<T>(subject) && perceive<T>(object) && subject.has<R>(object);
@@ -154,13 +207,22 @@ namespace opack
 		    return false;
 		}
 
+		/**
+		 *@brief Get value of component @c C from @c subject, only if it is perceivable trough sense @c T.
+		 *@return A const pointer to component @c C if it is perceivable, @c nullptr otherwise.
+
+        If no sense type is specified, it defaults to @c opack::Sense.
+        Which means it asks, whether the observer perceive @c subject, with any sense.
+        In order to do so, a more complex call is required, which is more expensive.
+        When possible, you should specify a sense.
+		 */
 		template<std::derived_from<Sense> T = opack::Sense, typename C>
-	    std::optional<const C&> value(const Entity subject) const
+	    const C* value(const Entity subject) const
         {
 			if constexpr (!std::same_as<T, opack::Sense>)
 			{
 			    if(perceive<T, C>(subject))
-				    return std::make_optional<const C&>(*subject.get<C>());
+				    return subject.get<C>();
 			}
 			else
 			{
