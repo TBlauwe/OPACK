@@ -3,7 +3,7 @@
 set(SOURCE_LIST 
 	"core/world.cpp"
     "core/perception.cpp"
-)
+ "core/action.cpp")
 
 # Dependencies
 # ============
