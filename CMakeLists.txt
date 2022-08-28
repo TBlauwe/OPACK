@@ -72,24 +72,26 @@ set(HEADER_LIST
     "include/opack/utils/type_name.hpp"
     "include/opack/core/api_types.hpp"
     "include/opack/core/components.hpp"
+    "include/opack/core/common.hpp"
     "include/opack/core/world.hpp"
+    "include/opack/core/entity.hpp" 
 	"include/opack/core/operation.hpp"
     "include/opack/core/perception.hpp"
     "include/opack/core/action.hpp" 
 	"include/opack/core.hpp"
     "include/opack/operations/basic.hpp" 
     "include/opack/operations/influence_graph.hpp" 
+    "include/opack/module/fipa_acl.hpp" 
     #"include/opack/module/activity_dl.hpp"
-    #"include/opack/module/fipa_acl.hpp" 
-     "include/opack/core/entity.hpp" "include/opack/core/common.hpp")
+)
 
 set(SOURCE_LIST 
-    "src/core/world.cpp"
     "src/core.cpp" 
-	"src/core/simulation.cpp"
+    "src/core/world.cpp"
     "src/core/perception.cpp" 
+	"src/core/simulation.cpp"
+    "src/module/fipa_acl.cpp" 
     #"src/module/activity_dl.cpp"
-    #"src/module/fipa_acl.cpp" 
     )
 
 

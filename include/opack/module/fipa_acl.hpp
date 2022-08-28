@@ -1,25 +1,26 @@
-/*********************************************************************
+/*****************************************************************//**
  * \file   fipa_acl.hpp
- * \brief  Module to add fipa acl, i.e agent communication language. 
+ * \brief  Module adding fipa-acl like messages, i.e agent communication language. 
  * See http://www.fipa.org/specs/fipa00037/SC00037J.html.
  * 
- * \author Tristan
- * \date   July 2022
+ * \author Tristan 
+ * \date   August 2022
  *********************************************************************/
 #pragma once
 
 #include <flecs.h>
-#include <opack/core/types.hpp>
+#include <opack/core.hpp>
 #include <opack/utils/flecs_helper.hpp>
 
-struct fipa_acl
+namespace fipa_acl
 {
-	fipa_acl(flecs::world& world);
+	void import(opack::World& world);
 
 	// --------------------------------------------------------------------------- 
 	// Message Structure
 	// --------------------------------------------------------------------------- 
-	struct Message : opack::Message {};
+	OPACK_SUB_PREFAB(Message, opack::Message);
+
 	struct Read {};
 	struct Sender {};
 	struct Receiver {};
@@ -33,12 +34,13 @@ struct fipa_acl
 	// Communicative Acts
 	// --------------------------------------------------------------------------- 
 
-	// The action of accepting a previously submitted proposal to perform an action.
-	// The action of agreeing to perform some action, possibly in the future.
-	enum class Performative
+	/**  A performative indicates the intention behind a message. */
+	enum class Performative : uint32_t
 	{
 		None = 0,
+	    // Accepts a previously submitted proposal to perform an action.
 		AcceptProposal,
+	    // Agrees to perform some action, possibly in the future.
 		Agree,
 		Cancel,
 		CallForProposal,
@@ -62,96 +64,104 @@ struct fipa_acl
 		Subscribe
 	};
 
-	/// <summary>
-	/// Builder class to construct a fipa-acl message. At any moment, the message can be sent. But if there is no receivers, 
-	/// then the message will be discared at the end of the cycle.
-	/// </summary>
+	/**
+	 *@brief Builder class to construct a fipa-acl message. At any moment, the message can be sent. But if there is no receivers,
+	 *then the message will be discarded at the end of the cycle.
+	 */
 	class MessageBuilder
 	{
 	public:
-		MessageBuilder(flecs::world& world);
-		MessageBuilder(flecs::entity entity);
+		MessageBuilder(opack::World& world);
+		MessageBuilder(opack::Entity entity);
 
 		MessageBuilder& performative(Performative performative);
-		MessageBuilder& sender(flecs::entity sender);
-		MessageBuilder& receiver(flecs::entity receiver);
+		MessageBuilder& sender(opack::Entity sender);
+        /**
+         * \brief After @c time, it will be deleted.
+         * \param time in seconds.
+         */
+        MessageBuilder& timeout(float time);
+        /**
+         * \brief After @c tick, it will be deleted.
+         * \param tick simulation tick.
+         */
+		MessageBuilder& timeout(size_t tick);
+		MessageBuilder& receiver(opack::Entity receiver);
 		MessageBuilder& conversation_id(int id);
 
-		flecs::entity build();
-		flecs::entity send();
+		/** @brief Build the message and returns it. */
+		opack::Entity build();
+		/** @brief Send the message and returns it. */
+		opack::Entity send();
 
 	protected:
-		flecs::entity message;
+		opack::Entity message;
 	};
 
 	class ReplyBuilder : public MessageBuilder
 	{
 	public:
-		ReplyBuilder(flecs::entity message);
+		ReplyBuilder(opack::Entity message);
 	};
 
-	static void consume(flecs::entity message, flecs::entity reader);
+	void consume(opack::Entity message, opack::Entity reader);
 
-	/// <summary>
-	/// Allows to retrieve messages from a template. You should not create it manually and use @c fipa_acl::inbox() instead.
-	/// </summary>
+	/**
+	 * @brief Allows to retrieve messages from a template.
+	 * You should not create it manually and use @c fipa_acl::inbox() instead.
+	 */
 	struct Inbox
 	{
-		flecs::entity entity;
+		opack::Entity entity;
 		flecs::iter_iterable<> iter;
 
-		flecs::entity first();
+		opack::Entity first();
 		size_t count();
-		void each(std::function<void(flecs::entity)> func);
+		void each(std::function<void(opack::Entity)> func);
 		void clear();
 	};
 
-	/// <summary>
-	/// Returns a message builder with the sender already initialized to entity.
-	/// </summary>
-	/// <param name="entity">Entity that will send the message.</param>
-	/// <returns></returns>
-	static MessageBuilder message(flecs::entity entity);
+	/**
+	 *@brief Returns a message builder with the sender already initialized to entity.
+	 *@param sender Automatically set as the sender.
+	 */
+	MessageBuilder message(opack::Entity sender);
 
-	/// <summary>
-	/// Sends the messages, so that other can read it.
-	/// </summary>
-	/// <param name="sender"></param>
-	static void send(flecs::entity sender);
+	/**
+	 *@brief Sends the messages, so that other can read it.
+	 *@param sender Automatically set as the sender.
+	 */
+	void send(opack::Entity sender);
 
-	/// <summary>
-	/// Return an iterable to retrieve messages matching template. More performant if you need to have multiple calls.
-	/// </summary>
-	static Inbox
-	inbox(flecs::entity entity, fipa_acl::Performative performative = fipa_acl::Performative::None);
 
-	/// <summary>
-	/// Retrieve the first message adressed to this entity matching the template. 
-	/// Shortcut opposed to use directly the inbox, but if you need to receive multiple messages, prefer the use of inbox.
-	/// </summary>
-	/// <param name="entity">Entity for which to look at.</param>
-	/// <param name="performative">If specified, only the first message having this performative will be returned.</param>
-	/// <returns></returns>
-	static flecs::entity receive(flecs::entity entity, fipa_acl::Performative performative = fipa_acl::Performative::None);
+    /**
+     *@brief Return an iterable to retrieve messages matching template. More performant if you need to have multiple calls.
+     */
+	Inbox inbox(opack::Entity entity, Performative performative = Performative::None);
 
-	/// <summary>
-	/// Create a reply from given message.
-	/// </summary>
-	/// <param name="message">Reply to this message.</param>
-	/// <returns></returns>
-	static ReplyBuilder reply(flecs::entity message);
+	/**
+	 *@brief Retrieve the first message addressed to this entity, matching the template.
+	 *It's a shortcut to using the inbox. However, if you need to receive multiple messages, prefer to use @ref inbox.
+	 */
+	opack::Entity receive(opack::Entity entity, Performative performative = Performative::None);
+
+	/**
+	 *@brief Create a reply from given message.
+	 *@param message Reply to this message.
+	 */
+	ReplyBuilder reply(opack::Entity message);
 
 	// Setter
-	static flecs::entity& performative(flecs::entity message, fipa_acl::Performative performative);
-	static flecs::entity& sender(flecs::entity message, flecs::entity sender);
+	opack::Entity& performative(opack::Entity message, fipa_acl::Performative performative);
+	opack::Entity& sender(opack::Entity message, opack::Entity sender);
 
 	// Getter
-	static fipa_acl::Performative performative(flecs::entity message);
-	static flecs::entity sender(flecs::entity message);
-	static int conversation_id(flecs::entity message);
-	static float timestamp(flecs::entity message);
-	static bool has_receiver(flecs::entity message, flecs::entity receiver);
-	static bool has_been_read_by(flecs::entity message, flecs::entity reader);
+	Performative performative(opack::Entity message);
+	opack::Entity sender(opack::Entity message);
+	int conversation_id(opack::Entity message);
+	float timestamp(opack::Entity message);
+	bool has_receiver(opack::Entity message, opack::Entity receiver);
+	bool has_been_read_by(opack::Entity message, opack::Entity reader);
 
 	struct queries
 	{
@@ -167,7 +177,7 @@ struct fipa_acl
 			int32_t sender_var;
 			int32_t receiver_var;
 			int32_t performative_var;
-			Messages(flecs::world& world);
+			Messages(opack::World& world);
 		};
 	};
 };

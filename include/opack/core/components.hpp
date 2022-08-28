@@ -44,6 +44,15 @@ namespace opack
 		float value {0.0f};
 	};
 
+	/** Destroy entity when timeout is equal to zero. */
+	template<typename T>
+	struct Timeout 
+	{
+		T value;
+	};
+	using TickTimeout = Timeout<size_t>;
+	using TimeTimeout = Timeout<float>;
+
 	struct Begin {};
 	struct End {};
 }

@@ -1,9 +1,10 @@
-#include <opack/module/fipa_acl.hpp>
+#include "opack/module/fipa_acl.hpp"
 #include <unordered_set>
 
-fipa_acl::fipa_acl(flecs::world& world)
+void fipa_acl::import(opack::World& world)
 {
-	world.module<fipa_acl>();
+	auto scope = world.entity("::opack::modules::fipa_acl");
+	auto prev = world.set_scope(scope);
 	world.component<Message>().is_a<opack::Message>();
 	world.component<Sender>().add(flecs::Exclusive);
 	world.component<Receiver>();
@@ -37,10 +38,11 @@ fipa_acl::fipa_acl(flecs::world& world)
 
 	world.emplace<queries::Messages>(world);
 
-	world.system<Message, opack::Timestamp>("System_ConsumeMessageAfterRead")
+	world.system<opack::Timestamp>("System_ConsumeMessageAfterRead")
+		.term(flecs::IsA).second<Message>()
 		.term<Read>().second(flecs::Wildcard)
 		.kind(flecs::PreFrame)
-		.iter([](flecs::iter& iter, Message*, opack::Timestamp*)
+		.iter([](flecs::iter& iter, opack::Timestamp*)
 			{
 				for (auto i : iter)
 				{
@@ -51,53 +53,64 @@ fipa_acl::fipa_acl(flecs::world& world)
 			}
 	);
 
-	world.system<Message, opack::Timestamp>("System_CleanUp_Leftover_FIPA_ACL_Messages")
+	world.system<opack::Timestamp>("System_CleanUp_Leftover_FIPA_ACL_Messages")
+		.term(flecs::IsA).second<Message>()
 		.term<Receiver>().second(flecs::Wildcard).not_()
 		.kind(flecs::PostFrame)
-		.each([](flecs::entity e, Message, opack::Timestamp)
+		.each([](opack::Entity e, opack::Timestamp&)
 			{
 				e.destruct();
 			}
 	);
-
+    world.set_scope(prev);
 }
 
-fipa_acl::MessageBuilder::MessageBuilder(flecs::world& world)
-	: message(world.entity())
+fipa_acl::MessageBuilder::MessageBuilder(opack::World& world)
+	: message(world.entity().is_a<Message>())
 {
-	message.add<Message>();
 	message.set<ConversationID>({static_cast<int>(message)});
-	opack::internal::organize<opack::world::Messages>(message);
+	opack::_::organize_entity<Message>(message);
 }
 
-fipa_acl::MessageBuilder::MessageBuilder(flecs::entity entity)
-	: message(entity.world().entity())
+fipa_acl::MessageBuilder::MessageBuilder(opack::Entity entity)
+	: message(entity.world().entity().is_a<Message>())
 {
-	message.add<Message>();
 	message.set<ConversationID>({static_cast<int>(message)});
-	opack::internal::organize<opack::world::Messages>(message);
+	opack::_::organize_entity<Message>(message);
 }
 
-fipa_acl::ReplyBuilder::ReplyBuilder(flecs::entity m)
-	: MessageBuilder(m.world().entity())
+fipa_acl::ReplyBuilder::ReplyBuilder(opack::Entity m)
+	: MessageBuilder(m.world().entity().is_a<Message>())
 {
 	message.set<ConversationID>({static_cast<int>(m)});
 	message.add<Receiver>(fipa_acl::sender(m));
 }
 
-fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::performative(fipa_acl::Performative performative)
+fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::performative(Performative performative)
 {
 	message.add(performative);
 	return *this;
 }
 
-fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::sender(flecs::entity sender)
+fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::sender(opack::Entity sender)
 {
 	message.add<Sender>(sender);
 	return *this;
 }
 
-fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::receiver(flecs::entity receiver)
+fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::timeout(float time)
+{
+	message.set<opack::TimeTimeout>({time});
+	return *this;
+}
+
+fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::timeout(size_t tick)
+{
+	message.set<opack::TickTimeout>({tick});
+	return *this;
+}
+
+fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::receiver(opack::Entity receiver)
 {
 	message.add<Receiver>(receiver);
 	return *this;
@@ -109,108 +122,108 @@ fipa_acl::MessageBuilder& fipa_acl::MessageBuilder::conversation_id(int id)
 	return *this;
 }
 
-flecs::entity& fipa_acl::performative(flecs::entity message, fipa_acl::Performative performative)
+opack::Entity& fipa_acl::performative(opack::Entity message, Performative performative)
 {
-	return message.set<fipa_acl::Performative>({performative});
+	return message.set<Performative>({performative});
 }
 
-flecs::entity& fipa_acl::sender(flecs::entity message, flecs::entity sender)
+opack::Entity& fipa_acl::sender(opack::Entity message, opack::Entity sender)
 {
 	return message.add<Sender>(sender);
 }
 
-fipa_acl::Performative fipa_acl::performative(flecs::entity message)
+fipa_acl::Performative fipa_acl::performative(opack::Entity message)
 {
-	return *message.get<fipa_acl::Performative>();
+	return *message.get<Performative>();
 }
 
-flecs::entity fipa_acl::sender(flecs::entity message)
+opack::Entity fipa_acl::sender(opack::Entity message)
 {
 	return message.target<Sender>();
 }
 
-int fipa_acl::conversation_id(flecs::entity message)
+int fipa_acl::conversation_id(opack::Entity message)
 {
 	return message.get<ConversationID>()->value;
 }
 
-float fipa_acl::timestamp(flecs::entity message)
+float fipa_acl::timestamp(opack::Entity message)
 {
 	return message.get<opack::Timestamp>()->value;
 }
 
-bool fipa_acl::has_receiver(flecs::entity message, flecs::entity receiver)
+bool fipa_acl::has_receiver(opack::Entity message, opack::Entity receiver)
 {
-	return message.has<fipa_acl::Receiver>(receiver);
+	return message.has<Receiver>(receiver);
 }
 
-bool fipa_acl::has_been_read_by(flecs::entity message, flecs::entity reader)
+bool fipa_acl::has_been_read_by(opack::Entity message, opack::Entity reader)
 {
-	return message.has<fipa_acl::Read>(reader);
+	return message.has<Read>(reader);
 }
 
-fipa_acl::MessageBuilder fipa_acl::message(flecs::entity entity)
+fipa_acl::MessageBuilder fipa_acl::message(opack::Entity entity)
 {
-	return fipa_acl::MessageBuilder(entity).sender(entity);
+	return MessageBuilder(entity).sender(entity);
 }
 
-fipa_acl::ReplyBuilder fipa_acl::reply(flecs::entity message)
+fipa_acl::ReplyBuilder fipa_acl::reply(opack::Entity message)
 {
-	return fipa_acl::ReplyBuilder(message);
+	return {message};
 }
 
-flecs::entity fipa_acl::MessageBuilder::build()
+opack::Entity fipa_acl::MessageBuilder::build()
 {
 	return message;
 }
 
-flecs::entity fipa_acl::MessageBuilder::send()
+opack::Entity fipa_acl::MessageBuilder::send()
 { 
 	fipa_acl::send(message);
 	return message;
 }
 
-void fipa_acl::send(flecs::entity message)
+void fipa_acl::send(opack::Entity message)
 {
 	//ecs_assert(message.has<Sender>(flecs::Wildcard), ECS_INVALID_PARAMETER, "message has no sender.");
 	message.set<opack::Timestamp>({ message.world().time() });
 }
 
-fipa_acl::Inbox fipa_acl::inbox(flecs::entity entity, fipa_acl::Performative performative)
+fipa_acl::Inbox fipa_acl::inbox(opack::Entity entity, Performative performative)
 {
 	auto world = entity.world();
-	auto query = world.get<fipa_acl::queries::Messages>();
+	auto query = world.get<queries::Messages>();
 	Inbox inbox{ entity, query->rule.rule.iter().set_var(query->receiver_var, entity) };
 
-	if(performative != fipa_acl::Performative::None)
+	if(performative != Performative::None)
 		inbox.iter.set_var(query->performative_var, world.id(performative));
 	return inbox;
 }
 
-void fipa_acl::consume(flecs::entity message, flecs::entity reader)
+void fipa_acl::consume(opack::Entity message, opack::Entity reader)
 {
 	if(message.is_valid())
-		message.add<fipa_acl::Read>(reader);
+		message.add<Read>(reader);
 }
 
-flecs::entity fipa_acl::Inbox::first()
+opack::Entity fipa_acl::Inbox::first()
 {
 	auto m = iter.first();
-	fipa_acl::consume(m, entity);
+	consume(m, entity);
 	return m;
 }
 
 size_t fipa_acl::Inbox::count()
 {
-	return iter.count();
+	return static_cast<size_t>(iter.count());
 }
 
 void fipa_acl::Inbox::clear()
 {
-	iter.each([this](flecs::entity message) {fipa_acl::consume(message, entity); });
+	iter.each([this](opack::Entity message) {consume(message, entity); });
 }
 
-void fipa_acl::Inbox::each(std::function<void(flecs::entity)> func)
+void fipa_acl::Inbox::each(std::function<void(opack::Entity)> func)
 {
 	std::unordered_set<flecs::entity_t> duplicates;
 	iter.each(
@@ -220,30 +233,31 @@ void fipa_acl::Inbox::each(std::function<void(flecs::entity)> func)
 			if (!duplicates.contains(message))
 			{
 				duplicates.insert(message);
-				fipa_acl::consume(message, entity);
+				consume(message, entity);
 				func(message);
 			}
 		}
 	);
 }
 
-flecs::entity fipa_acl::receive(flecs::entity entity, fipa_acl::Performative performative)
+opack::Entity fipa_acl::receive(opack::Entity entity, Performative performative)
 {
-	auto rule = fipa_acl::inbox(entity, performative);
+	auto rule = inbox(entity, performative);
 	auto m = rule.first();
 	if(m.is_valid())
 		m.add<Read>(entity);
 	return m;
 }
 
-fipa_acl::queries::Messages::Messages(flecs::world& world)
+fipa_acl::queries::Messages::Messages(opack::World& world)
 	: rule
 {
-	world.rule_builder<Message>()
-	.expr("$Performative(This)")
+	world.rule_builder<>()
+	.term(flecs::IsA).second<Message>()
+	.term().first().var("Performative")
 	.term<Sender>().second().var("Sender")
 	.term<Receiver>().second().var("Receiver")
-	.term<Read>().second().var("Receiver").oper(flecs::Not)
+	.term<Read>().second().var("Receiver").not_()
 	.build()
 },
 sender_var{ rule.rule.find_var("Sender") },

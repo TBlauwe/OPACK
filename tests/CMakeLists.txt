@@ -5,11 +5,11 @@ set(SOURCE_LIST
     "core/types.cpp"
     "core/basic.cpp"
     "core/simulation.cpp"
-   "core/perception.cpp"
+    "core/perception.cpp"
     #"operation.cpp" 
     #"algorithm/influence_graph.cpp" 
+    "module/fipa_acl.cpp"
     #"module/activity_dl.cpp"
-    #"module/fipa_acl.cpp"
  "core/action.cpp")
 
 # Dependencies

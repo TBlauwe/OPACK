@@ -127,7 +127,7 @@ void opack::import_opack(World& world)
 	).child_of<opack::world::dynamics>();
 
 	world.system<Duration>("UpdateDuration")
-		.each([](flecs::iter& iter, size_t i, Duration& duration)
+		.each([](flecs::iter& iter, size_t, Duration& duration)
 			{
 					duration.value += iter.delta_system_time();
 			}
@@ -139,6 +139,24 @@ void opack::import_opack(World& world)
 					delay.value -= iter.delta_system_time();
 					if (delay.value <= 0)
 						iter.entity(i).remove<Delay>();
+			}
+	).child_of<opack::world::dynamics>();
+
+	world.system<TickTimeout>("UpdateTickTimeout")
+		.each([](flecs::iter& iter, size_t i, TickTimeout& timeout)
+			{
+					timeout.value--;
+					if (timeout.value <= 0)
+						iter.entity(i).destruct();
+			}
+	).child_of<opack::world::dynamics>();
+
+	world.system<TimeTimeout>("UpdateTimeTimeout")
+		.each([](flecs::iter& iter, size_t i, TimeTimeout& timeout)
+			{
+					timeout.value -= iter.delta_system_time();
+					if (timeout.value <= 0)
+						iter.entity(i).destruct();
 			}
 	).child_of<opack::world::dynamics>();
 }
