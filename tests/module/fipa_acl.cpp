@@ -134,9 +134,8 @@ TEST_CASE("fipa_acl in systems")
 	int initial_counter = 10;
 	int counter = initial_counter * nb_agents;
 
-	world.system()
-		.term(flecs::IsA).second<MyAgent>()
-		.each([&counter](flecs::entity e)
+	opack::each<MyAgent>(world,
+		[&counter](flecs::entity e)
 			{
 				if (counter)
 				{
@@ -155,9 +154,8 @@ TEST_CASE("fipa_acl in systems")
 	);
 
 	int receive_counter{ 0 };
-	world.system()
-		.term(flecs::IsA).second<MyAgent>()
-		.each([&receive_counter](flecs::entity e)
+	opack::each<MyAgent>(world,
+		[&receive_counter](flecs::entity e)
 			{
 				auto inbox = fipa_acl::inbox(e);
 				inbox.each(
