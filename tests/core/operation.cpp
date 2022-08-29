@@ -188,11 +188,9 @@ TEST_CASE("Operation API Basics")
                 const auto id = Op2::get_influencer(i1);
                 auto& actions = Op2::get_choices(i1);
                 auto& graph = Op2::get_graph(i1);
-                fmt::print("Choices for {} :\n", e);
                 for (auto& a : actions)
                 {
                     graph.entry(a);
-                    fmt::print("-- {} \n", a);
                 }
                 return opack::make_outputs<Op2>();
             }
@@ -202,16 +200,15 @@ TEST_CASE("Operation API Basics")
             [](opack::Entity e, typename Op3::inputs& i1)
             {
                 auto action = std::get<opack::df<Op2, opack::Action_t>&>(i1).value;
-                fmt::print("Choosed {} \n", action);
                 opack::act<MyActuator>(e, action);
                 return opack::make_outputs<Op3>();
             }
         );
         
-        opack::run_with_webapp(world);
+        opack::step(world, 1.0);
         {
             auto action = opack::dataflow<Op2, opack::Action_t>(a1);
-            CHECK(action.template has<Action1>());
+            CHECK(action.is_a<Action1>());
         }
     }
 }
