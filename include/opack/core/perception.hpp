@@ -25,6 +25,53 @@
 
 namespace opack
 {
+	namespace queries::perception
+	{
+		/**
+		 * Query :
+		 * @code
+			(IsA, opack.Tangible), $This($Sensor), IsA($Observer, opack.Tangible), $Sens($Observer, $Sensor)
+		 * @endcode.
+		 */
+		struct Entity : internal::Rule
+		{
+			int32_t observer_var;
+			int32_t sense_var;
+			Entity(World& world);
+		};
+
+		/**
+		 * Query :
+		 * @code
+			$Sense($Observer, $Subject), $Predicate($Subject), opack.Sense($Sense, $Predicate)
+		 * @endcode.
+		 */
+		struct Component : internal::Rule
+		{
+			int32_t observer_var;
+			int32_t sense_var;
+			int32_t subject_var;
+			int32_t predicate_var;
+			Component(World& world);
+		};
+
+		/**
+		 * Query :
+		 * @code
+			$Sense($Observer, $Subject), $Predicate($Subject, $Object), opack.Sense($Sense, $Predicate)
+		 * @endcode.
+		 */
+		struct Relation : internal::Rule
+		{
+			int32_t observer_var;
+			int32_t sense_var;
+			int32_t subject_var;
+			int32_t predicate_var;
+			int32_t object_var;
+			Relation(World& world);
+		};
+	}
+
 	/**
 	 *@brief Add sense @c T to entity @c prefab
 	 *Usage:
@@ -50,7 +97,7 @@ namespace opack
 				[](flecs::entity e)
 				{
 					auto child = e.world().entity().is_a<TSense>().child_of(e);
-					_::name_entity_after_type<TSense>(e);
+					_::name_entity_after_type<TSense>(child);
 					e.add<TSense>(child);
 				}
 		).template child_of<world::dynamics>();
@@ -248,6 +295,24 @@ namespace opack
 		    return {};
 		}
 
+		template<typename T>
+		void each(std::function<void(Entity)> func)
+		{
+		     auto query = observer.world().get<opack::queries::perception::Entity>();
+             query->rule.iter()
+                .set_var(query->observer_var, observer)
+            .each(
+                [&func](flecs::iter& it, size_t index)
+                {
+                    auto subject = it.entity(index);
+					if (opack::is_a<T>(subject))
+						func(subject);
+					else if (subject.has<T>())
+						func(subject);
+                }
+			 );
+		}
+
 		Entity observer;
 	};
 
@@ -277,106 +342,6 @@ namespace opack
 	//	}
 	//}
 
-
-	///**
-	//@brief A percept represents a perceivable entity with a component or relation.
-	//*/
-	//struct Percept
-	//{
-	//	enum class Type { Component, Relation };
-	//	Type type{ Type::Component };
-
-	//	EntityView	sense;
-	//	EntityView	subject;
-	//	EntityView	predicate;
-	//	EntityView	object; // Only set if @c type is equal to @c Type::Component.
-
-	//	Percept(EntityView _sense, EntityView _subject, EntityView _predicate) :
-	//		type{ Type::Component }, sense{ _sense }, subject{ _subject }, predicate{ _predicate }, object{}
-	//	{}
-
-	//	Percept(EntityView _sense, EntityView _subject, EntityView _predicate, EntityView _object) :
-	//		type{ Type::Relation }, sense{ _sense }, subject{ _subject }, predicate{ _predicate }, object{ _object }
-	//	{}
-
-	//	/**
-	//	@brief Return true if percept is using given sense @c T.
-	//	*/
-	//	template<std::derived_from<Sense> T = Sense>
-	//	bool with_sense() { return sense == sense.world().id<T>(); }
-
-	//	/**
-	//	@brief Return true if subject is equal to @c _subject.
-	//	*/
-	//	bool subject_is(const Entity _subject) const { return subject == _subject; }
-
-	//	/**
-	//	@brief Return true if predicate is of type @c T .
-	//	*/
-	//	template<typename T>
-	//	bool predicate_is() { return predicate == predicate.world().id<T>(); }
-
-	//	/**
-	//	@brief Return true if object is equal to @c _object.
-	//	*/
-	//	bool object_is(Entity _object) { return object == _object; }
-
-	//	/**
-	//	@brief Return true if percept is a relation of type @c R with object @c object.
-	//	*/
-	//	template<typename R>
-	//	bool is_relation(Entity object)
-	//	{
-	//		auto world = subject.world();
-	//		return world.pair<R>(object) == world.pair(predicate, object);
-	//	}
-
-	//	/**
-	//	@brief Retrieve the current value from the perceived entity.
-	//	Pointer stability is not guaranteed. Copy value if you need to keep it.
-	//	Does not check if @c T is indeed accessible from this sense and if @c target do have it.
-	//	Use @c is() if you wish to check this beforehand.
-	//	*/
-	//	template<typename T>
-	//	const T* value() { return subject.get<T>(); }
-	//};
-	//using Percepts = std::vector<Percept>;
-
-	namespace queries::perception
-	{
-		/**
-		 * Query :
-		 * @code
-			$Sense($Observer, $Subject), $Predicate($Subject), opack.Sense($Sense, $Predicate)
-		 * @endcode.
-		 */
-		struct Component
-		{
-			internal::Rule rule;
-			int32_t observer_var;
-			int32_t sense_var;
-			int32_t subject_var;
-			int32_t predicate_var;
-			Component(World& world);
-		};
-
-		/**
-		 * Query :
-		 * @code
-			$Sense($Observer, $Subject), $Predicate($Subject, $Object), opack.Sense($Sense, $Predicate)
-		 * @endcode.
-		 */
-		struct Relation
-		{
-			internal::Rule rule;
-			int32_t observer_var;
-			int32_t sense_var;
-			int32_t subject_var;
-			int32_t predicate_var;
-			int32_t object_var;
-			Relation(World& world);
-		};
-	}
 
 	///**
 	// Iterate all currently perceived entities with sense @c T, or any if unspecified, with component @c U.

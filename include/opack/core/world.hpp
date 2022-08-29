@@ -24,13 +24,14 @@ namespace opack
         void organize_entity(Entity& entity)
         {
 #ifndef OPACK_OPTIMIZE
-            entity.set_doc_name(type_name_cstr<T>());
+            if(!entity.name())
+                entity.set_doc_name(type_name_cstr<T>());
             entity.child_of<typename T::root_t::entities_folder_t>();
 #endif
         }
 
         template<typename T>
-        void organize_prefab(Entity& entity){}
+        void organize_prefab(Entity&){}
 
         template<typename T>
         requires (HasRoot<T> && HasFolder<typename T::root_t>)

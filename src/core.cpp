@@ -42,13 +42,16 @@ void opack::import_opack(World& world)
 	// -------------------------------------------------------
 	// Prefabs 
 	// -------------------------------------------------------
-	opack::prefab<Agent>(world);
-    opack::prefab<Artefact>(world);
+	opack::prefab<Tangible>(world);
+	opack::prefab<Agent>(world).is_a<Tangible>();
+    opack::prefab<Artefact>(world).is_a<Tangible>();
 	opack::prefab<Action>(world)
 		.add<Arity>();
 	opack::prefab<Actuator>(world)
 		;
-	opack::prefab<Sense>(world);
+	opack::prefab<Sense>(world)
+		.add(flecs::Transitive)
+        ;
 
 
 	// -------------------------------------------------------
@@ -67,7 +70,6 @@ void opack::import_opack(World& world)
 		.add(flecs::OneOf, entity<Action::entities_folder_t>(world))
 		;
 	world.component<By>(); 
-	world.component<>(); 
 	world.component<On>();
 	world.component<Delay>()
 		.member<float, flecs::units::duration::Seconds>("value")
@@ -77,6 +79,7 @@ void opack::import_opack(World& world)
 		;
 
 	world.entity("::opack::queries::perception").add(flecs::Module);
+	world.emplace<queries::perception::Entity>(world);
 	world.emplace<queries::perception::Component>(world);
 	world.emplace<queries::perception::Relation>(world);
 

@@ -142,14 +142,16 @@ namespace opack
 	//--------------------------
 	// Foundational types
 	//--------------------------
+	struct Tangible {};
+
     OPACK_FOLDERS_STRUCT(agents);
-	struct Agent : public _::root<Agent>
+	struct Agent : public _::root<Agent>, public Tangible
 	{
         OPACK_FOLDERS_TYPEDEF(agents);
 	};
 
     OPACK_FOLDERS_STRUCT(artefacts);
-	struct Artefact : public _::root<Artefact>
+	struct Artefact : public _::root<Artefact>, public Tangible
 	{
         OPACK_FOLDERS_TYPEDEF(artefacts);
 	};
