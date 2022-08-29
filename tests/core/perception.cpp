@@ -59,5 +59,4 @@ TEST_CASE("Perception API")
             if (subject == e3)
                 CHECK(!p.perceive<MySense, Test>(subject));
         });
-    //opack::run_with_webapp(world);
 }
