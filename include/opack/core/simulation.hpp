@@ -2,12 +2,32 @@
  * \file   simulation.hpp
  * \brief  API to controls the simulation.
  * 
- * \author Hyperenor
+ * \author Tristan
  * \date   August 2022
  *********************************************************************/
 #pragma once
 
 #include <opack/core/api_types.hpp>
+
+/**
+@brief Shorthand for OPACK_SUB_PREFAB(name, opack::Agent)
+*/
+#define OPACK_AGENT(name) OPACK_SUB_PREFAB(name, opack::Agent)
+
+/**
+@brief Identical to OPACK_SUB_PREFAB(name, base)
+*/
+#define OPACK_SUB_AGENT(name, base) OPACK_SUB_PREFAB(name, base)
+
+/**
+@brief Shorthand for OPACK_SUB_PREFAB(name, opack::Artefact)
+*/
+#define OPACK_ARTEFACT(name) OPACK_SUB_PREFAB(name, opack::Artefact)
+
+/**
+@brief Identical to OPACK_SUB_PREFAB(name, base)
+*/
+#define OPACK_SUB_ARTEFACT(name, base) OPACK_SUB_PREFAB(name, base)
 
 namespace opack {
 

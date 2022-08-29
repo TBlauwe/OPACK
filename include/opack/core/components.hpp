@@ -55,4 +55,79 @@ namespace opack
 
 	struct Begin {};
 	struct End {};
+
+    /** Relation used to indicate active behaviors. */
+	struct HasBehaviour {};
+
+	using DefaultBehaviour = flecs::pair<HasBehaviour, Behaviour>;
+
+	template<typename TOper, typename T>
+	struct df 
+	{
+		using operation = TOper;
+		using type = T;
+		T value;
+	};
+
+	template<typename... T>
+	using Inputs = std::tuple<T...>;
+
+	template<typename... T>
+	using Outputs = std::tuple<T...>;
+
+	template<typename TOper>
+	struct Impact
+	{
+		flecs::entity_view behaviour;
+		std::function<typename TOper::outputs(flecs::entity, typename TOper::inputs&)> func;
+	};
+
+	template<typename TInputs, typename TOutputs, typename UInputs, typename UOutputs>
+	struct O;                     
+ 
+	template
+	<
+		template<typename...> typename TInputs, typename... TInput, 
+		template<typename...> typename TOutputs, typename... TOutput,
+		template<typename...> typename UInputs, typename... UInput, 
+		template<typename...> typename UOutputs, typename... UOutput
+	>
+	struct O<TInputs<TInput...>, TOutputs<TOutput...>, UInputs<UInput...>, UOutputs<UOutput...>> 
+	{
+		using operation_t = O<TInputs<TInput...>, TOutputs<TOutput...>, UInputs<UInput...>, UOutputs<UOutput...>>;
+		using operation_inputs_t = std::tuple<TInput...>;
+		using operation_outputs_t = std::tuple<TOutput...>;
+		using operation_inputs = std::tuple<TInput&...>;
+		using operation_outputs = std::tuple<TOutput...>;
+		using impact_inputs = std::tuple<UInput...>;
+		using impact_outputs = std::tuple<UOutput...>;
+		using inputs = std::tuple<TInput&..., UInput...>;
+		using outputs = std::tuple<UOutput...>;
+		static constexpr size_t operation_inputs_size = sizeof...(TInput);
+		static constexpr size_t operation_outputs_size = sizeof...(TOutput);
+		static constexpr size_t impact_inputs_size = sizeof...(UInput);
+		static constexpr size_t impact_outputs_size = sizeof...(UOutput);
+
+		template<typename TOper>
+		struct Strategy
+		{
+			using impact_t = Impact<TOper>;
+			using impacts_t = std::vector<const impact_t*>;
+
+			Strategy(flecs::entity _agent) : agent{ _agent }
+			{
+				agent.each<HasBehaviour>(
+					[&](flecs::entity object)
+					{
+						auto impact = object.get_second<TOper, impact_t>();
+						if (impact)
+							impacts.push_back(impact);
+					}
+				);
+			}
+
+			flecs::entity	agent{};
+			impacts_t		impacts{};
+		};
+	};
 }

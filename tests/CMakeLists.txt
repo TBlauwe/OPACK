@@ -6,11 +6,12 @@ set(SOURCE_LIST
     "core/basic.cpp"
     "core/simulation.cpp"
     "core/perception.cpp"
-    #"operation.cpp" 
-    #"algorithm/influence_graph.cpp" 
+    "core/action.cpp"
+    "core/operation.cpp" 
+    "algorithm/influence_graph.cpp" 
     "module/fipa_acl.cpp"
     #"module/activity_dl.cpp"
- "core/action.cpp")
+)
 
 # Dependencies
 # ============

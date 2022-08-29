@@ -7,9 +7,13 @@
  *********************************************************************/
 #pragma once
 
+#ifdef _MSC_VER
+#ifndef __clang__
 #include <iterator> // Needed for MSVC
+#endif
+#endif
 #include <flecs.h>
-#include <opack/core/types.hpp>
+#include <opack/core/api_types.hpp>
 
 namespace opack::operations
 {

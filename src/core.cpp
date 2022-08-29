@@ -36,6 +36,7 @@ void opack::import_opack(World& world)
 	_::create_module_entity<Sense>(world);
 	_::create_module_entity<Flow>(world);
 	_::create_module_entity<Operation>(world);
+	_::create_module_entity<Behaviour>(world);
 	_::create_module_entity<Message>(world);
 
 
@@ -43,7 +44,10 @@ void opack::import_opack(World& world)
 	// Prefabs 
 	// -------------------------------------------------------
 	opack::prefab<Tangible>(world);
-	opack::prefab<Agent>(world).is_a<Tangible>();
+	opack::prefab<Agent>(world)
+        .is_a<Tangible>()
+		.override<DefaultBehaviour>()
+    ;
     opack::prefab<Artefact>(world).is_a<Tangible>();
 	opack::prefab<Action>(world)
 		.add<Arity>();
@@ -52,13 +56,14 @@ void opack::import_opack(World& world)
 	opack::prefab<Sense>(world)
 		.add(flecs::Transitive)
         ;
-
+	opack::prefab<Flow>(world)
+        ;
 
 	// -------------------------------------------------------
 	// Operation
 	// -------------------------------------------------------
 	world.component<Behaviour>();
-	world.component<Active>();
+	world.component<HasBehaviour>();
 
 	world.component<Arity>()
 		.member<size_t>("min")

@@ -9,7 +9,7 @@
 
 #include <flecs.h>
 
-#include <opack/core/types.hpp>
+#include <opack/core/api_types.hpp>
 #include <opack/algorithm/influence_graph.hpp>
 
 namespace opack::operations

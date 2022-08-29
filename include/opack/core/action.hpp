@@ -57,7 +57,7 @@ namespace opack
 				[](flecs::entity e)
 				{
 					auto child = e.world().entity().is_a<TActuator>().child_of(e);
-					_::name_entity_after_type<TActuator>(e);
+					_::name_entity_after_type<TActuator>(child);
 					e.add<TActuator>(child);
 				}
 		).template child_of<world::dynamics>();
@@ -80,6 +80,17 @@ namespace opack
 		return entity.target<T>();
 #endif
 	}
+
+	/**
+	 * @brief Create an instanced action @c T.
+	 */
+	template<std::derived_from<opack::Action> T>
+	Entity action(const Entity& entity)
+	{
+		auto world = entity.world();
+		return opack::spawn<T>(world);
+	}
+
 
 	/**
 	@brief Return current action done by @c entity with actuator @c T
