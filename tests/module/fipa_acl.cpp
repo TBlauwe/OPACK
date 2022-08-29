@@ -111,32 +111,33 @@ TEST_CASE("fipa-acl API")
 	}
 }
 
-//TEST_CASE("In systems")
+OPACK_SENSE(Vision);
+struct A {};
+
+//TEST_CASE("fipa_acl in systems")
 //{
+//    auto world = opack::create_world();
+//    fipa_acl::import(world);
+//	opack::batch_init<MyAgent>(world);
 //
-//	auto sim = opack::Simulation();
-//	sim.import<fipa_acl>();
+//	opack::perceive<Vision, opack::Agent>(world);
 //
-//	struct Vision : opack::Sense {};
-//	struct A {};
-//	opack::reg<Vision>(sim);
-//	opack::perceive<Vision, opack::Agent>(sim);
-//
-//	auto a1 = opack::agent(sim, "a1");
-//	auto a2 = opack::agent(sim, "a2");
-//	auto a3 = opack::agent(sim, "a3");
-//	auto a4 = opack::agent(sim, "a4");
+//	auto a1 = opack::spawn<MyAgent>(world, "a1");
+//	auto a2 = opack::spawn<MyAgent>(world, "a2");
+//	auto a3 = opack::spawn<MyAgent>(world, "a3");
+//	auto a4 = opack::spawn<MyAgent>(world, "a4");
 //	opack::perceive<Vision>(a1, a2);
 //	opack::perceive<Vision>(a1, a3);
 //	opack::perceive<Vision>(a2, a3);
 //	opack::perceive<Vision>(a3, a4);
 //
-//	int nb_agents = opack::count<opack::Agent>(sim);
+//	int nb_agents = opack::count<opack::Agent>(world);
 //	int initial_counter = 10;
 //	int counter = initial_counter * nb_agents;
 //
-//	sim.world.system<opack::Agent>()
-//		.each([&counter](flecs::entity e, opack::Agent)
+//	world.system()
+//		.term(flecs::IsA).second<MyAgent>()
+//		.each([&counter](flecs::entity e)
 //			{
 //				if (counter)
 //				{
@@ -155,8 +156,9 @@ TEST_CASE("fipa-acl API")
 //	);
 //
 //	int receive_counter{ 0 };
-//	sim.world.system<opack::Agent>()
-//		.each([&receive_counter](flecs::entity e, opack::Agent)
+//	world.system()
+//		.term(flecs::IsA).second<MyAgent>()
+//		.each([&receive_counter](flecs::entity e)
 //			{
 //				auto inbox = fipa_acl::inbox(e);
 //				inbox.each(
@@ -169,16 +171,17 @@ TEST_CASE("fipa-acl API")
 //	);
 //
 //	int send_counter{ 0 };
-//	sim.world.observer<fipa_acl::Message>()
+//	world.observer()
+//		.term(flecs::IsA).second<fipa_acl::Message>()
 //		.event(flecs::OnAdd)
-//		.each([&send_counter](flecs::entity e, fipa_acl::Message) 
+//		.each([&send_counter](flecs::entity e) 
 //			{
 //				send_counter++;
 //			}
 //	);
 //
-//	//sim.run_with_webapp();
-//	sim.step_n(initial_counter + 1); // Because message are received during next tick.
+//	//world.run_with_webapp();
+//	opack::step_n(world, initial_counter + 1); // Because message are received during next tick.
 //	int expected = initial_counter * nb_agents;
 //	CHECK(send_counter == expected);
 //	CHECK(receive_counter == send_counter);

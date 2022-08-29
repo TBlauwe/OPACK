@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
 
     // overrides
     context.setOption("duration", true);            // Show duration for each test
-    context.setOption("success", true);             // Show successfull test
+    context.setOption("success", false);             // Show successfull test
     context.setOption("no-path-filenames", true);   // Don't show path
     context.setOption("no-breaks", true);           // don't break in the debugger when assertions fail
 

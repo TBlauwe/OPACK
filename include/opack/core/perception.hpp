@@ -13,6 +13,16 @@
 #include <opack/core/entity.hpp>
 #include <opack/utils/flecs_helper.hpp>
 
+/**
+@brief Shorthand for OPACK_SUB_PREFAB(name, opack::Sense)
+*/
+#define OPACK_SENSE(name) OPACK_SUB_PREFAB(name, opack::Sense)
+
+/**
+@brief Identical to OPACK_SUB_PREFAB(name, base)
+*/
+#define OPACK_SUB_SENSE(name, base) OPACK_SUB_PREFAB(name, base)
+
 namespace opack
 {
 	/**

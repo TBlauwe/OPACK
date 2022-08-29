@@ -53,4 +53,31 @@ TEST_CASE("Perception API")
     CHECK(!p.perceive<MySense, R>(e2, e3));
     opack::perceive<MySense>(e1, e3);
     CHECK(p.perceive<MySense, R>(e2, e3));
+
+    fmt::print("===== RULE ====\n");
+    auto rule = world.rule_builder()
+        .term(flecs::IsA).src().var("Sensor").second().var("Sense")
+        .term().first().var("Sense").src().var("Observer").second().var("Sensor")
+        .term().first().var("Subject").src().var("Sensor")
+        .term<opack::Sense>().src().var("Sense").second().var("Predicate")
+        .term().first().var("Predicate").src().var("Subject").or_()
+        .term().first().var("Predicate").src().var("Subject").second().var("Object").or_()
+        .build();
+    fmt::print("to string : {} \n", rule.str());
+    rule.iter().set_var("Observer", e1).iter(
+        [](flecs::iter& it)
+        {
+            auto observer = it.get_var("Observer");
+            auto sense = it.get_var("Sense");
+            auto subject = it.get_var("Subject");
+            auto predicate = it.get_var("Predicate");
+            auto object = it.get_var("Object");
+            if(object)
+                fmt::print("{} with sense {} perceives {} with {} and {}\n", observer.path(), sense.path(), subject.path(), predicate.path(), object.path());
+            else
+                fmt::print("{} with sense {} perceives {} with {}\n", observer.path(), sense.path(), subject.path(), predicate.path());
+        }
+    );
+    fmt::print("===============\n");
+    opack::run_with_webapp(world);
 }
