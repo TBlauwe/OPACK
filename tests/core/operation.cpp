@@ -3,12 +3,12 @@
 #include <opack/operations/basic.hpp>
 #include <opack/operations/influence_graph.hpp>
 
-struct MyAgent : public opack::Agent {using base_t = opack::Agent;};
+OPACK_AGENT(MyAgent);
 OPACK_FLOW(MyFlow);
 OPACK_BEHAVIOUR(B1);
 OPACK_BEHAVIOUR(B2);
 OPACK_BEHAVIOUR(B3);
-struct Action1 : public opack::Action {using base_t = opack::Action;};
+OPACK_ACTION(Action1);
 OPACK_ACTION(Action2);
 OPACK_ACTION(Action3);
 OPACK_ACTUATOR(MyActuator);

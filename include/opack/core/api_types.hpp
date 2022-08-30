@@ -131,9 +131,6 @@ namespace opack
 
 		/** @brief Scope to regroup rules/query entities.*/
 		struct rules {};
-
-		/** @brief Scope to regroup modules.*/
-		struct modules {};
 	};
 
 	//--------------------------

@@ -22,7 +22,6 @@ void opack::import_opack(World& world)
 	world.entity<world::behaviours>().add(flecs::Module);
 	world.entity<world::dynamics>().add(flecs::Module);
 	world.entity<world::rules>().add(flecs::Module);
-	world.entity<world::modules>().add(flecs::Module);
 
 
 	// -------------------------------------------------------
@@ -42,7 +41,7 @@ void opack::import_opack(World& world)
 
 	// -------------------------------------------------------
 	// Prefabs 
-	// -------------------------------------------------------
+	// -------------------------------------------a------------
 	opack::prefab<Tangible>(world);
 	opack::prefab<Agent>(world)
         .is_a<Tangible>()
@@ -79,7 +78,7 @@ void opack::import_opack(World& world)
 	world.component<Delay>()
 		.member<float, flecs::units::duration::Seconds>("value")
 		;
-	world.component<Delay>()
+	world.component<Duration>()
 		.member<float, flecs::units::duration::Seconds>("value")
 		;
 

@@ -1,13 +1,13 @@
 #include <doctest/doctest.h>
 #include <opack/core.hpp>
 
-OPACK_TAG(V);            
-OPACK_PREFAB(A);        
-OPACK_SUB_PREFAB(B, A); 
-OPACK_SUB_PREFAB(C, B); 
-
 TEST_CASE("World & Entity API")
 {
+    OPACK_TAG(V);            
+    OPACK_PREFAB(A);        
+    OPACK_SUB_PREFAB(B, A); 
+    OPACK_SUB_PREFAB(C, B); 
+
 	opack::World world = opack::create_world();
 
     auto a = opack::entity<A>(world);

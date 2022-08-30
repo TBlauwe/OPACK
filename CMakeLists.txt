@@ -82,7 +82,7 @@ set(HEADER_LIST
     "include/opack/operations/basic.hpp" 
     "include/opack/operations/influence_graph.hpp" 
     "include/opack/module/fipa_acl.hpp" 
-    #"include/opack/module/activity_dl.hpp"
+    "include/opack/module/activity_dl.hpp"
 )
 
 set(SOURCE_LIST 
@@ -91,7 +91,7 @@ set(SOURCE_LIST
     "src/core/perception.cpp" 
 	"src/core/simulation.cpp"
     "src/module/fipa_acl.cpp" 
-    #"src/module/activity_dl.cpp"
+    "src/module/activity_dl.cpp"
     )
 
 

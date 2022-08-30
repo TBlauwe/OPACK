@@ -3,52 +3,32 @@
 #include <opack/module/activity_dl.hpp>
 #include <iostream>
 
-TEST_SUITE_BEGIN("Module : Activity-DL");
-
-TEST_CASE("Initialization")
+TEST_CASE("API Activity-DL")
 {
-	auto sim = opack::Simulation();
-	auto module = sim.import<adl>();
-	CHECK(sim.world.has<adl>());
-}
+    OPACK_AGENT(MyAgent);
+    ADL_ACTIVITY(Activity_A);
+    ADL_ACTIVITY(Activity_B);
+    struct ReadyA {};
+    struct ReadyB {};
 
-struct Activity_A : adl::Activity {};
-TEST_CASE("Basics")
-{
-	auto sim = opack::Simulation();
-	sim.import<adl>();
+    OPACK_ACTION(Action1);
+    OPACK_ACTION(Action2);
+    OPACK_ACTION(Action3);
 
-	auto root = adl::activity<Activity_A>(sim);
-	CHECK(adl::children_count(root) == 0);
-	CHECK(adl::size(root) == 1);
+	auto world = opack::create_world();
+	adl::import(world);
+	world.component<ReadyA>();
+	world.component<ReadyB>();
 
-	auto task_1 = adl::task("a1", root);
-	CHECK(adl::has_children(root));
-	CHECK(adl::children_count(root) == 1);
-	CHECK(adl::size(root) == 2);
+	opack::init<Action1>(world);
+	opack::init<MyAgent>(world);
+	auto agent = opack::spawn<MyAgent>(world);
 
-	auto instance = adl::instantiate<Activity_A>(sim);
-	CHECK(adl::children_count(instance) == 1);
-	CHECK(!adl::is_satisfied(instance));
-}
-
-struct ReadyA {};
-struct ReadyB {};
-TEST_CASE("Conditions")
-{
-	auto sim = opack::Simulation();
-	sim.import<adl>();
-	sim.world.component<ReadyA>();
-	sim.world.component<ReadyB>();
-
-	// Define actions
-	// ===============
-	struct Action1 : opack::Action {};
-	opack::register_action<Action1>(sim);
-
-	auto root = adl::activity<Activity_A>(sim);
+	auto root = adl::activity<Activity_A>(world);
 	root.emplace<adl::ContextualCondition>([](flecs::entity task, flecs::entity agent) {return agent.has<ReadyA>(); });
 	CHECK(adl::children_count(root) == 0);
+	CHECK(root.get<adl::Constructor>()->logical_constructor == adl::LogicalConstructor::AND);
+	CHECK(root.get<adl::Constructor>()->temporal_constructor == adl::TemporalConstructor::SEQ_ORD);
 	CHECK(adl::size(root) == 1);
 
 	auto task_1 = adl::action<Action1>(root);
@@ -57,10 +37,22 @@ TEST_CASE("Conditions")
 	CHECK(adl::children_count(root) == 1);
 	CHECK(adl::size(root) == 2);
 
-	auto agent = opack::agent(sim);
-	auto instance = adl::instantiate<Activity_A>(sim);
-	CHECK(adl::children_count(instance) == 1);
-	CHECK(!adl::is_satisfied(instance));
+	SUBCASE("Instanciation")
+	{
+        auto instance = adl::instantiate<Activity_A>(world);
+        CHECK(instance.get<adl::Constructor>()->logical_constructor == adl::LogicalConstructor::AND);
+        CHECK(instance.get<adl::Constructor>()->temporal_constructor == adl::TemporalConstructor::SEQ_ORD);
+        CHECK(adl::children_count(instance) == 1);
+        CHECK(!adl::is_satisfied(instance, agent));
+	}
+
+    SUBCASE("Composition")
+    {
+        auto activity_b = adl::activity<Activity_B>(world);
+        auto instance = adl::compose<Activity_A>(activity_b);
+        CHECK(adl::size(instance) == 2);
+        CHECK(adl::size(activity_b) == 3);
+    }
 
 	std::vector<flecs::entity> actions{};
 
@@ -89,46 +81,10 @@ TEST_CASE("Conditions")
 		CHECK(!success);
 		CHECK(!adl::has_task_in_progress(root));
 	}
-}
-
-struct Activity_B : adl::Activity {};
-TEST_CASE("Composition")
-{
-	auto sim = opack::Simulation();
-	sim.import<adl>();
-
-	auto root = adl::activity<Activity_A>(sim);
-	auto task_1 = adl::task("task_1", root);
-
-	auto activity_b = adl::activity<Activity_B>(sim);
-	auto instance = adl::compose<Activity_A>(activity_b);
-	CHECK(adl::size(instance) == 2);
-	CHECK(adl::size(activity_b) == 3);
-}
-
-TEST_CASE("Reasonning")
-{
-	auto sim = opack::Simulation();
-	sim.import<adl>();
-
-	auto agent = opack::agent(sim);
-
-	// Define actions
-	// ===============
-	struct Action1 : opack::Action {};
-	opack::register_action<Action1>(sim);
-
-	struct Action2 : opack::Action {};
-	opack::register_action<Action2>(sim);
-
-	struct Action3 : opack::Action {};
-	opack::register_action<Action3>(sim);
 
 	SUBCASE("Check success")
 	{
-		std::vector<flecs::entity> actions{};
-
-		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::AND, adl::TemporalConstructor::IND);
+		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::AND, adl::TemporalConstructor::IND);
 		auto a1 = adl::action<Action1>(root);
 
 		SUBCASE("Fail because there are still potential actions") // Since no task have been finished successfuly
@@ -169,12 +125,12 @@ TEST_CASE("Reasonning")
 
 	SUBCASE("Traversal")
 	{
-		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::OR, adl::TemporalConstructor::IND);
+		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::OR, adl::TemporalConstructor::IND);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
 
-		auto instance = adl::instantiate<Activity_A>(sim);
+		auto instance = adl::instantiate<Activity_A>(world);
 
 		int counter { 0 };
 		adl::traverse_dfs(instance, [&counter](flecs::entity task) { counter++; });
@@ -183,7 +139,7 @@ TEST_CASE("Reasonning")
 
 	SUBCASE("IND AND")
 	{
-		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::AND, adl::TemporalConstructor::IND);
+		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::AND, adl::TemporalConstructor::IND);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -265,7 +221,7 @@ TEST_CASE("Reasonning")
 
 	SUBCASE("IND OR")
 	{
-		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::OR, adl::TemporalConstructor::IND);
+		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::OR, adl::TemporalConstructor::IND);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -347,7 +303,7 @@ TEST_CASE("Reasonning")
 
 	SUBCASE("SEQ AND")
 	{
-		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ);
+		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -433,7 +389,7 @@ TEST_CASE("Reasonning")
 
 	SUBCASE("SEQ OR")
 	{
-		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::OR, adl::TemporalConstructor::SEQ);
+		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::OR, adl::TemporalConstructor::SEQ);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -527,7 +483,7 @@ TEST_CASE("Reasonning")
 	
 	SUBCASE("SEQ_ORD OR")
 	{
-		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::OR, adl::TemporalConstructor::SEQ_ORD);
+		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::OR, adl::TemporalConstructor::SEQ_ORD);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -613,7 +569,7 @@ TEST_CASE("Reasonning")
 
 	SUBCASE("SEQ_ORD AND")
 	{
-		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ_ORD);
+		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ_ORD);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -705,7 +661,7 @@ TEST_CASE("Reasonning")
 
 	SUBCASE("ORD AND")
 	{
-		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::AND, adl::TemporalConstructor::ORD);
+		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::AND, adl::TemporalConstructor::ORD);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -796,7 +752,7 @@ TEST_CASE("Reasonning")
 
 	SUBCASE("ORD OR")
 	{
-		auto root = adl::activity<Activity_A>(sim, adl::LogicalConstructor::OR, adl::TemporalConstructor::ORD);
+		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::OR, adl::TemporalConstructor::ORD);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);

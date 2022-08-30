@@ -5,6 +5,7 @@
  * \author Tristan
  * \date   August 2022
  *********************************************************************/
+#pragma once
 
 #include <flecs.h>
 #include <opack/core/api_types.hpp>

@@ -104,34 +104,6 @@ namespace opack
     }
 
     /**
-    @brief Retrieve (or create) a prefab associated with given type @c T.
-
-    @tparam T Any type.
-    @param world explicit.
-    @return A prefab entity associated with type @c T.
-
-    See also @ref spawn to instantiate an entity from this prefab.
-
-    Usage :
-
-    @code{.cpp}
-    struct A {};
-    auto prefab = opack::prefab<A>(world);
-    // customize prefab ...
-    auto e = opack::spawn<A>(world);
-    opack::is_a<A>(e); // true
-    @endcode
-    */
-    template<typename T>
-        requires HasRoot<T>&& HasFolder<typename T::root_t>
-    Entity prefab(World& world)
-    {
-        auto prefab = world.prefab<T>();
-        _::organize_prefab<T>(prefab);
-        return prefab;
-    }
-
-    /**
     @brief Initialize a sub-prefab according to its type and  correctly inherits its parent.
 
     @tparam T Any type that matches a sub-prefab.

@@ -1,14 +1,15 @@
 #include <doctest/doctest.h>
 #include <opack/core.hpp>
 
-OPACK_SUB_PREFAB(MyAgent, opack::Agent);
-OPACK_ACTUATOR(MyActuator);
-OPACK_ACTION(MoveTo);
 
-struct Done {};
 
 TEST_CASE("Action API")
 {
+    OPACK_SUB_PREFAB(MyAgent, opack::Agent);
+    OPACK_ACTUATOR(MyActuator);
+    OPACK_ACTION(MoveTo);
+    struct Done {};
+
     auto world = opack::create_world();
     opack::batch_init<
         MyAgent,
