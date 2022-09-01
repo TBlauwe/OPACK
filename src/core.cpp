@@ -95,6 +95,8 @@ void opack::import_opack(World& world)
 	// ----
 	world.component<Timestamp>()
 		.member<float, flecs::units::duration::Seconds>("value");
+	world.component<Timer>()
+		.member<float, flecs::units::duration::Seconds>("value");
 
 	// Phases
 	// --------
@@ -153,20 +155,19 @@ void opack::import_opack(World& world)
 		.kind<Act::Update>()
 		.term(flecs::IsA).second<opack::Action>()
         .term<Delay>().not_()
-		.each([](flecs::entity entity, EventCallable& callable)
+        .term<End, Timestamp>().not_()
+		.each([](flecs::iter& it, size_t index, OnUpdate& callable)
 			{
-		        callable.func(entity);
+		        callable.func(it.entity(index), it.delta_time());
 			}
 	).child_of<opack::world::dynamics>();
 
 	world.system<Timer>("TimerFinishedActions")
 		.kind<Act::Update>()
-		.term_at(1).read_write()
 		.term(flecs::IsA).second<opack::Action>()
-		.term<End>().write()
 		.each([](flecs::entity e, Timer& timer)
 			{
-				if(timer.value == 0.0)
+				if(timer.value == 0.0f)
 		            e.remove<Timer>();
 			}
 	).child_of<opack::world::dynamics>();
@@ -177,6 +178,7 @@ void opack::import_opack(World& world)
 		.term(flecs::IsA).second<opack::Action>()
 		.term<Timer>().not_()
 		.term<Delay>().not_()
+        .term<End, Timestamp>().not_()
 		.each([](flecs::iter& it, size_t index, EventCallable& callable)
 			{
 				auto entity = it.entity(index);

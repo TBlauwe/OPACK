@@ -135,6 +135,13 @@ namespace opack
 		actuator.template add<Doing>(action);
 	}
 
+	/** Get the @c n -nth initiator of provided @c action.*/
+	inline Entity initiator(Entity& action, size_t n = 0)
+	{
+		auto entity = action.target<By>(static_cast<int>(n));
+		return entity.mut(action);
+	}
+
 	template<ActionPrefab T>
 	void on_action_begin(World& world, std::function<void(Entity)> func)
 	{
@@ -142,7 +149,7 @@ namespace opack
 	}
 
 	template<ActionPrefab T>
-	void on_action_update(World& world, std::function<void(Entity)> func)
+	void on_action_update(World& world, std::function<void(Entity, float)> func)
 	{
 		opack::prefab<T>(world).template set<OnUpdate>({ func });
 	}

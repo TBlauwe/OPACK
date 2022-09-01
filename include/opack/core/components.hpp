@@ -62,12 +62,17 @@ namespace opack
 		std::function<void(Entity)> func;
 	};
 
+	struct EventCallableWithDelta
+	{
+		std::function<void(Entity, float)> func;
+	};
+
 	struct Begin {};
 	struct Cancel {};
 	struct End {};
 
 	using OnBegin = flecs::pair<Begin, EventCallable>;
-	using OnUpdate = EventCallable;
+	using OnUpdate = EventCallableWithDelta;
 	using OnCancel = flecs::pair<Cancel, EventCallable>;
 	using OnEnd = flecs::pair<End, EventCallable>;
 
