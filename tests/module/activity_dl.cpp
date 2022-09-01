@@ -10,6 +10,7 @@ TEST_CASE("API Activity-DL")
     ADL_ACTIVITY(Activity_B);
     struct ReadyA {};
     struct ReadyB {};
+	struct Data { float value{ 1.0 }; };
 
     OPACK_ACTION(Action1);
     OPACK_ACTION(Action2);
@@ -21,18 +22,18 @@ TEST_CASE("API Activity-DL")
 	world.component<ReadyB>();
 
 	opack::init<Action1>(world);
+	opack::init<Action2>(world);
+	opack::init<Action3>(world);
 	opack::init<MyAgent>(world);
 	auto agent = opack::spawn<MyAgent>(world);
 
 	auto root = adl::activity<Activity_A>(world);
-	root.emplace<adl::ContextualCondition>([](flecs::entity task, flecs::entity agent) {return agent.has<ReadyA>(); });
 	CHECK(adl::children_count(root) == 0);
 	CHECK(root.get<adl::Constructor>()->logical_constructor == adl::LogicalConstructor::AND);
 	CHECK(root.get<adl::Constructor>()->temporal_constructor == adl::TemporalConstructor::SEQ_ORD);
 	CHECK(adl::size(root) == 1);
 
 	auto task_1 = adl::action<Action1>(root);
-	task_1.emplace<adl::ContextualCondition>([](flecs::entity task, flecs::entity agent) {return agent.has<ReadyB>();});
 	CHECK(adl::has_children(root));
 	CHECK(adl::children_count(root) == 1);
 	CHECK(adl::size(root) == 2);
@@ -40,6 +41,24 @@ TEST_CASE("API Activity-DL")
 	SUBCASE("Instanciation")
 	{
         auto instance = adl::instantiate<Activity_A>(world);
+        CHECK(instance.get<adl::Constructor>()->logical_constructor == adl::LogicalConstructor::AND);
+        CHECK(instance.get<adl::Constructor>()->temporal_constructor == adl::TemporalConstructor::SEQ_ORD);
+        CHECK(adl::children_count(instance) == 1);
+        CHECK(!adl::is_satisfied(instance, agent));
+	}
+
+	SUBCASE("Context")
+	{
+        auto instance = adl::instantiate<Activity_A>(world);
+
+		adl::context_target<opack::Agent>(instance, agent);
+		adl::context_value<Data>(instance, {3.0});
+		instance.children([&](flecs::entity child)
+			{
+				CHECK(adl::context_target<opack::Agent>(child) == agent);
+				CHECK(adl::context_value<Data>(child)->value == 3.0);
+			});
+
         CHECK(instance.get<adl::Constructor>()->logical_constructor == adl::LogicalConstructor::AND);
         CHECK(instance.get<adl::Constructor>()->temporal_constructor == adl::TemporalConstructor::SEQ_ORD);
         CHECK(adl::children_count(instance) == 1);
@@ -56,76 +75,83 @@ TEST_CASE("API Activity-DL")
 
 	std::vector<flecs::entity> actions{};
 
-	SUBCASE("0 possible actions because agent is not ready yet") 
+	SUBCASE("Contextual Condition")
 	{
-		auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
-		CHECK(actions.size() == 0);
-		CHECK(!success);
-		CHECK(!adl::has_task_in_progress(root));
-	}
+        root.emplace<adl::ContextualCondition>([](flecs::entity task, flecs::entity agent) {return agent.has<ReadyA>(); });
+        task_1.emplace<adl::ContextualCondition>([](flecs::entity task, flecs::entity agent) {return agent.has<ReadyB>();});
+        SUBCASE("0 possible actions because agent is not ready yet") 
+        {
+            auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
+            CHECK(actions.size() == 0);
+            CHECK(!success);
+            CHECK(!adl::has_task_in_progress(root));
+        }
 
-	agent.add<ReadyA>();
-	SUBCASE("0 possible actions because agent is not ready yet") 
-	{
-		auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
-		CHECK(actions.size() == 0);
-		CHECK(!success);
-		CHECK(!adl::has_task_in_progress(root));
-	}
+        agent.add<ReadyA>();
+        SUBCASE("0 possible actions because agent is not ready yet") 
+        {
+            auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
+            CHECK(actions.size() == 0);
+            CHECK(!success);
+            CHECK(!adl::has_task_in_progress(root));
+        }
 
-	agent.add<ReadyB>();
-	SUBCASE("1 possible actions since agent is ready") 
-	{
-		auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
-		CHECK(actions.size() == 1);
-		CHECK(!success);
-		CHECK(!adl::has_task_in_progress(root));
-	}
+        agent.add<ReadyB>();
+        SUBCASE("1 possible actions since agent is ready") 
+        {
+            auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
+            CHECK(actions.size() == 1);
+            CHECK(!success);
+            CHECK(!adl::has_task_in_progress(root));
+        }
 
-	SUBCASE("Check success")
-	{
-		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::AND, adl::TemporalConstructor::IND);
-		auto a1 = adl::action<Action1>(root);
+        SUBCASE("Check success")
+        {
+            auto root = adl::instantiate<Activity_A>(world);
+            root.add(adl::LogicalConstructor::AND).add(adl::TemporalConstructor::IND);
+            auto a1 = adl::action<Action1>(root);
 
-		SUBCASE("Fail because there are still potential actions") // Since no task have been finished successfuly
-		{
-			auto success = adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 1);
-			CHECK(!success);
-			CHECK(!adl::has_task_in_progress(root));
-		}
+            SUBCASE("Fail because there are still potential actions") // Since no task have been finished successfuly
+            {
+                auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
+                CHECK(actions.size() == 1);
+                CHECK(!success);
+                CHECK(!adl::has_task_in_progress(root));
+            }
 
-		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
-		SUBCASE("Fail because are still potential actions") // Since task is not finished
-		{
-			auto success = adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
-			CHECK(!success);
-			CHECK(adl::has_task_in_progress(root));
-		}
+            a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
+            SUBCASE("Fail because are still potential actions") // Since task is not finished
+            {
+                auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
+                CHECK(actions.size() == 0);
+                CHECK(!success);
+                CHECK(adl::has_task_in_progress(root));
+            }
 
-		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-		SUBCASE("Failed activity") // Since task is finished but not satisfied
-		{
-			auto success = adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
-			CHECK(!success);
-			CHECK(!adl::has_task_in_progress(root));
-		}
+            a1.set<opack::End, opack::Timestamp>({ 0.0f });
+            SUBCASE("Failed activity") // Since task is finished but not satisfied
+            {
+                auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
+                CHECK(actions.size() == 0);
+                CHECK(!success);
+                CHECK(!adl::has_task_in_progress(root));
+            }
 
-		a1.add<adl::Satisfied>();
-		SUBCASE("Succeeded activity") // Since task is finished  and satisfied
-		{
-			auto success = adl::potential_actions(root, std::back_inserter(actions));
-			CHECK(actions.size() == 0);
-			CHECK(success);
-			CHECK(!adl::has_task_in_progress(root));
-		}
+            a1.add<adl::Satisfied>();
+            SUBCASE("Succeeded activity") // Since task is finished  and satisfied
+            {
+                auto success = adl::potential_actions(root, std::back_inserter(actions), agent);
+                CHECK(actions.size() == 0);
+                CHECK(success);
+                CHECK(!adl::has_task_in_progress(root));
+            }
+        }
 	}
 
 	SUBCASE("Traversal")
 	{
-		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::OR, adl::TemporalConstructor::IND);
+		auto root = adl::instantiate<Activity_A>(world);
+		root.add(adl::LogicalConstructor::OR).add(adl::TemporalConstructor::IND);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -139,12 +165,12 @@ TEST_CASE("API Activity-DL")
 
 	SUBCASE("IND AND")
 	{
-		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::AND, adl::TemporalConstructor::IND);
+		auto root = adl::instantiate<Activity_A>(world);
+		root.add(adl::LogicalConstructor::AND).add(adl::TemporalConstructor::IND);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
 
-		std::vector<flecs::entity> actions{};
 		SUBCASE("All tasks")
 		{
 			auto success = adl::potential_actions(root, std::back_inserter(actions));
@@ -221,7 +247,8 @@ TEST_CASE("API Activity-DL")
 
 	SUBCASE("IND OR")
 	{
-		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::OR, adl::TemporalConstructor::IND);
+		auto root = adl::instantiate<Activity_A>(world);
+		root.add(adl::LogicalConstructor::OR).add(adl::TemporalConstructor::IND);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -302,7 +329,8 @@ TEST_CASE("API Activity-DL")
 
 	SUBCASE("SEQ AND")
 	{
-		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ);
+		auto root = adl::instantiate<Activity_A>(world);
+		root.add(adl::LogicalConstructor::AND).add(adl::TemporalConstructor::SEQ);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -387,7 +415,8 @@ TEST_CASE("API Activity-DL")
 
 	SUBCASE("SEQ OR")
 	{
-		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::OR, adl::TemporalConstructor::SEQ);
+		auto root = adl::instantiate<Activity_A>(world);
+		root.add(adl::LogicalConstructor::OR).add(adl::TemporalConstructor::SEQ);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -480,7 +509,8 @@ TEST_CASE("API Activity-DL")
 	
 	SUBCASE("SEQ_ORD OR")
 	{
-		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::OR, adl::TemporalConstructor::SEQ_ORD);
+		auto root = adl::instantiate<Activity_A>(world);
+		root.add(adl::LogicalConstructor::OR).add(adl::TemporalConstructor::SEQ_ORD);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -565,7 +595,8 @@ TEST_CASE("API Activity-DL")
 
 	SUBCASE("SEQ_ORD AND")
 	{
-		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ_ORD);
+		auto root = adl::instantiate<Activity_A>(world);
+		root.add(adl::LogicalConstructor::AND).add(adl::TemporalConstructor::SEQ_ORD);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -656,7 +687,8 @@ TEST_CASE("API Activity-DL")
 
 	SUBCASE("ORD AND")
 	{
-		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::AND, adl::TemporalConstructor::ORD);
+		auto root = adl::instantiate<Activity_A>(world);
+		root.add(adl::LogicalConstructor::AND).add(adl::TemporalConstructor::ORD);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
@@ -746,7 +778,8 @@ TEST_CASE("API Activity-DL")
 
 	SUBCASE("ORD OR")
 	{
-		auto root = adl::activity<Activity_A>(world, adl::LogicalConstructor::OR, adl::TemporalConstructor::ORD);
+		auto root = adl::instantiate<Activity_A>(world);
+		root.add(adl::LogicalConstructor::OR).add(adl::TemporalConstructor::ORD);
 		auto a1 = adl::action<Action1>(root);
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);

@@ -192,6 +192,47 @@ namespace opack
         OPACK_FOLDERS_TYPEDEF(behaviours);
 	};
 
+	// Phases
+	//--------
+	/** @addtogroup Phases
+
+	Phases are a mean provided by flecs to organize systems call order. Here, we define three
+	groups of 3 phases : "Perceive", "Reason" and "Act". Each are also divided by 3 other phases :
+	"PreUpdate", "Update", "PostUpdate".
+
+    During "Perceive" phases, all operations/systems related to this, otherwise, those that manipulate P,
+    must be finished.
+
+    Afterwards, during "Reason" phases, this is where all reasoning is happening, even action selection.
+
+    Phases in "Act" are reserved to handle actions update. Three phases are necessary in order to begin action,
+    tick them and ending them.
+
+	@{
+	*/
+	namespace Perceive
+	{
+	    struct PreUpdate{};
+	    struct Update{};
+	    struct PostUpdate{};
+	};
+
+	namespace Reason
+	{
+	    struct PreUpdate{};
+	    struct Update{};
+	    struct PostUpdate{};
+	};
+
+	namespace Act
+	{
+	    struct PreUpdate{};
+	    struct Update{};
+	    struct PostUpdate{};
+	};
+
+	/** @}*/ //End of group
+
 	// A - Action
 	//-----------
 	using Actions_t = std::vector<flecs::entity>;

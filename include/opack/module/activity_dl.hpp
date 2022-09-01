@@ -35,6 +35,8 @@ namespace adl
         using entities_folder_t = activities;
 	    using prefabs_folder_t = activities::prefabs;
 	};
+    struct Context {};
+	struct Task {};
 	template<typename T>
 	concept ActivityPrefab = opack::SubPrefab<T> && std::derived_from<T, Activity>;
 
@@ -98,6 +100,65 @@ namespace adl
 	bool check_satisfaction(opack::Entity task, opack::Entity agent = opack::Entity::null());
 	bool is_potential(opack::Entity task, opack::Entity agent = opack::Entity::null());
 	bool has_task_in_progress(opack::Entity task, opack::Entity agent = opack::Entity::null());
+
+	/**
+	 *@brief Retrieve pointer to context value @c T, from current task or parent task.
+	 *
+	 */
+	template<typename T>
+	const T* context_value(opack::Entity task)
+	{
+		const T* result = task.get<T>();
+		if(!result)
+		{
+			auto parent = task.parent();
+			if (opack::is_a<Task>(parent))
+				result = context_value<T>(parent);
+
+		}
+		return result;
+	}
+
+    /** Set context value @c T, into parent task or itself if no parent. */
+	template<typename T>
+	void context_value(opack::Entity task, T&& value)
+	{
+        auto parent = task.parent();
+		if (opack::is_a<Task>(parent))
+			context_value<T>(parent, std::forward<T>(value));
+		else
+			task.set<T>({ value });
+	}
+
+	/**
+	 *@brief Retrieve entity from context target @c (R, target), from current task or parent task.
+	 *
+	 */
+	template<typename R>
+	opack::Entity context_target(opack::Entity task)
+	{
+		auto result = task.target<R>();
+		if(!result)
+		{
+			auto parent = task.parent();
+			if (opack::is_a<Task>(parent))
+				result = context_target<R>(parent);
+
+		}
+		return result;
+	}
+
+    /** Set context target @c (R,target), into parent task or itself if no parent. */
+	template<typename R>
+	void context_target(opack::Entity task, opack::Entity target)
+	{
+        auto parent = task.parent();
+		if (opack::is_a<Task>(parent))
+			context_target<R>(parent, target);
+		else
+			task.add<R>(target);
+	}
+
 
 	/**
 	 *  Create an activity model refered as @c T.

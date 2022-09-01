@@ -18,7 +18,7 @@ namespace opack
 	/** Relation between an action and an entity.
 	 * Actuator "X" is doing action "Y".
 	 */
-	struct Act {};
+	struct Doing {};
 
 	/** Relation between an action and an entity.
 	 * Action "X" is done "By" entity "Y".
@@ -39,6 +39,9 @@ namespace opack
 	/** Measure since how long it has been added. */
 	struct Duration { float value{ 0.0 }; };
 
+	/** Removed once value reaches zero. */
+	struct Timer { float value{ 1.0 }; };
+
 	/** Holds simulation time. */
 	struct Timestamp
 	{
@@ -54,8 +57,19 @@ namespace opack
 	using TickTimeout = Timeout<size_t>;
 	using TimeTimeout = Timeout<float>;
 
+	struct EventCallable
+	{
+		std::function<void(Entity)> func;
+	};
+
 	struct Begin {};
+	struct Cancel {};
 	struct End {};
+
+	using OnBegin = flecs::pair<Begin, EventCallable>;
+	using OnUpdate = EventCallable;
+	using OnCancel = flecs::pair<Cancel, EventCallable>;
+	using OnEnd = flecs::pair<End, EventCallable>;
 
     /** Relation used to indicate active behaviors. */
 	struct HasBehaviour {};

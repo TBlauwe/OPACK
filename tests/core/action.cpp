@@ -23,9 +23,9 @@ TEST_CASE("Action API")
     opack::act<MyActuator>(e1, action);
     CHECK(opack::current_action<MyActuator>(e1) == action);
 
-    opack::on_action_begin<MoveTo>(world, [](opack::Entity agent, opack::Entity actuator, opack::Entity action)
+    opack::on_action_begin<MoveTo>(world, [](opack::Entity action)
         {
-            agent.add<Done>();
+            action.target<opack::By>().add<Done>();
         }
     );
 

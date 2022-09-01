@@ -12,7 +12,10 @@ void adl::import(opack::World& world)
         scope = world.entity("::opack::modules::adl").add(flecs::Module);
         world.set_scope(scope);
         {
-            opack::prefab<Activity>(world);
+			opack::prefab<Task>(world)
+				.add<LogicalConstructor>()
+				.add<TemporalConstructor>();
+            opack::prefab<Activity>(world).is_a<Task>();
 
             world.component<Satisfied>();
             world.component<Order>()
@@ -42,7 +45,7 @@ void adl::import(opack::World& world)
 
 opack::Entity adl::task(const char* name, opack::Entity parent, LogicalConstructor logical, TemporalConstructor temporal, size_t arity_max, size_t arity_min)
 {
-	auto entity = parent.world().prefab(name);
+	auto entity = parent.world().prefab(name).is_a<Task>();
 	entity.child_of(parent);
 	entity.set<Order>({adl::children_count(parent)});
 	entity.add(logical);

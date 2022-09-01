@@ -10,6 +10,7 @@
 #include <flecs.h>
 
 #include <opack/core/api_types.hpp>
+#include <opack/core/components.hpp>
 #include <opack/utils/type_name.hpp>
 
 #include <functional>
@@ -98,7 +99,7 @@ namespace opack
 	template<ActuatorPrefab T>
 	Entity current_action(Entity entity)
 	{
-		return opack::actuator<T>(entity).template target<Act>();
+		return opack::actuator<T>(entity).template target<Doing>();
 	}
 
 	/**
@@ -121,35 +122,40 @@ namespace opack
 		// Action without initiator are cleaned up, so we need to remove relation from previous action.
 		auto world = initiator.world();
 		auto actuator = opack::actuator<T>(initiator);
-		auto last_action = actuator.template target<Act>();
+		auto last_action = actuator.template target<Doing>();
 		if (last_action)
 		{
 			last_action.mut(world)
-		        .template set<End, Timestamp>({world.time()})
-			    .template remove<By>(initiator);
+				.template add<Cancel>();
 		}
 		
 		action.mut(world)
 			.add<By>(initiator)
 			.add<Actuator>(actuator);
-		actuator.template add<Act>(action);
+		actuator.template add<Doing>(action);
 	}
 
 	template<ActionPrefab T>
-	void on_action_begin(World& world, std::function<void(Entity, Entity, Entity)> func)
+	void on_action_begin(World& world, std::function<void(Entity)> func)
 	{
-		world.system<Begin, flecs::pair<Begin, Timestamp>>()
-			.kind(flecs::PostUpdate)
-			.term(flecs::IsA).second<T>()
-			.each([func](flecs::entity action, Begin, Timestamp& value)
-				{
-					func(action.target<By>(), action.target<Actuator>(), action);
-				}).template child_of<world::dynamics>();
+		opack::prefab<T>(world).template set<OnBegin>({ func });
 	}
 
 	template<ActionPrefab T>
-	void on_action_end(World& world, std::function<void(Entity, Entity, Entity)> func)
+	void on_action_update(World& world, std::function<void(Entity)> func)
 	{
-		//TODO
+		opack::prefab<T>(world).template set<OnUpdate>({ func });
+	}
+
+	template<ActionPrefab T>
+	void on_action_cancel(World& world, std::function<void(Entity)> func)
+	{
+		opack::prefab<T>(world).template set<OnCancel>({ func });
+	}
+
+	template<ActionPrefab T>
+	void on_action_end(World& world, std::function<void(Entity)> func)
+	{
+		opack::prefab<T>(world).template set<OnEnd>({ func });
 	}
 }

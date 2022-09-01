@@ -1,29 +1,36 @@
 #include <opack/core.hpp>
-#include <opack/examples/all.hpp>
+#include <opack/module/activity_dl.hpp>
+#include <opack/module/fipa_acl.hpp>
+#include <fmt/compile.h>
+#include <iostream>
+#include <windows.h>
+#include <shellapi.h>
 
 using namespace opack;
 
-int main(int argc, char* argv[])
+int main()
 {
 	size_t choice{ 0 };
-	std::cout << "========== Menu =========\n";
-	std::cout << "[1] Empty\n";
-	std::cout << "[2] SimpleSim\n";
-	std::cout << "[3] MedicalSim\n";
-	std::cout << "Choose a simulation : ";
+	fmt::print("========== Menu =========\n");
+	fmt::print("[1] Empty\n");
+	fmt::print("[2] w\ modules\n");
+	//fmt::print("[2] SimpleSim\n");
+	//fmt::print("[3] MedicalSim\n");
+	fmt::print("Choose a simulation : ");
 	std::cin >> choice;
+	auto world = create_world();
 	switch (choice)
 	{
+	    case 2:
+		    fipa_acl::import(world);
+		    adl::import(world);
+			break;
 		case 1:
-			EmptySim{argc, argv}.run_with_webapp();
-			break;
-		case 2:
-			SimpleSim{argc, argv}.run_with_webapp();
-			break;
-		case 3:
-			MedicalSim{argc, argv}.run_with_webapp();
-			break;
 		default:
-			std::cout << "Closing...\n";
+			std::cout << "Running empty simulation...\n";
 	}
+	auto url = "https://www.flecs.dev/explorer/?remote=true";
+	fmt::print("Explorer url : {}\n", url);
+	ShellExecute(0, 0, url, 0, 0 , SW_SHOW );
+    run_with_webapp(world);
 }
