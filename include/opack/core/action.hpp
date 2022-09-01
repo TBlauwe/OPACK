@@ -66,7 +66,7 @@ namespace opack
 	/**
 	 * @brief Retrieve instanced actuator @c T for current entity.
 	 *
-	 * WARNING : If you want to retrieve the sense prefab, identified by
+	 * WARNING : If you want to retrieve the actuator prefab, identified by
 	 * @c T, use @ref entity<T>.
 	 */
 	template<ActuatorPrefab T>

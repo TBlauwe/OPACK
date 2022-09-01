@@ -226,7 +226,6 @@ TEST_CASE("API Activity-DL")
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
 
-		std::vector<flecs::entity> actions{};
 		SUBCASE("All tasks")
 		{
 			auto success = adl::potential_actions(root, std::back_inserter(actions));
@@ -308,7 +307,6 @@ TEST_CASE("API Activity-DL")
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
 
-		std::vector<flecs::entity> actions{};
 		SUBCASE("A1 & A2 & A3")
 		{
 			auto success = adl::potential_actions(root, std::back_inserter(actions));
@@ -394,7 +392,6 @@ TEST_CASE("API Activity-DL")
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
 
-		std::vector<flecs::entity> actions{};
 		SUBCASE("A1 & A2 & A3")
 		{
 			auto success = adl::potential_actions(root, std::back_inserter(actions));
@@ -488,7 +485,6 @@ TEST_CASE("API Activity-DL")
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
 
-		std::vector<flecs::entity> actions{};
 		SUBCASE("A1")
 		{
 			auto success = adl::potential_actions(root, std::back_inserter(actions));
@@ -574,7 +570,6 @@ TEST_CASE("API Activity-DL")
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
 
-		std::vector<flecs::entity> actions{};
 		SUBCASE("A1")
 		{
 			auto success = adl::potential_actions(root, std::back_inserter(actions));
@@ -666,7 +661,6 @@ TEST_CASE("API Activity-DL")
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
 
-		std::vector<flecs::entity> actions{};
 		SUBCASE("A1")
 		{
 			auto success = adl::potential_actions(root, std::back_inserter(actions));
@@ -757,7 +751,6 @@ TEST_CASE("API Activity-DL")
 		auto a2 = adl::action<Action2>(root);
 		auto a3 = adl::action<Action3>(root);
 
-		std::vector<flecs::entity> actions{};
 		SUBCASE("A1")
 		{
 			auto success = adl::potential_actions(root, std::back_inserter(actions));
