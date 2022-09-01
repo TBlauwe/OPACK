@@ -135,11 +135,21 @@ void opack::import_opack(World& world)
 			}
 	).child_of<opack::world::dynamics>();
 
+	world.system<Timer>("TimerFinishedActions")
+		.kind<Act::PreUpdate>()
+		.term(flecs::IsA).second<opack::Action>()
+		.each([](flecs::entity e, Timer& timer)
+			{
+				if(timer.value == 0.0f)
+		            e.remove<Timer>();
+			}
+	).child_of<opack::world::dynamics>();
+
 	world.system("StartActions")
 		.kind<Act::PreUpdate>()
 		.term<OnBegin>().optional()
 		.term(flecs::IsA).second<opack::Action>()
-        .term<Begin, Timestamp>().not_().write()
+		.term<Begin, Timestamp>().not_()
         .term<Delay>().not_()
 		.each([](flecs::iter& it, size_t index)
 			{
@@ -159,16 +169,6 @@ void opack::import_opack(World& world)
 		.each([](flecs::iter& it, size_t index, OnUpdate& callable)
 			{
 		        callable.func(it.entity(index), it.delta_time());
-			}
-	).child_of<opack::world::dynamics>();
-
-	world.system<Timer>("TimerFinishedActions")
-		.kind<Act::Update>()
-		.term(flecs::IsA).second<opack::Action>()
-		.each([](flecs::entity e, Timer& timer)
-			{
-				if(timer.value == 0.0f)
-		            e.remove<Timer>();
 			}
 	).child_of<opack::world::dynamics>();
 
@@ -198,6 +198,7 @@ void opack::import_opack(World& world)
 	).child_of<opack::world::dynamics>();
 
 	world.system<Delay>("UpdateDelay")
+		.term<Delay>().write()
 		.each([](flecs::iter& iter, size_t i, Delay& delay)
 			{
 					delay.value -= iter.delta_system_time();
