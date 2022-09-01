@@ -17,21 +17,19 @@ void adl::import(opack::World& world)
 				.add<TemporalConstructor>();
             opack::prefab<Activity>(world).is_a<Task>();
 
-            world.component<Satisfied>();
             world.component<Order>()
                 .member<size_t>("value");
 			world.component<LogicalConstructor>()
 				.constant("AND", static_cast<int>(LogicalConstructor::AND))
-				.constant("OR", static_cast<int>(LogicalConstructor::OR));
+				.constant("OR", static_cast<int>(LogicalConstructor::OR))
+                .add(flecs::Union);
 			world.component<TemporalConstructor>()
 				.constant("IND", static_cast<int>(TemporalConstructor::IND))
 				.constant("SEQ_ORD", static_cast<int>(TemporalConstructor::SEQ_ORD))
 				.constant("ORD", static_cast<int>(TemporalConstructor::ORD))
 				.constant("SEQ", static_cast<int>(TemporalConstructor::SEQ))
-				.constant("PAR", static_cast<int>(TemporalConstructor::PAR));
-			world.component<Constructor>()
-                .member<LogicalConstructor>("logical_constructor")
-                .member<TemporalConstructor>("temporal_constructor");
+				.constant("PAR", static_cast<int>(TemporalConstructor::PAR))
+                .add(flecs::Union);
 
             world.component<ContextualCondition>();
             world.component<FavorableCondition>();
@@ -47,7 +45,7 @@ opack::Entity adl::task(const char* name, opack::Entity parent, LogicalConstruct
 {
 	auto entity = parent.world().prefab(name).is_a<Task>();
 	entity.child_of(parent);
-	entity.set<Order>({adl::children_count(parent)});
+	entity.set<Order>({children_count(parent)});
 	entity.add(logical);
 	entity.add(temporal);
 	entity.set<opack::Arity>({arity_min, arity_max});
@@ -59,23 +57,23 @@ bool adl::has_children(opack::Entity task)
 	return adl::children_count(task) > 0;
 }
 
-bool adl::is_finished(opack::Entity task, opack::Entity agent)
+bool adl::is_finished(opack::Entity task)
 {
 	bool result{ true };
 	if(adl::has_children(task))
 	{
-		ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a temporal and logical constructor.");
+        ecs_assert(task.has<LogicalConstructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a logical constructor component.");
         // False if children are not finished 
-		task.children([&agent, &result](opack::Entity e) {result &= is_finished(e, agent); }); 
-		switch (task.get<Constructor>()->logical_constructor)
+		task.children([&result](opack::Entity e) {result &= is_finished(e); }); 
+		switch (*task.get<LogicalConstructor>())
 		{
 			case LogicalConstructor::AND:
                 // But true if one is and is not satisfied
-				task.children([&agent, &result](opack::Entity e) {result |= is_finished(e, agent) && !is_satisfied(e, agent); });
+				task.children([&result](opack::Entity e) {result |= is_finished(e) && !is_satisfied(e); });
 				break;
 			case LogicalConstructor::OR:
                 // True if one child is finished
-				task.children([&agent, &result](opack::Entity e) {result |= is_finished(e, agent) && is_satisfied(e, agent); });
+				task.children([&result](opack::Entity e) {result |= is_finished(e) && is_satisfied(e); });
 				break;
 		}
 	}
@@ -91,7 +89,6 @@ bool adl::has_started(opack::Entity task)
 	bool result{ false };
 	if(has_children(task))
 	{
-		ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a logical constructor.");
 		task.children([&result](opack::Entity e) {result |= has_started(e); });
 	}
 	else
@@ -101,9 +98,9 @@ bool adl::has_started(opack::Entity task)
 	return result;
 }
 
-bool adl::in_progress(opack::Entity task, opack::Entity agent)
+bool adl::in_progress(opack::Entity task)
 {
-	return has_started(task) && !is_finished(task, agent);
+	return has_started(task) && !is_finished(task);
 }
 
 size_t adl::order(opack::Entity task)
@@ -128,52 +125,47 @@ opack::Entity adl::parent_of(opack::Entity task)
 	return task.target(flecs::ChildOf);
 }
 
-bool adl::check_satisfaction(opack::Entity task, opack::Entity agent)
-{
-	return (task.has<Satisfied>() && !task.has<SatisfactionCondition>()) || (task.has<SatisfactionCondition>() && task.get<SatisfactionCondition>()->func(task, agent));
-}
-
-bool adl::is_satisfied(opack::Entity task, opack::Entity agent)
+bool adl::is_satisfied(opack::Entity task)
 {
 	bool result{ true };
 	if(has_children(task))
 	{
-		ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a temporal and logical constructor.");
-		switch (task.get<Constructor>()->logical_constructor)
+		ecs_assert(task.has<LogicalConstructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a logical constructor.");
+		switch (*task.get<LogicalConstructor>())
 		{
 			case LogicalConstructor::AND:
                 // False if one child is not satisfied
-				task.children([&agent, &result](opack::Entity e) {result &= is_satisfied(e, agent); });
+				task.children([&result](opack::Entity e) {result &= is_satisfied(e); });
 				break;
 			case LogicalConstructor::OR:
 				result = false;  // True if one child is satisfied
-				task.children([&agent, &result](opack::Entity e) {result |= is_satisfied(e, agent); });
+				task.children([&result](opack::Entity e) {result |= is_satisfied(e); });
 				break;
 		}
 	}
 	else
 	{
-		result = check_satisfaction(task, agent);
+		result = !task.has<SatisfactionCondition>() || task.get<SatisfactionCondition>()->func(task);
 	}
 	return result;
 }
 
-bool adl::is_potential(opack::Entity task, opack::Entity agent)
+bool adl::is_potential(opack::Entity task)
 {
-	if (is_satisfied(task, agent) || in_progress(task, agent))
+	if (is_satisfied(task) || in_progress(task))
 		return false;
     if (task.has<ContextualCondition>())
-        return task.get<ContextualCondition>()->func(task, agent);
+        return task.get<ContextualCondition>()->func(task);
     return true;
 }
 
-bool adl::has_task_in_progress(opack::Entity task, opack::Entity agent)
+bool adl::has_task_in_progress(opack::Entity task)
 {
 	if(has_children(task))
 	{
 		bool result{ false };
-		task.children([&agent, &result](opack::Entity e) {result |= has_task_in_progress(e, agent); }); // False if one child is not satisfied
+		task.children([&result](opack::Entity e) {result |= has_task_in_progress(e); }); // False if one child is not satisfied
 		return result;
 	}
-    return in_progress(task, agent);
+    return in_progress(task);
 }

@@ -12,11 +12,7 @@
 
 #include <flecs.h>
 
-#include <opack/core/api_types.hpp>
-#include <opack/core/components.hpp>
-#include <opack/core/action.hpp>
-#include <opack/utils/flecs_helper.hpp>
-#include <opack/utils/type_name.hpp>
+#include <opack/core.hpp>
 
 /** Shorthand for creating a type.*/
 #define ADL_ACTIVITY(name) OPACK_SUB_PREFAB(name, adl::Activity)
@@ -28,17 +24,21 @@
 /** Namespace for API related to Activity-DL. */
 namespace adl
 {
+	/** Import Activity-DL in your world. */
+	void import(opack::World& world);
 
+	struct Task {};
     struct activities { struct prefabs {}; };
 	struct Activity : public opack::_::root<Activity>
 	{
         using entities_folder_t = activities;
 	    using prefabs_folder_t = activities::prefabs;
 	};
-    struct Context {};
-	struct Task {};
+
 	template<typename T>
 	concept ActivityPrefab = opack::SubPrefab<T> && std::derived_from<T, Activity>;
+
+    struct Context {};
 
 	/** Component to hold order of a task in regards to its parent. */
 	struct Order
@@ -49,17 +49,9 @@ namespace adl
 	enum class LogicalConstructor { AND, OR };
 	enum class TemporalConstructor { IND, SEQ_ORD, ORD, SEQ, PAR };
 
-	struct Constructor
-	{
-		LogicalConstructor logical_constructor {LogicalConstructor::AND };
-		TemporalConstructor temporal_constructor {TemporalConstructor::SEQ_ORD };
-	};
-
 	struct Condition
 	{
-		Condition() = default;
-        Condition(std::function<bool(opack::Entity task, opack::Entity entity)>&& f) : func(std::move(f)) { }
-		std::function<bool(opack::Entity task, opack::Entity entity)> func;
+		std::function<bool(opack::Entity task)> func;
 	};
 
 	struct ContextualCondition : Condition { using Condition::Condition; };
@@ -67,11 +59,6 @@ namespace adl
 	struct NomologicalCondition : Condition { using Condition::Condition; };
 	struct RegulatoryCondition : Condition { using Condition::Condition; };
 	struct SatisfactionCondition : Condition { using Condition::Condition; };
-
-	struct Satisfied {};
-
-	/** Import Activity-DL in your world. */
-	void import(opack::World& world);
 
 	/** Create a task named @c name, with @c parent as parent. */
 	opack::Entity task(const char* name,
@@ -82,12 +69,11 @@ namespace adl
 		size_t arity_min = 1
 	);
 
-	/** A task is considered to be a task only if it has children. */
 	bool has_children(opack::Entity task);
 
-	bool is_finished(opack::Entity task, opack::Entity agent = opack::Entity::null());
+	bool is_finished(opack::Entity task);
 	bool has_started(opack::Entity task);
-	bool in_progress(opack::Entity task, opack::Entity agent = opack::Entity::null());
+	bool in_progress(opack::Entity task);
 
 	size_t order(opack::Entity task);
 
@@ -96,10 +82,9 @@ namespace adl
 
 	opack::Entity parent_of(opack::Entity task);
 
-	bool is_satisfied(opack::Entity task, opack::Entity agent = opack::Entity::null());
-	bool check_satisfaction(opack::Entity task, opack::Entity agent = opack::Entity::null());
-	bool is_potential(opack::Entity task, opack::Entity agent = opack::Entity::null());
-	bool has_task_in_progress(opack::Entity task, opack::Entity agent = opack::Entity::null());
+	bool is_satisfied(opack::Entity task);
+	bool is_potential(opack::Entity task);
+	bool has_task_in_progress(opack::Entity task);
 
 	/**
 	 *@brief Retrieve pointer to context value @c T, from current task or parent task.
@@ -173,7 +158,8 @@ namespace adl
 	)
 	{
 		return opack::init<T>(world)
-			.template set<Constructor>({ logical, temporal })
+			.template add(logical)
+			.template add(temporal)
 			.template set<opack::Arity>({ arity_min, arity_max })
 			.template child_of<Activity::prefabs_folder_t>();
 	}
@@ -208,7 +194,7 @@ namespace adl
 	opack::Entity action(opack::Entity parent)
 	{
 		auto world = parent.world();
-		return opack::spawn<T>(world)
+		return world.prefab().is_a<T>()
 	        .child_of(parent)
 	        .template add<opack::DoNotClean>()
 		    .template set<Order>({ children_count(parent) });
@@ -216,20 +202,20 @@ namespace adl
 
 
 	template<typename OutputIterator>
-	bool potential_actions(opack::Entity task, OutputIterator out, opack::Entity agent = opack::Entity::null())
+	bool potential_actions(opack::Entity task, OutputIterator out)
 	{
 		if (adl::is_finished(task))
-			return adl::is_satisfied(task, agent);
+			return adl::is_satisfied(task);
 
 		if (!adl::has_children(task))
 		{
 			ecs_assert(opack::is_a<opack::Action>(task), ECS_INVALID_PARAMETER, "Leaf task is not an action.");
-			if (adl::is_potential(task, agent))
+			if (adl::is_potential(task))
 				*out++ = task;
 		}
 		else
 		{
-			ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a logical and temporal constructor component.");
+			ecs_assert(task.has<TemporalConstructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a temporal constructor component.");
 
 			// 1. Retrieve all children and sort them by their orders.
 			std::map<size_t, opack::Entity> subtasks{};
@@ -245,36 +231,36 @@ namespace adl
 			bool has_active_task{ false };
 			for (auto [order, subtask] : subtasks)
 			{
-				has_active_task |= adl::has_started(subtask) && !adl::is_finished(subtask, agent);
+				has_active_task |= adl::has_started(subtask) && !adl::is_finished(subtask);
 			}
 
 			// 3. Determine, based on temporal constructor, which potential actions are added.
 			bool first{ true };
 			bool succeeded{ false };
-			switch (task.get<Constructor>()->temporal_constructor)
+			switch (*task.get<TemporalConstructor>())
 			{
 			case TemporalConstructor::PAR: // TODO
 			case TemporalConstructor::IND: // Every potential actions are added, even if another isn't finished.
 				for (auto [order, subtask] : subtasks)
 				{
-					succeeded |= potential_actions(subtask, out, agent);
+					succeeded |= potential_actions(subtask, out);
 				}
 				break;
 			case TemporalConstructor::SEQ: // Every potential actions are added, if last one is finished
 				for (auto [order, subtask] : subtasks)
 				{
-					if (!has_active_task && !adl::is_satisfied(subtask, agent))
+					if (!has_active_task && !adl::is_satisfied(subtask))
 					{
-						succeeded |= potential_actions(subtask, out, agent);
+						succeeded |= potential_actions(subtask, out);
 					}
 				}
 				break;
 			case TemporalConstructor::SEQ_ORD: // First non satisfied task is next, if last one is finished.
 				for (auto [order, subtask] : subtasks)
 				{
-					if (!has_active_task && first && (!adl::is_satisfied(subtask, agent) && !adl::is_finished(subtask, agent)))
+					if (!has_active_task && first && (!adl::is_satisfied(subtask) && !adl::is_finished(subtask)))
 					{
-						succeeded |= potential_actions(subtask, out, agent);
+						succeeded |= potential_actions(subtask, out);
 						first = false;
 					}
 				}
@@ -282,9 +268,9 @@ namespace adl
 			case TemporalConstructor::ORD: // First non satisfied task is next, even if last one isn't finished.
 				for (auto [order, subtask] : subtasks)
 				{
-					if (first && (!adl::is_satisfied(subtask, agent) && !adl::has_started(subtask)))
+					if (first && (!adl::is_satisfied(subtask) && !adl::has_started(subtask)))
 					{
-						succeeded |= potential_actions(subtask, out, agent);
+						succeeded |= potential_actions(subtask, out);
 						first = false;
 					}
 				}
