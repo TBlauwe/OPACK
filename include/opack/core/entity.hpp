@@ -21,7 +21,7 @@ namespace opack
     @brief Returns true if given entity is an instance of given prefab
 
     @tparam T Prefab's type
-    @param entity 
+    @param entity to check 
     @return A prefab entity instantiated from prefab @c T.
 
     Usage :

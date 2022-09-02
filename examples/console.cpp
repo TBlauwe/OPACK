@@ -1,5 +1,5 @@
 #include <opack/core.hpp>
-#include <opack/module/activity_dl.hpp>
+#include <opack/module/adl.hpp>
 #include <opack/module/fipa_acl.hpp>
 #include <fmt/compile.h>
 #include <iostream>
@@ -13,7 +13,7 @@ int main()
 	size_t choice{ 0 };
 	fmt::print("========== Menu =========\n");
 	fmt::print("[1] Empty\n");
-	fmt::print("[2] w\ modules\n");
+	fmt::print("[2] w\\ modules\n");
 	//fmt::print("[2] SimpleSim\n");
 	//fmt::print("[3] MedicalSim\n");
 	fmt::print("Choose a simulation : ");

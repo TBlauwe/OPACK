@@ -11,6 +11,6 @@ int main(int, char* [])
     flecs::world ecs;
     auto prefab = ecs.entity().add(TileStatus::Free); 
     auto entity = ecs.entity().is_a(prefab); 
-    std::cout << "Entity has tile   : " << entity.has<TileStatus>() << "\n";
-    std::cout << "Entity tile value : " << static_cast<int>(*entity.get<TileStatus>()) << "\n";
+    ecs_assert(entity.has<TileStatus>(), ECS_INVALID_OPERATION, "");
+    ecs_assert(entity.get<TileStatus>() != nullptr, ECS_INVALID_OPERATION, "Assert here");
 }

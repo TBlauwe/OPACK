@@ -82,7 +82,10 @@ set(HEADER_LIST
     "include/opack/operations/basic.hpp" 
     "include/opack/operations/influence_graph.hpp" 
     "include/opack/module/fipa_acl.hpp" 
-    "include/opack/module/activity_dl.hpp"
+    "include/opack/module/adl/types.hpp"
+    "include/opack/module/adl/components.hpp"
+    "include/opack/module/adl/api.hpp"
+    "include/opack/module/adl.hpp"
 )
 
 set(SOURCE_LIST 
