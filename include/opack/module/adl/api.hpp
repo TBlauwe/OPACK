@@ -172,6 +172,10 @@ namespace adl
 		    .template set<Order>({ children_count(parent) });
 	}
 
+	/** Returns an ordered map of @c task children. */
+	std::map<size_t, opack::Entity> children(opack::Entity task);
+
+	/** Add potential actions to output iterator @c out and returns true if task is satisfied.*/
 	template<typename OutputIterator>
 	bool potential_actions(opack::Entity task, OutputIterator out)
 	{

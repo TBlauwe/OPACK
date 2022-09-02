@@ -162,6 +162,19 @@ bool adl::is_potential(opack::Entity task)
     return check_condition<Contextual>(task);
 }
 
+std::map<size_t, opack::Entity> adl::children(opack::Entity task)
+{
+    std::map<size_t, opack::Entity> subtasks{};
+    task.children
+    (
+        [&subtasks](opack::Entity e)
+        {
+            subtasks.emplace(order(e), e);
+        }
+    );
+    return subtasks;
+}
+
 bool adl::in_progress(opack::Entity task)
 {
 	if(has_children(task))
