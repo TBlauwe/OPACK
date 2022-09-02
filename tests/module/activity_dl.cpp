@@ -156,24 +156,19 @@ TEST_CASE("API Activity-DL")
             }
         }
 	}
+
+	SUBCASE("Traversal")
+	{
+		auto instance = opack::spawn<Activity_A>(world);
+
+		int counter { 0 };
+		adl::traverse_dfs(instance, [&counter](flecs::entity task) { counter++; });
+		CHECK(counter == 2);
+	}
 }
 //
 //
 //
-//	SUBCASE("Traversal")
-//	{
-//		auto root = adl::instantiate<Activity_A>(world);
-//		root.add(adl::LogicalConstructor::OR).add(adl::TemporalConstructor::IND);
-//		auto a1 = adl::action<Action1>(root);
-//		auto a2 = adl::action<Action2>(root);
-//		auto a3 = adl::action<Action3>(root);
-//
-//		auto instance = adl::instantiate<Activity_A>(world);
-//
-//		int counter { 0 };
-//		adl::traverse_dfs(instance, [&counter](flecs::entity task) { counter++; });
-//		CHECK(counter == 4);
-//	}
 //
 //	SUBCASE("IND AND")
 //	{
