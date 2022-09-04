@@ -117,7 +117,7 @@ namespace opack
 			flow_system.template term<T, Begin>().write();
 			flow_system.kind(flecs::PreUpdate);
 
-			auto cleaner = world.system<const T>()
+		    world.system<const T>()
 				.template term<T, Begin>()
 				.kind(flecs::PostUpdate)
 				.iter(
@@ -163,7 +163,7 @@ namespace opack
 
 		void build()
 		{
-			auto launcher = flow_system
+			flow_system
 				.iter(
 				[](flecs::iter& it)
 				{
@@ -181,8 +181,8 @@ namespace opack
 		}
 
 	private:
-		flecs::system_builder<const T> flow_system;
 		World& world;
+		flecs::system_builder<const T> flow_system;
 	};
 
 	template<typename TFlow>
@@ -278,9 +278,9 @@ namespace opack
 		}
 
 	private:
+		World& world;
 		flecs::entity operation;
 		flecs::system_builder<TInput...> system_builder;
-		World& world;
 	};
 
 	template<typename TFlow, typename... TOper>
