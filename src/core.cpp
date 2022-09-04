@@ -71,7 +71,7 @@ void opack::import_opack(World& world)
 
 	world.component<Doing>()
 		.add(flecs::Exclusive)
-		.add(flecs::OneOf, entity<Action::entities_folder_t>(world))
+		//.add(flecs::OneOf, entity<Action::entities_folder_t>(world))
 		;
 	world.component<By>(); 
 	world.component<On>();
