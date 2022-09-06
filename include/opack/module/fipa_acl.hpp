@@ -24,6 +24,7 @@ namespace fipa_acl
 	struct Read {};
 	struct Sender {};
 	struct Receiver {};
+	struct Channel {};
 	struct ConversationID 
 	{
 		int value {0};

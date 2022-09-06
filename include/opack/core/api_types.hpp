@@ -294,3 +294,4 @@ namespace opack
 	template<typename T>
 	concept SensePrefab = SubPrefab<T> && std::derived_from<T, Sense>;
 }
+

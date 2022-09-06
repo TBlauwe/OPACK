@@ -178,6 +178,7 @@ void opack::import_opack(World& world)
 
 	world.system<OnEnd>("EndAction")
 		.kind<Act::PostUpdate>()
+		.term_at(1).optional()
 		.term<DoNotClean>().optional()
 		.term(flecs::IsA).second<opack::Action>()
 		.term<Timer>().not_()
@@ -187,7 +188,8 @@ void opack::import_opack(World& world)
 		.each([](flecs::iter& it, size_t index, EventCallable& callable)
 			{
 				auto entity = it.entity(index);
-		        callable.func(entity);
+				if(it.is_set(1))
+					callable.func(entity);
 				if(it.is_set(2))
 				    entity.set<End, Timestamp>({ it.world().time()});
 				else

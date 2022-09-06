@@ -1,16 +1,11 @@
 #include <flecs.h>
-#include <iostream>
 
-enum class TileStatus {
-    Free,
-    Occupied
-};
+struct Head {};
 
 int main(int, char* [])
 {
     flecs::world ecs;
-    auto prefab = ecs.entity().add(TileStatus::Free); 
-    auto entity = ecs.entity().is_a(prefab); 
-    ecs_assert(entity.has<TileStatus>(), ECS_INVALID_OPERATION, "");
-    ecs_assert(entity.get<TileStatus>() != nullptr, ECS_INVALID_OPERATION, "Assert here");
+    auto e = ecs.prefab();
+    ecs.prefab<Head>().child_of(e);
+    ecs.entity().is_a(e); // Assert here
 }
