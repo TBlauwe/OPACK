@@ -7,11 +7,7 @@
  *********************************************************************/
 #pragma once
 
-#ifdef _MSC_VER
-#ifndef __clang__
-#include <iterator> // Needed for MSVC
-#endif
-#endif
+#include <iterator> 
 #include <flecs.h>
 #include <opack/core/api_types.hpp>
 

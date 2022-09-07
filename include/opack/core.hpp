@@ -10,7 +10,6 @@
 
 #include <opack/core/api_types.hpp>
 #include <opack/core/components.hpp>
-#include <opack/core/common.hpp>
 #include <opack/core/world.hpp>
 #include <opack/core/entity.hpp>
 #include <opack/core/action.hpp>

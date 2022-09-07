@@ -22,10 +22,10 @@ TEST_CASE("Operation API Basics")
 {
 	auto world = opack::create_world();
 
-    opack::init<MyActuator>(world);
-    opack::init<Action1>(world);
-    opack::init<Action2>(world);
-    opack::init<Action3>(world);
+    auto actuator = opack::init<MyActuator>(world);
+    opack::init<Action1>(world).set<opack::RequiredActuator>({actuator});
+    opack::init<Action2>(world).set<opack::RequiredActuator>({actuator});
+    opack::init<Action3>(world).set<opack::RequiredActuator>({actuator});
     opack::init<MyAgent>(world)
         .add<MyFlow>()
         .override<Data>().override<State>();
@@ -200,7 +200,7 @@ TEST_CASE("Operation API Basics")
             [](opack::Entity e, typename Op3::inputs& i1)
             {
                 auto action = std::get<opack::df<Op2, opack::Action_t>&>(i1).value;
-                opack::act<MyActuator>(e, action);
+                opack::act(e, action);
                 return opack::make_outputs<Op3>();
             }
         );

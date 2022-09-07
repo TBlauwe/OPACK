@@ -6,9 +6,18 @@
 #pragma once
 
 #include <flecs.h>
+#include <fmt/core.h>
 
 namespace opack::internal
 {
+	template<typename T>
+	void name_entity_after_type(flecs::entity entity)
+	{
+#ifndef OPACK_ORGANIZE
+		entity.set_name(fmt::format("{} - {}", type_name_cstr<T>(), entity).c_str());
+#endif
+	}
+
 	/**
 	 * Get prefab of type @c T.
 	 */
@@ -21,7 +30,7 @@ namespace opack::internal
     template<typename T>
     void organize(flecs::entity& entity)
     {
-#ifndef OPACK_OPTIMIZATION
+#ifndef OPACK_ORGANIZE
         entity.child_of<T>();
 #endif
     }
@@ -29,7 +38,7 @@ namespace opack::internal
     template<typename T>
     void doc_name(flecs::entity& entity, const char* name)
     {
-#ifndef OPACK_OPTIMIZATION
+#ifndef OPACK_ORGANIZE
         entity.set_doc_name(name);
 #endif
     }
@@ -37,10 +46,11 @@ namespace opack::internal
     template<typename T>
     void doc_brief(flecs::entity& entity, const char* brief)
     {
-#ifndef OPACK_OPTIMIZATION
+#ifndef OPACK_ORGANIZE
         entity.set_doc_brief(brief);
 #endif
     }
+
 
     /**
      * Returns the number of children for entity @c e.

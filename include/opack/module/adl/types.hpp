@@ -25,7 +25,7 @@ namespace adl
     struct activities { struct prefabs {}; };
 
 	/** An activity is a tree of tasks, with actions as leaf. */
-	struct Activity : opack::_::root<Activity>
+	struct Activity : opack::internal::root<Activity>
 	{
         using entities_folder_t = activities;
 	    using prefabs_folder_t = activities::prefabs;

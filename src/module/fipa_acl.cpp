@@ -70,14 +70,14 @@ fipa_acl::MessageBuilder::MessageBuilder(opack::World& world)
 	: message(world.entity().is_a<Message>())
 {
 	message.set<ConversationID>({static_cast<int>(message)});
-	opack::_::organize_entity<Message>(message);
+	opack::internal::organize_entity<Message>(message);
 }
 
 fipa_acl::MessageBuilder::MessageBuilder(opack::Entity entity)
 	: message(entity.world().entity().is_a<Message>())
 {
 	message.set<ConversationID>({static_cast<int>(message)});
-	opack::_::organize_entity<Message>(message);
+	opack::internal::organize_entity<Message>(message);
 }
 
 fipa_acl::ReplyBuilder::ReplyBuilder(opack::Entity m)

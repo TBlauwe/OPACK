@@ -64,8 +64,8 @@ namespace opack
 					}
 				}
 		)
-#ifndef OPACK_OPTIMIZE
-		.set_doc_name(fmt::format(FMT_COMPILE("BehaviourActivation : {}"), type_name_cstr<TBeh>()).c_str())
+#ifndef OPACK_ORGANIZE
+		.set_doc_name(fmt::format("BehaviourActivation : {}", type_name_cstr<TBeh>()).c_str())
 		.template child_of<opack::world::dynamics>()
 #endif
 	    ;
@@ -129,8 +129,8 @@ namespace opack
 						}
 					}
 				)
-#ifndef OPACK_OPTIMIZE
-		        .set_doc_name(fmt::format(FMT_COMPILE("CleaningFlow : {}"), type_name_cstr<T>()).c_str())
+#ifndef OPACK_ORGANIZE
+		        .set_doc_name(fmt::format("CleaningFlow : {}", type_name_cstr<T>()).c_str())
 		        .template child_of<opack::world::dynamics>()
 #endif
 						;
@@ -173,8 +173,8 @@ namespace opack
 					}
 				}
 			)
-#ifndef OPACK_OPTIMIZE
-			.set_doc_name(fmt::format(FMT_COMPILE("LaunchingFlow : {}"), type_name_cstr<T>()).c_str())
+#ifndef OPACK_ORGANIZE
+			.set_doc_name(fmt::format("LaunchingFlow : {}", type_name_cstr<T>()).c_str())
 		    .template child_of<opack::world::dynamics>()
 #endif
 				;
@@ -216,7 +216,7 @@ namespace opack
 			system_builder {world.system<TInput...>(type_name_cstr<TOper>())}
 		{
 			//(world.template component<df<TOper, TInput>>().template member<TInput>("value") , ...); // BUG Doesn't work with templated class ?
-#ifndef OPACK_OPTIMIZE
+#ifndef OPACK_ORGANIZE
 			operation.child_of<world::operations>();
 #endif
 			system_builder.kind(flecs::OnUpdate);
@@ -268,8 +268,8 @@ namespace opack
 					}
 				}
 			)
-#ifndef OPACK_OPTIMIZE
-				.set_doc_name(fmt::format(FMT_COMPILE("Operation : {}"), type_name_cstr<TOper>()).c_str())
+#ifndef OPACK_ORGANIZE
+				.set_doc_name(fmt::format("Operation : {}", type_name_cstr<TOper>()).c_str())
 					.template child_of<opack::world::dynamics>()
 #endif
 					;

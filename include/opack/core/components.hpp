@@ -30,6 +30,15 @@ namespace opack
 	 */
 	struct On {};	
 
+	/**
+	 * Waiting fix for : https://github.com/SanderMertens/flecs/issues/753.
+	 * Indicate which actuator is required for the action.
+	 */
+	struct RequiredActuator
+	{
+		flecs::entity_view entity;
+	};
+
 	/** Indicates the minimum and maximum of entities needed by an action. */
 	struct Arity { size_t min{ 1 }; size_t max{ 1 };};
 

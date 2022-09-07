@@ -917,9 +917,9 @@ TEST_CASE("Sample Activity-Tree")
 	auto world = opack::create_world();
 	adl::import(world);
 
-	opack::init<MyAction>(world);
 	opack::init<MyAgent>(world).add<MyFlow>();
-	opack::init<MyActuator>(world);
+	auto actuator = opack::init<MyActuator>(world);
+	opack::init<MyAction>(world).set<opack::RequiredActuator>({actuator});
 	opack::add_actuator<MyActuator, MyAgent>(world);
 	using f = ActivityFlowBuilder<MyFlow, Handling>;
 	f(world).interval(2.0).build();
@@ -930,7 +930,7 @@ TEST_CASE("Sample Activity-Tree")
 			if (action)
 			{
 				fmt::print("Doing : {}\n", action.path());
-				opack::act<MyActuator>(agent, action);
+				opack::act(agent, action);
 			}
 			return opack::make_outputs<f::Act>();
 		}
@@ -946,9 +946,14 @@ TEST_CASE("Sample Activity-Tree")
 	auto a2 = adl::action<MyAction>(inform_task);
 	adl::condition<adl::Satisfaction>(a2, adl::is_finished);
 
-	auto confirm_task = adl::task("Confirm", root, adl::LogicalConstructor::OR, adl::TemporalConstructor::IND);
-	auto a3 = adl::action<MyAction>(confirm_task);
-	adl::condition<adl::Satisfaction>(a3, adl::is_finished);
+	auto confirm_task = adl::task("Confirm", root, adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ_ORD);
+	auto a30 = adl::action<MyAction>(confirm_task);
+	adl::condition<adl::Satisfaction>(a30, adl::is_finished);
+	auto optional_task = adl::task("Optional", confirm_task, adl::LogicalConstructor::OR, adl::TemporalConstructor::IND);
+	auto a31 = adl::action<MyAction>(optional_task);
+	auto a32 = adl::action<MyAction>(optional_task);
+	adl::condition<adl::Satisfaction>(a31, adl::is_finished);
+	adl::condition<adl::Satisfaction>(a32, adl::is_finished);
 
 	auto ask_clearance = adl::task("Ask clearance", root, adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ_ORD);
 	auto a4 = adl::action<MyAction>(ask_clearance);
@@ -964,6 +969,4 @@ TEST_CASE("Sample Activity-Tree")
 
 	auto instance = opack::spawn<MyActivity>(world);
 	agent.add<Handling>(instance);
-
-	opack::run_with_webapp(world);
 }

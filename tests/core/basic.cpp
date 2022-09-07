@@ -19,7 +19,7 @@ TEST_CASE("World & Entity API")
     REQUIRE(a != c);
     REQUIRE(b != c);
 
-    opack::add<V>(a);
+    a.add<V>();
 
     REQUIRE(a.has<V>());
     REQUIRE(!b.has<V>());

@@ -48,21 +48,12 @@ namespace opack
 	 *@endcode 
 	 */
 	template<ActuatorPrefab TActuator, std::derived_from<Agent> TAgent>
-	void add_actuator(World& world)
-	{
-		// Waiting for fix : https://github.com/SanderMertens/flecs/issues/791
-		world.observer()
-			.event(flecs::OnAdd)
-			.term(flecs::IsA).second<TAgent>()
-			.each(
-				[](flecs::entity e)
-				{
-					auto child = e.world().entity().is_a<TActuator>().child_of(e);
-					_::name_entity_after_type<TActuator>(child);
-					e.add<TActuator>(child);
-				}
-		).template child_of<world::dynamics>();
-	}
+	void add_actuator(World& world);
+
+	/**
+	 * @brief Retrieve actuator from prefab @c actuator_prefab for current @c entity.
+	 */
+	Entity actuator(const EntityView& actuator_prefab, const EntityView& entity);
 
 	/**
 	 * @brief Retrieve instanced actuator @c T for current entity.
@@ -71,69 +62,29 @@ namespace opack
 	 * @c T, use @ref entity<T>.
 	 */
 	template<ActuatorPrefab T>
-	Entity actuator(const Entity& entity)
-	{
-#ifdef OPACK_DEBUG
-		auto actuator = entity.target<T>();
-		ecs_assert(actuator.is_valid(), ECS_INVALID_OPERATION, "No actuator for given entity. Make sure to add actuator to its prefab (or to it directly).");
-		return actuator;
-#else 
-		return entity.target<T>();
-#endif
-	}
+	Entity actuator(const EntityView& entity);
 
 	/**
 	 * @brief Create an instanced action @c T.
 	 */
 	template<std::derived_from<opack::Action> T>
-	Entity action(const Entity& entity)
-	{
-		auto world = entity.world();
-		return opack::spawn<T>(world);
-	}
+	Entity action(const Entity& entity);
 
+	/**
+	@brief Return current action done by @c entity with @c actuator_prefab
+	*/
+	Entity current_action(Entity actuator_prefab, Entity entity);
 
 	/**
 	@brief Return current action done by @c entity with actuator @c T
 	*/
 	template<ActuatorPrefab T>
-	Entity current_action(Entity entity)
-	{
-		return opack::actuator<T>(entity).template target<Doing>();
-	}
+	Entity current_action(Entity entity);
 
 	/**
 	@brief @c initiator is now acting with actuator @c to accomplish given @c action.
 	*/
-	template<ActuatorPrefab T>
-	void act(Entity initiator, Entity action)
-	{
-		//size_t count{ 0 };
-		//Entity last;
-		//action.each<By>([&count, &last](Entity object) {count++; last = object; });
-
-		//if (count >= action.get<Arity>()->value)
-		//{
-		//	//TODO Should issue warning - Here we replace the last initiator.
-		//	//There will be a bug since we do not remove the relation from the initiator to the action.
-		//	action.remove<By>(last);
-		//}
-
-		// Action without initiator are cleaned up, so we need to remove relation from previous action.
-		auto world = initiator.world();
-		auto actuator = opack::actuator<T>(initiator);
-		auto last_action = actuator.template target<Doing>();
-		if (last_action)
-		{
-			last_action.mut(world)
-				.template add<Cancel>();
-		}
-		
-		action.mut(world)
-			.add<By>(initiator)
-			.add<Actuator>(actuator);
-		actuator.template add<Doing>(action);
-	}
+	void act(Entity initiator, Entity action);
 
 	/** Get the @c n -nth initiator of provided @c action.*/
 	inline Entity initiator(Entity& action, size_t n = 0)
@@ -164,5 +115,76 @@ namespace opack
 	void on_action_end(World& world, std::function<void(Entity)> func)
 	{
 		opack::prefab<T>(world).template set<OnEnd>({ func });
+	}
+
+	// --------------------------------------------------------------------------- 
+	// Definition
+	// --------------------------------------------------------------------------- 
+
+	template<ActuatorPrefab TActuator, std::derived_from<Agent> TAgent>
+	void add_actuator(World& world)
+	{
+		// Waiting for fix : https://github.com/SanderMertens/flecs/issues/791
+		world.observer()
+			.event(flecs::OnAdd)
+			.term(flecs::IsA).second<TAgent>()
+			.each(
+				[](flecs::entity e)
+				{
+					auto child = e.world().entity().is_a<TActuator>().child_of(e);
+					internal::name_entity_after_type<TActuator>(child);
+					e.add<TActuator>(child);
+				}
+		).template child_of<world::dynamics>();
+	}
+
+	inline Entity actuator(const EntityView& actuator_prefab, const EntityView& entity)
+	{
+		auto actuator = entity.target(actuator_prefab);
+#ifdef OPACK_ASSERTS
+		ecs_assert(actuator.is_valid(), ECS_INVALID_OPERATION, "No actuator \"{}\" for entity \"{}\". Make sure this was called : \"opack::add_actuator<{0}, YourPrefab>(world)\".", actuator_prefab, entity.path());
+#endif
+		return actuator;
+	}
+
+	template<ActuatorPrefab T>
+	Entity actuator(const opack::EntityView& entity)
+	{
+		auto actuator = entity.target<T>();
+#ifdef OPACK_ASSERTS
+		ecs_assert(actuator.is_valid(), ECS_INVALID_OPERATION, "No actuator \"{}\" for entity \"{}\". Make sure this was called : \"opack::add_actuator<{0}, YourPrefab>(world)\".", type_name_cstr<T>(), entity.path());
+#endif
+		return actuator;
+	}
+
+	template<std::derived_from<opack::Action> T>
+	Entity action(const Entity& entity)
+	{
+		auto world = entity.world();
+		return opack::spawn<T>(world);
+	}
+
+	inline Entity current_action(opack::Entity actuator_prefab, Entity entity)
+	{
+		return opack::actuator(actuator_prefab, entity).template target<Doing>();
+	}
+
+	template<ActuatorPrefab T>
+	Entity current_action(Entity entity)
+	{
+		return opack::actuator<T>(entity).template target<Doing>();
+	}
+
+	inline void act(Entity initiator, Entity action)
+	{
+		auto actuator = opack::actuator(action.get<RequiredActuator>()->entity, initiator);
+		auto last_action = actuator.template target<Doing>();
+		if (last_action)
+		{
+			last_action.mut(action)
+				.template add<Cancel>();
+		}
+		action.mut(action).add<By>(initiator);
+		actuator.template add<Doing>(action);
 	}
 }

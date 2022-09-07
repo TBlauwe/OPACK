@@ -25,8 +25,9 @@ include(cmake/target_default_compile_options.cmake)
 option(OPACK_BUILD_EXAMPLES       "Build examples." OFF)
 option(OPACK_BUILD_TESTS          "Build tests." OFF)
 option(OPACK_BUILD_BENCHMARKS     "Build benchmarks using google benchmarks." OFF)
-option(OPACK_DEVELOPPER_WARNINGS  "Enable more warnings" OFF)
-option(OPACK_OPTIMIZE             "Disable some code (mainly organisation for explorer) for faster usage" OFF)
+option(OPACK_DEVELOPPER_WARNINGS  "Enable more warnings when compiling" OFF)
+option(OPACK_ORGANIZE             "Enable organisation of entities, different from C++ namespace (mainly organisation for explorer). Disabling it may lead to more performance." ON)
+option(OPACK_ASSERTS              "Enable assertions. Disabling it may lead to more performance." ON)
 
 
 # Dependencies
@@ -49,17 +50,17 @@ CPMAddPackage(
         GITHUB_REPOSITORY SanderMertens/flecs
         GIT_TAG master
         OPTIONS
-        "FLECS_STATIC_LIBS ON"
-        "FLECS_SHARED_LIBS OFF"
+        "FLECS_STATIC ON"
+        "FLECS_SHARED OFF"
 )
 set_target_properties(flecs_static PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:flecs_static,INTERFACE_INCLUDE_DIRECTORIES>)
 
 # A modern formatting library
 CPMAddPackage(
-        NAME fmt 
-        GITHUB_REPOSITORY fmtlib/fmt
-        GIT_TAG 9.0.0
-        OPTIONS
+		NAME fmt 
+		GITHUB_REPOSITORY fmtlib/fmt
+		GIT_TAG 9.1.0
+		OPTIONS
 )
 set_target_properties(fmt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:fmt,INTERFACE_INCLUDE_DIRECTORIES>)
 
@@ -72,7 +73,7 @@ set(HEADER_LIST
     "include/opack/utils/type_name.hpp"
     "include/opack/core/api_types.hpp"
     "include/opack/core/components.hpp"
-    "include/opack/core/common.hpp"
+    
     "include/opack/core/world.hpp"
     "include/opack/core/entity.hpp" 
 	"include/opack/core/operation.hpp"
@@ -91,7 +92,7 @@ set(HEADER_LIST
 
 set(SOURCE_LIST 
     "src/core.cpp" 
-    "src/core/world.cpp"
+    
     "src/core/perception.cpp" 
 	"src/core/simulation.cpp"
     "src/module/fipa_acl.cpp" 
@@ -103,9 +104,8 @@ set(SOURCE_LIST
 # ==============
 add_library (opack STATIC ${SOURCE_LIST} ${HEADER_LIST})
 target_include_directories(opack PUBLIC include)
-target_link_libraries(opack PUBLIC flecs_static fmt::fmt)
+target_link_libraries(opack PUBLIC flecs_static fmt)
 target_compile_features(opack PUBLIC cxx_std_20)
-target_compile_definitions(opack PUBLIC "$<$<CONFIG:DEBUG>:OPACK_DEBUG>" "$<$<CONFIG:RELEASE>:OPACK_OPTIMIZE>")
 if(OPACK_DEVELOPPER_WARNINGS)
     target_set_compile_warnings_cxx(opack)
 endif()

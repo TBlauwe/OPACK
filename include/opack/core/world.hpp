@@ -10,48 +10,9 @@
 #include <flecs.h>
 
 #include <opack/core/api_types.hpp>
-#include <opack/utils/assert.hpp>
 
 namespace opack
 {
-    namespace _
-    {
-        template<typename T>
-        void organize_entity(Entity& entity) {}
-
-        template<typename T>
-            requires (HasRoot<T>&& HasFolder<typename T::root_t>)
-        void organize_entity(Entity& entity)
-        {
-#ifndef OPACK_OPTIMIZE
-            if (!entity.name())
-                entity.set_doc_name(type_name_cstr<T>());
-            entity.child_of<typename T::root_t::entities_folder_t>();
-#endif
-        }
-
-        template<typename T>
-        void organize_prefab(Entity&) {}
-
-        template<typename T>
-            requires (HasRoot<T>&& HasFolder<typename T::root_t>)
-        void organize_prefab(Entity& entity)
-        {
-#ifndef OPACK_OPTIMIZE
-            entity.child_of<typename T::root_t::prefabs_folder_t>();
-#endif
-        }
-
-        template<HasFolder T>
-        void create_module_entity(World& world)
-        {
-#ifndef OPACK_OPTIMIZE
-            world.entity<typename T::entities_folder_t>().add(flecs::Module);
-            world.entity<typename T::prefabs_folder_t>().add(flecs::Module);
-#endif
-        }
-    }
-
     /**
     @brief Retrieve (or create) an entity from given type @c T.
 
@@ -71,10 +32,7 @@ namespace opack
     @endcode
     */
     template<typename T>
-    Entity entity(World& world)
-    {
-        return world.entity<T>();
-    }
+    Entity entity(World& world);
 
     /**
     @brief Retrieve (or create) a prefab associated with given type @c T.
@@ -96,15 +54,10 @@ namespace opack
     @endcode
     */
     template<typename T>
-    Entity prefab(World& world)
-    {
-        auto prefab = world.prefab<T>();
-        _::organize_prefab<T>(prefab);
-        return prefab;
-    }
+    Entity prefab(World& world);
 
     /**
-    @brief Initialize a sub-prefab according to its type and  correctly inherits its parent.
+    @brief Initialize a sub-prefab according to its type and correctly inherits its parent.
 
     @tparam T Any type that matches a sub-prefab.
     @param world explicit.
@@ -135,34 +88,39 @@ namespace opack
     @endcode
     */
     template<SubPrefab T>
-    Entity init(World& world)
-    {
-        auto e = prefab<T>(world);
-        e.template is_a<typename T::base_t>();
-        return e;
-    }
+    Entity init(World& world);
 
     /**
-    @brief Calls @ref init for each passed types.
-    Use this if you want to initialize multiples types at once and you
-    do not care to customize each entity.
-    You can always customize each entity later.
-    Order does not matter.
-
-    @tparam T Parameter pack of type you which to initialize.
-    @param world explicit.
+    @brief Spawn a new entity instantiated from @c prefab.
 
     Usage :
 
     @code{.cpp}
-    opack::batch_init<MyType1, MyType2, ...>(world);
+    struct A {};
+    auto prefab = opack::prefab<A>(world);
+    // customize prefab ...
+    auto e = opack::spawn(prefab);
+    opack::is_a<A>(e); // true
     @endcode
     */
-    template<SubPrefab... T>
-    void batch_init(World& world)
-    {
-        (init<T>(world), ...);
-    }
+    Entity spawn(Entity& prefab);
+
+    /**
+    @brief Spawn a new entity instantiated from @c prefab, with @c name.
+
+    @return A entity instantiated from @c prefab.
+
+    Usage :
+
+    @code{.cpp}
+    struct A {};
+    auto prefab = opack::prefab<A>(world);
+    // customize prefab ...
+    auto e = opack::spawn(prefab, "my_instance");
+    @endcode
+    */
+    Entity spawn(Entity& prefab, const char * name);
+
 
     /**
     @brief Spawn a new entity instantiated from prefab @c T.
@@ -182,13 +140,7 @@ namespace opack
     @endcode
     */
     template<typename T>
-    Entity spawn(World& world)
-    {
-        _::check_type<T>(world);
-        auto e = world.entity().is_a<T>();
-        _::organize_entity<T>(e);
-        return e;
-    }
+    Entity spawn(World& world);
 
     /**
     @brief Spawn a new entity with name @c name, instantiated from prefab @c T.
@@ -209,13 +161,7 @@ namespace opack
     @endcode
     */
     template<typename T>
-    Entity spawn(World& world, const char* name)
-    {
-        _::check_type<T>(world);
-        auto e = world.entity(name).is_a<T>();
-        _::organize_entity<T>(e);
-        return e;
-    }
+    Entity spawn(World& world, const char* name);
 
     /**
     @brief Count number of entities matching the pattern.
@@ -278,4 +224,71 @@ namespace opack
             .each(func);
     }
 
+    // --------------------------------------------------------------------------- 
+    // Definition
+    // --------------------------------------------------------------------------- 
+    template<typename T>
+    Entity entity(World& world)
+    {
+        return world.entity<T>();
+    }
+
+    template<typename T>
+    Entity prefab(World& world)
+    {
+        auto prefab = world.prefab<T>();
+        internal::organize_prefab<T>(prefab);
+        return prefab;
+    }
+
+    template<SubPrefab T>
+    Entity init(World& world)
+    {
+        auto e = prefab<T>(world);
+        e.template is_a<typename T::base_t>();
+        return e;
+    }
+
+	inline size_t count(const World& world, const Entity rel, const Entity obj)
+	{
+		return static_cast<size_t>(world.count(rel, obj));
+	}
+
+    inline Entity spawn(Entity& prefab)
+    {
+#ifdef OPACK_ASSERTS
+        ecs_assert(prefab.has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to call : `opack::init<{0}>(world)`", type_name_cstr<T>()).c_str());
+#endif 
+        return prefab.world().entity().is_a(prefab);
+    }
+
+    inline Entity spawn(Entity& prefab, const char * name)
+    {
+#ifdef OPACK_ASSERTS
+        ecs_assert(prefab.has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to call : `opack::init<{0}>(world)`", type_name_cstr<T>()).c_str());
+#endif 
+        return prefab.world().entity(name).is_a(prefab);
+    }
+
+    template<typename T>
+    Entity spawn(World& world)
+    {
+#ifdef OPACK_ASSERTS
+        ecs_assert(world.entity<T>().has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to call : `opack::init<{0}>(world)`", type_name_cstr<T>()).c_str());
+#endif 
+        auto e = world.entity().is_a<T>();
+        internal::organize_entity<T>(e);
+        return e;
+    }
+
+    template<typename T>
+    Entity spawn(World& world, const char* name)
+    {
+#ifdef OPACK_ASSERTS
+        ecs_assert(world.entity<T>().has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to call : `opack::init<{0}>(world)`", type_name_cstr<T>()).c_str());
+#endif 
+        auto e = world.entity(name).is_a<T>();
+        internal::organize_entity<T>(e);
+        return e;
+    }
 }

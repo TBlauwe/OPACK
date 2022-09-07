@@ -27,16 +27,16 @@ void opack::import_opack(World& world)
 	// -------------------------------------------------------
 	// API Types
 	// -------------------------------------------------------
-	_::create_module_entity<Agent>(world);
-	_::create_module_entity<Artefact>(world);
-	_::create_module_entity<Action>(world);
-	_::create_module_entity<Message>(world);
-	_::create_module_entity<Actuator>(world);
-	_::create_module_entity<Sense>(world);
-	_::create_module_entity<Flow>(world);
-	_::create_module_entity<Operation>(world);
-	_::create_module_entity<Behaviour>(world);
-	_::create_module_entity<Message>(world);
+	internal::create_module_entity<Agent>(world);
+	internal::create_module_entity<Artefact>(world);
+	internal::create_module_entity<Action>(world);
+	internal::create_module_entity<Message>(world);
+	internal::create_module_entity<Actuator>(world);
+	internal::create_module_entity<Sense>(world);
+	internal::create_module_entity<Flow>(world);
+	internal::create_module_entity<Operation>(world);
+	internal::create_module_entity<Behaviour>(world);
+	internal::create_module_entity<Message>(world);
 
 
 	// -------------------------------------------------------
@@ -71,8 +71,12 @@ void opack::import_opack(World& world)
 
 	world.component<Doing>()
 		.add(flecs::Exclusive)
-		//.add(flecs::OneOf, entity<Action::entities_folder_t>(world))
 		;
+
+	world.component<RequiredActuator>()
+		.member<flecs::entity_t>("entity")
+		;
+
 	world.component<By>(); 
 	world.component<On>();
 	world.component<Delay>()

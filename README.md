@@ -131,4 +131,5 @@ This line will generate a json file with 'Release' in its name. It will also rep
 * **[Doctest](https://github.com/doctest/doctest)**
 * **[Doxygen-awesome](https://github.com/jothepro/doxygen-awesome-css)**
 * **[Flecs](https://github.com/SanderMertens/flecs)**
+* **[fmt](https://github.com/fmtlib/fmt)**
 * **[Google Benchmark](https://github.com/google/benchmark)**

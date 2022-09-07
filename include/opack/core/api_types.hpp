@@ -13,6 +13,10 @@
 #include <concepts>
 
 #include <flecs.h>
+#include <fmt/core.h>
+
+#include <opack/utils/flecs_helper.hpp>
+#include <opack/utils/type_name.hpp>
 
 /**
 @brief Helper macro to define additional structs to organize entities in explorer.
@@ -78,7 +82,7 @@ opack::init<B>(world);
 */
 namespace opack
 {
-	namespace _
+	namespace internal
 	{
 		template<typename T>
 	    struct root
@@ -86,6 +90,7 @@ namespace opack
 			using root_t = T;
 		};
 	}
+
 	/** @addtogroup Flecs 
 
 	OPACK is built around flecs. To ensure minimal friction, we do not want to encapsulate its basic types. 
@@ -115,6 +120,14 @@ namespace opack
 	*/
 	using EntityView = flecs::entity_view;
 
+	class Handle : public flecs::entity
+	{
+	};
+
+	class HandleView : public flecs::entity_view
+	{
+	};
+
 	/** @}*/ //End of group
 
 	/**
@@ -139,55 +152,55 @@ namespace opack
 	struct Tangible {};
 
     OPACK_FOLDERS_STRUCT(agents);
-	struct Agent : public _::root<Agent>, public Tangible
+	struct Agent : public internal::root<Agent>, public Tangible
 	{
         OPACK_FOLDERS_TYPEDEF(agents);
 	};
 
     OPACK_FOLDERS_STRUCT(artefacts);
-	struct Artefact : public _::root<Artefact>, public Tangible
+	struct Artefact : public internal::root<Artefact>, public Tangible
 	{
         OPACK_FOLDERS_TYPEDEF(artefacts);
 	};
 
     OPACK_FOLDERS_STRUCT(actions);
-	struct Action : public _::root<Action>
+	struct Action : public internal::root<Action>
 	{
         OPACK_FOLDERS_TYPEDEF(actions);
 	};
 
     OPACK_FOLDERS_STRUCT(messages);
-	struct Message : public _::root<Message>
+	struct Message : public internal::root<Message>
 	{
         OPACK_FOLDERS_TYPEDEF(messages);
 	};
 
     OPACK_FOLDERS_STRUCT(actuators);
-	struct Actuator : public _::root<Actuator>
+	struct Actuator : public internal::root<Actuator>
 	{
         OPACK_FOLDERS_TYPEDEF(actuators);
 	};
 
     OPACK_FOLDERS_STRUCT(senses);
-	struct Sense : public _::root<Sense>
+	struct Sense : public internal::root<Sense>
 	{
         OPACK_FOLDERS_TYPEDEF(senses);
 	};
 
     OPACK_FOLDERS_STRUCT(flows);
-	struct Flow : public _::root<Flow>
+	struct Flow : public internal::root<Flow>
 	{
         OPACK_FOLDERS_TYPEDEF(flows);
 	};
 
     OPACK_FOLDERS_STRUCT(operations);
-	struct Operation : public _::root<Operation>
+	struct Operation : public internal::root<Operation>
 	{
         OPACK_FOLDERS_TYPEDEF(operations);
 	};
 
     OPACK_FOLDERS_STRUCT(behaviours);
-	struct Behaviour : public _::root<Behaviour>
+	struct Behaviour : public internal::root<Behaviour>
 	{
         OPACK_FOLDERS_TYPEDEF(behaviours);
 	};
@@ -293,5 +306,43 @@ namespace opack
 
 	template<typename T>
 	concept SensePrefab = SubPrefab<T> && std::derived_from<T, Sense>;
+
+	namespace internal
+	{
+		template<typename T>
+		void organize_entity(flecs::entity&) {}
+
+		template<typename T>
+			requires (HasRoot<T>&& HasFolder<typename T::root_t>)
+		void organize_entity(Entity& entity)
+		{
+#ifndef OPACK_ORGANIZE
+			if (!entity.name())
+				opack::internal::name_entity_after_type<T>(entity);
+			entity.child_of<typename T::root_t::entities_folder_t>();
+#endif
+		}
+
+		template<typename T>
+		void organize_prefab(Entity&) {}
+
+		template<typename T>
+			requires (HasRoot<T>&& HasFolder<typename T::root_t>)
+		void organize_prefab(Entity& entity)
+		{
+#ifndef OPACK_ORGANIZE
+			entity.child_of<typename T::root_t::prefabs_folder_t>();
+#endif
+		}
+
+		template<HasFolder T>
+		void create_module_entity(World& world)
+		{
+#ifndef OPACK_ORGANIZE
+			world.entity<typename T::entities_folder_t>().add(flecs::Module);
+			world.entity<typename T::prefabs_folder_t>().add(flecs::Module);
+#endif
+		}
+	}
 }
 

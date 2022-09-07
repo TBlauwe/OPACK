@@ -10,19 +10,34 @@
 #include <flecs.h>
 
 #include <opack/core/api_types.hpp>
-#include <opack/utils/type_name.hpp>
-#ifndef OPACK_OPTIMIZE
-#include <fmt/compile.h>
-#endif
 
 namespace opack
 {
     /** 
-    @brief Returns true if given entity is an instance of given prefab
+    @brief Returns true if @c entity is an instance of @c prefab.
+
+    Usage :
+
+    @code{.cpp}
+    OPACK_PREFAB(A); // expands to struct A {};
+    OPACK_SUB_PREFAB(B, A); // expands to struct B : public A {using base_t = A; };
+    auto a = opack::prefab<A>(world);
+    auto b = opack::init<B>(world);
+    // customize prefab a ...
+    auto e1 = opack::spawn<A>(world, "Arthur");
+    auto e2 = opack::spawn<B>(world, "Bob");
+    opack::is_a(a, e1); // true
+    opack::is_a(b, e2); // true
+    opack::is_a(a, e2); // false
+    @endcode
+    */
+    bool is_a(Entity prefab, Entity entity);
+
+    /** 
+    @brief Returns true if @c entity is an instance of prefab @c T.
 
     @tparam T Prefab's type
     @param entity to check 
-    @return A prefab entity instantiated from prefab @c T.
 
     Usage :
 
@@ -40,20 +55,21 @@ namespace opack
     @endcode
     */
 	template<typename T>
-	bool is_a(Entity entity)
+    bool is_a(Entity entity);
+
+
+    // --------------------------------------------------------------------------- 
+    // Definition
+    // --------------------------------------------------------------------------- 
+	inline bool is_a(Entity prefab, Entity entity)
 	{
-        auto world = entity.world();
-		return entity.has(flecs::IsA, opack::entity<T>(world));
+		return entity.has(flecs::IsA, prefab);
 	}
 
-    namespace _
+	template<typename T>
+	bool is_a(Entity entity)
 	{
-        template<typename T>
-        void name_entity_after_type(Entity entity)
-        {
-    #ifndef OPACK_OPTIMIZE
-            entity.set_doc_name(type_name_cstr<T>());
-    #endif
-        }
+		return is_a(entity.world().entity<T>(), entity);
 	}
 }
+
