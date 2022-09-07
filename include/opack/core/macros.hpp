@@ -25,8 +25,7 @@
 	struct name :								\
 		opack::internal::root<name>,					\
 		opack::internal::handle<name ## Handle, name ## HandleView>, \
-		opack::internal::entities_folder<world::plural>, \
-		opack::internal::prefabs_folder<world::plural::prefabs>
+		opack::internal::entities_folder<world::plural>
 
 namespace opack::internal
 {
@@ -47,11 +46,5 @@ namespace opack::internal
 	struct entities_folder
 	{
 		using entities_folder_t = T;
-	};
-
-	template<typename T>
-	struct prefabs_folder
-	{
-		using prefabs_folder_t = T;
 	};
 }

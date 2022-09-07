@@ -147,7 +147,7 @@ namespace adl
 		return opack::init<T>(world)
 			.template set<Constructor>({ logical, temporal })
 			.template set<opack::Arity>({ arity_min, arity_max })
-			.template child_of<Activity::prefabs_folder_t>();
+			;
 	}
 
 	/** Add activity @c T as a children of @c parent. */

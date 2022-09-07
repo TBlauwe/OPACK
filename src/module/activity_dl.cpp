@@ -6,7 +6,6 @@ void adl::import(opack::World& world)
 {
 	auto scope = world.entity("::opack::modules");
 	auto prev = world.set_scope(scope);
-    world.entity<Activity::prefabs_folder_t>().add(flecs::Module);
     world.entity<Activity::entities_folder_t>().add(flecs::Module);
 	{
         scope = world.entity("::opack::modules::adl").add(flecs::Module);
@@ -120,7 +119,7 @@ size_t adl::size(opack::Entity task)
 opack::Entity adl::parent_of(opack::Entity task)
 {
 	auto parent = task.parent();
-	if (opack::is_a<Task>(parent))
+	if (parent && opack::is_a<Task>(parent))
 		return parent;
 	return opack::Entity::null();
 }

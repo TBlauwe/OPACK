@@ -1,12 +1,11 @@
 #include <doctest/doctest.h>
 #include <opack/core.hpp>
+#include <opack/module/agents.hpp>
 
 
 
 TEST_CASE("Action API")
 {
-    OPACK_AGENT(MyAgent);
-    OPACK_ACTUATOR(MyActuator);
     OPACK_ACTION(MoveTo);
 
     struct HasBegun {};
@@ -16,15 +15,13 @@ TEST_CASE("Action API")
     int counter = 0;
 
     auto world = opack::create_world();
-    opack::init<MyAgent>(world);
-    opack::init<MyActuator>(world);
-    opack::init<MoveTo>(world).require<MyActuator>();
-    opack::add_actuator<MyActuator, MyAgent>(world);
-    auto e1  = opack::spawn<MyAgent>(world);
+    world.import<simple>();
+    opack::init<MoveTo>(world).require<simple::Actuator>();
+    auto e1  = opack::spawn<simple::Agent>(world);
 
     auto action = opack::spawn<MoveTo>(world);
     opack::act(e1, action);
-    CHECK(opack::current_action<MyActuator>(e1) == action);
+    CHECK(opack::current_action<simple::Actuator>(e1) == action);
 
     opack::on_action_begin<MoveTo>(world, [](opack::Entity action)
         {
@@ -52,7 +49,7 @@ TEST_CASE("Action API")
 
     MESSAGE("Checking action status w/ do not clean.");
     action = opack::spawn<MoveTo>(world).add<opack::DoNotClean>();
-    auto e2  = opack::spawn<MyAgent>(world);
+    auto e2  = opack::spawn<simple::Agent>(world);
     opack::act(e2, action);
     opack::step(world);
 
@@ -68,7 +65,7 @@ TEST_CASE("Action API")
         .add<opack::DoNotClean>()
         .set<opack::Delay>({3.0})
     ;
-    auto e3  = opack::spawn<MyAgent>(world);
+    auto e3  = opack::spawn<simple::Agent>(world);
     opack::act(e3, action);
     opack::step(world, 2.9f);
     CHECK(!e3.has<HasBegun>());
@@ -98,7 +95,7 @@ TEST_CASE("Action API")
             opack::initiator(action).add<HasUpdated>();
         }
     );
-    auto e4  = opack::spawn<MyAgent>(world);
+    auto e4  = opack::spawn<simple::Agent>(world);
     opack::act(e4, action);
 
     counter = 0;

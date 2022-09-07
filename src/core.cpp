@@ -18,7 +18,6 @@ void opack::import_opack(World& world)
 	// -------------------------------------------------------
 	world.entity("::opack").add(flecs::Module);
 	world.entity("::opack::world").add(flecs::Module);
-	world.entity<world::prefabs>().add(flecs::Module);
 	world.entity<world::behaviours>().add(flecs::Module);
 	world.entity<world::dynamics>().add(flecs::Module);
 	world.entity<world::rules>().add(flecs::Module);

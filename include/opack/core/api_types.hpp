@@ -119,9 +119,6 @@ namespace opack
 		/** @brief Scope to regroup dynamic entities (systems, observer, trigger, etc.).*/
 		struct dynamics {};
 
-		/** @brief Scope to regroup prefab entities.*/
-		struct prefabs {};
-
 		/** @brief Scope to regroup rules/query entities.*/
 		struct rules {};
 	};
@@ -230,7 +227,6 @@ namespace opack
 	concept HasFolder = requires 
     {
         typename T::entities_folder_t;
-        typename T::prefabs_folder_t;
     };
 
 	template<typename T>
@@ -283,24 +279,11 @@ namespace opack
 #endif
 		}
 
-		template<typename T>
-		void organize_prefab(Entity&) {}
-
-		template<typename T>
-			requires (HasRoot<T>&& HasFolder<typename T::root_t>)
-		void organize_prefab(Entity& entity)
-		{
-#ifndef OPACK_ORGANIZE
-			entity.child_of<typename T::root_t::prefabs_folder_t>();
-#endif
-		}
-
 		template<HasFolder T>
 		void create_module_entity(World& world)
 		{
 #ifndef OPACK_ORGANIZE
 			world.entity<typename T::entities_folder_t>().add(flecs::Module);
-			world.entity<typename T::prefabs_folder_t>().add(flecs::Module);
 #endif
 		}
 	}

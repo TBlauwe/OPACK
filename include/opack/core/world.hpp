@@ -273,9 +273,7 @@ namespace opack
     template<typename T>
     Entity prefab(World& world)
     {
-        auto prefab = world.prefab<T>();
-        internal::organize_prefab<T>(prefab);
-        return prefab;
+         return world.prefab<T>();
     }
 
     template<SubPrefab T>
