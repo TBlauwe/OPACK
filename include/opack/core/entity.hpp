@@ -13,6 +13,26 @@
 
 namespace opack
 {
+	struct AgentHandleView : HandleView
+	{
+		using HandleView::HandleView;
+	};
+
+	struct AgentHandle : Handle
+	{
+		using Handle::Handle;
+	};
+
+	struct ArtefactHandleView : HandleView
+	{
+		using HandleView::HandleView;
+	};
+
+	struct ArtefactHandle : Handle
+	{
+		using Handle::Handle;
+	};
+
     /** 
     @brief Returns true if @c entity is an instance of @c prefab.
 

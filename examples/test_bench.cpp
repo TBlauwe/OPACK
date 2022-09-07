@@ -11,6 +11,8 @@ int main(int, char* [])
     auto prefab     = ecs.prefab().add<R, A>();
     auto instance   = ecs.entity().is_a(prefab);
 
+    auto second_inst = flecs::entity(instance);
+
     std::cout << prefab.has<R>(flecs::Wildcard) << "\n"; // true;
     std::cout << (prefab.target<R>() == object) << "\n"; // true;
     std::cout << instance.has<R>(flecs::Wildcard) << "\n"; // true;

@@ -58,6 +58,43 @@ namespace opack
 
     /**
     @brief Initialize a sub-prefab according to its type and correctly inherits its parent.
+    Since @c T is a special type (Agent, Artefact, etc.), we directly provide an handle to 
+    manipulate them. Otherwise, a plain entity is returned.
+
+    @tparam T Any type that matches a sub-prefab and a fundamental type.
+    @param world explicit.
+    @return A prefab entity instantiated from prefab @c T.
+
+    A sub-prefab is a prefab based on another one. This function ensures that this link
+    is formed.
+
+    Afterwards, you can retrieve any prefab (sub-prefab also) by calling @ref prefab.
+
+    We do not need to specify from which prefab the sub-prefab inherits. It should be
+    already specified in its definition. It is done automatically with the helper macro
+    @ref OPACK_SUB_PREFAB(name, base). Or manually, by adding the static typename member @c base_t
+    equal to the type of the inheriting prefab (see below).
+
+    Usage :
+
+    @code{.cpp}
+    OPACK_PREFAB(A); // expands to struct A {};
+    OPACK_SUB_PREFAB(B, A); // expands to struct B : public A {using base_t = A; };
+    auto a = opack::prefab<A>(world);
+    auto b = opack::init<B>(world);
+    // customize prefab a ...
+    auto e1 = opack::spawn<A>(world, "Arthur");
+    auto e2 = opack::spawn<B>(world, "Bob");
+    opack::is_a<A>(e1); // true
+    opack::is_a<B>(e2); // true
+    @endcode
+    */
+    template<typename T>
+        requires SubPrefab<T> and HasHandle<T>
+    typename T::handle_t init(World& world);
+
+    /**
+    @brief Initialize a sub-prefab according to its type and correctly inherits its parent.
 
     @tparam T Any type that matches a sub-prefab.
     @param world explicit.
@@ -88,7 +125,7 @@ namespace opack
     @endcode
     */
     template<SubPrefab T>
-    Entity init(World& world);
+    opack::Entity init(World& world);
 
     /**
     @brief Spawn a new entity instantiated from @c prefab.
@@ -242,11 +279,20 @@ namespace opack
     }
 
     template<SubPrefab T>
-    Entity init(World& world)
+    opack::Entity init(World& world)
     {
         auto e = prefab<T>(world);
         e.template is_a<typename T::base_t>();
         return e;
+    }
+
+    template<typename T>
+        requires SubPrefab<T> and HasHandle<T>
+    typename T::handle_t init(World& world)
+    {
+        auto e = prefab<T>(world);
+        e.template is_a<typename T::base_t>();
+        return typename T::handle_t(world, e);
     }
 
 	inline size_t count(const World& world, const Entity rel, const Entity obj)

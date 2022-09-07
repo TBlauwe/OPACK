@@ -37,6 +37,31 @@
 
 namespace opack
 {
+	struct ActuatorHandleView : HandleView
+	{
+		using HandleView::HandleView;
+	};
+
+	struct ActuatorHandle : Handle
+	{
+		using Handle::Handle;
+	};
+
+	struct ActionHandleView : HandleView
+	{
+		using HandleView::HandleView;
+	};
+
+	struct ActionHandle : Handle
+	{
+		using Handle::Handle;
+
+		ActionHandle& require(const EntityView& actuator_prefab);
+
+		template<ActuatorPrefab T>
+		ActionHandle& require();
+	};
+
 	/**
 	 *@brief Add actuator @c T to entity @c prefab
 	 *Usage:
@@ -120,6 +145,19 @@ namespace opack
 	// --------------------------------------------------------------------------- 
 	// Definition
 	// --------------------------------------------------------------------------- 
+
+	inline ActionHandle& ActionHandle::require(const EntityView& actuator_prefab)
+	{
+		set<RequiredActuator>({ actuator_prefab });
+		return *this;
+	}
+
+	template<ActuatorPrefab T>
+	ActionHandle& ActionHandle::require()
+	{
+		set<RequiredActuator>({ world().entity<T>() });
+		return *this;
+	}
 
 	template<ActuatorPrefab TActuator, std::derived_from<Agent> TAgent>
 	void add_actuator(World& world)

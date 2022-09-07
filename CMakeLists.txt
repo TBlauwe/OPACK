@@ -71,9 +71,9 @@ set(HEADER_LIST
 	"include/opack/utils/type_map.hpp"
     "include/opack/utils/flecs_helper.hpp" 
     "include/opack/utils/type_name.hpp"
+    "include/opack/core/macros.hpp"
     "include/opack/core/api_types.hpp"
     "include/opack/core/components.hpp"
-    
     "include/opack/core/world.hpp"
     "include/opack/core/entity.hpp" 
 	"include/opack/core/operation.hpp"

@@ -25,6 +25,16 @@
 
 namespace opack
 {
+	struct SenseHandleView : HandleView
+	{
+		using HandleView::HandleView;
+	};
+
+	struct SenseHandle : Handle
+	{
+		using Handle::Handle;
+	};
+
 	namespace queries::perception
 	{
 		/**

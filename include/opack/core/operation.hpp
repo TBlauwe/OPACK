@@ -33,6 +33,36 @@
 
 namespace opack
 {
+	struct BehaviourHandleView : HandleView
+	{
+		using HandleView::HandleView;
+	};
+
+	struct BehaviourHandle : Handle
+	{
+		using Handle::Handle;
+	};
+
+	struct OperationHandleView : HandleView
+	{
+		using HandleView::HandleView;
+	};
+
+	struct OperationHandle : Handle
+	{
+		using Handle::Handle;
+	};
+
+	struct FlowHandleView : HandleView
+	{
+		using HandleView::HandleView;
+	};
+
+	struct FlowHandle : Handle
+	{
+		using Handle::Handle;
+	};
+
 	/**
 	 @brief Create a new behaviour @c T.
 	 @param func Activation function with following signature : bool(flecs::entity, (Tinputs&,...))

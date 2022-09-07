@@ -5,7 +5,7 @@
 
 TEST_CASE("Action API")
 {
-    OPACK_SUB_PREFAB(MyAgent, opack::Agent);
+    OPACK_AGENT(MyAgent);
     OPACK_ACTUATOR(MyActuator);
     OPACK_ACTION(MoveTo);
 
@@ -17,8 +17,8 @@ TEST_CASE("Action API")
 
     auto world = opack::create_world();
     opack::init<MyAgent>(world);
-    auto actuator = opack::init<MyActuator>(world);
-    opack::init<MoveTo>(world).set<opack::RequiredActuator>({actuator});
+    opack::init<MyActuator>(world);
+    opack::init<MoveTo>(world).require<MyActuator>();
     opack::add_actuator<MyActuator, MyAgent>(world);
     auto e1  = opack::spawn<MyAgent>(world);
 

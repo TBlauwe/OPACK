@@ -17,20 +17,7 @@
 
 #include <opack/utils/flecs_helper.hpp>
 #include <opack/utils/type_name.hpp>
-
-/**
-@brief Helper macro to define additional structs to organize entities in explorer.
-@param name Folder's name.
-*/
-#define OPACK_FOLDERS_STRUCT(name) namespace world { struct name { struct prefabs {}; };  }
-
-/**
-@brief Helper macro to define adequate typedefs for organization.
-@param name Type's name.
-*/
-#define OPACK_FOLDERS_TYPEDEF(name) \
-    using entities_folder_t = world::name; \
-    using prefabs_folder_t = world::name::prefabs
+#include <opack/core/macros.hpp>
 
 /**
 @brief Define a new type named @c name to identify a tag.
@@ -82,15 +69,6 @@ opack::init<B>(world);
 */
 namespace opack
 {
-	namespace internal
-	{
-		template<typename T>
-	    struct root
-		{
-			using root_t = T;
-		};
-	}
-
 	/** @addtogroup Flecs 
 
 	OPACK is built around flecs. To ensure minimal friction, we do not want to encapsulate its basic types. 
@@ -120,12 +98,14 @@ namespace opack
 	*/
 	using EntityView = flecs::entity_view;
 
-	class Handle : public flecs::entity
-	{
-	};
-
 	class HandleView : public flecs::entity_view
 	{
+		using flecs::entity_view::entity_view;
+	};
+
+	struct Handle : public flecs::entity
+	{
+		using flecs::entity::entity;
 	};
 
 	/** @}*/ //End of group
@@ -151,59 +131,32 @@ namespace opack
 	//--------------------------
 	struct Tangible {};
 
-    OPACK_FOLDERS_STRUCT(agents);
-	struct Agent : public internal::root<Agent>, public Tangible
-	{
-        OPACK_FOLDERS_TYPEDEF(agents);
-	};
+	OPACK_FUNDAMENTAL_TYPE(Agent, agents), Tangible
+	{};
 
-    OPACK_FOLDERS_STRUCT(artefacts);
-	struct Artefact : public internal::root<Artefact>, public Tangible
-	{
-        OPACK_FOLDERS_TYPEDEF(artefacts);
-	};
+	OPACK_FUNDAMENTAL_TYPE(Artefact, artefacts), Tangible
+	{};
 
-    OPACK_FOLDERS_STRUCT(actions);
-	struct Action : public internal::root<Action>
-	{
-        OPACK_FOLDERS_TYPEDEF(actions);
-	};
+    OPACK_FUNDAMENTAL_TYPE(Action, actions)
+	{};
 
-    OPACK_FOLDERS_STRUCT(messages);
-	struct Message : public internal::root<Message>
-	{
-        OPACK_FOLDERS_TYPEDEF(messages);
-	};
+    OPACK_FUNDAMENTAL_TYPE(Actuator, actuators)
+	{};
 
-    OPACK_FOLDERS_STRUCT(actuators);
-	struct Actuator : public internal::root<Actuator>
-	{
-        OPACK_FOLDERS_TYPEDEF(actuators);
-	};
+    OPACK_FUNDAMENTAL_TYPE(Message, messages)
+	{};
 
-    OPACK_FOLDERS_STRUCT(senses);
-	struct Sense : public internal::root<Sense>
-	{
-        OPACK_FOLDERS_TYPEDEF(senses);
-	};
+    OPACK_FUNDAMENTAL_TYPE(Sense, senses)
+	{};
 
-    OPACK_FOLDERS_STRUCT(flows);
-	struct Flow : public internal::root<Flow>
-	{
-        OPACK_FOLDERS_TYPEDEF(flows);
-	};
+    OPACK_FUNDAMENTAL_TYPE(Flow, flows)
+	{};
 
-    OPACK_FOLDERS_STRUCT(operations);
-	struct Operation : public internal::root<Operation>
-	{
-        OPACK_FOLDERS_TYPEDEF(operations);
-	};
+    OPACK_FUNDAMENTAL_TYPE(Operation, operations)
+	{};
 
-    OPACK_FOLDERS_STRUCT(behaviours);
-	struct Behaviour : public internal::root<Behaviour>
-	{
-        OPACK_FOLDERS_TYPEDEF(behaviours);
-	};
+    OPACK_FUNDAMENTAL_TYPE(Behaviour, behaviours)
+	{};
 
 	// Phases
 	//--------
@@ -284,6 +237,13 @@ namespace opack
 	concept HasRoot = requires
 	{
 	    typename T::root_t;
+	};
+
+	template<typename T>
+	concept HasHandle = requires
+	{
+	    typename T::handle_t;
+	    typename T::handle_view_t;
 	};
 
 	template<typename T>
