@@ -3,7 +3,10 @@
 set(SOURCE_LIST 
 	"core/world.cpp"
     "core/perception.cpp"
- "core/action.cpp")
+    "core/action.cpp"
+    "module/agents.cpp"
+
+)
 
 # Dependencies
 # ============

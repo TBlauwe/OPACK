@@ -111,7 +111,7 @@ namespace opack
 	/** @}*/ //End of group
 
 	/**
-	 *@brief Namespace used to organize entities in explorer. If @c OPACK_OPTIMIZE is defined,
+	 *@brief Namespace used to organize entities in explorer. If @c OPACK_ORGANIZE is defined,
 	 * then it will not be used.
 	 */
 	namespace world 
