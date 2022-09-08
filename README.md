@@ -20,24 +20,24 @@ your world.
 
 
 ```cpp
-#include <opack/core.hpp>					// Include core library features
-#include <opack/module/simple_agent.hpp>	// For starter
+#include <opack/core.hpp>                   // Include core library features
+#include <opack/module/simple_agent.hpp>    // For starter
 
 int main()
 {
-	auto world = opack::create_world();		// A world is a container of all ECS data.
-											// Here we return a world, with Opack already imported.
+    auto world = opack::create_world();     // A world is a container of all ECS data.
+                                            // Here we return a world, with Opack already imported.
     // -- or --
     //flecs::world world;                   // If you already have a world,
-    //opack::import(world)                  // you can import Opack like so.
+    //opack::import(world);                 // you can import Opack like so.
 
-	world.import<simple>()					// Import "simple" module into the world.
-											// It will add necessary components / "concepts".
+    world.import<simple>()			        // Import "simple" module into the world.
+						                    // It will add necessary components / "concepts".
 
-	// Spawn three entities that are "simple" agents.
-	auto agent_1 = opack::spawn<simple::Agent>(world);  
-	auto agent_2 = opack::spawn<simple::Agent>(world);  
-	auto agent_3 = opack::spawn<simple::Agent>(world);  
+    // Spawn three entities that are "simple" agents.
+    auto agent_1 = opack::spawn<simple::Agent>(world);  
+    auto agent_2 = opack::spawn<simple::Agent>(world);  
+    auto agent_3 = opack::spawn<simple::Agent>(world);  
 
     opack::run(world);
     // or 
