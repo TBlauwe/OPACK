@@ -1,6 +1,6 @@
 #include "../utils.hpp"
 
-#include <opack/module/agents.hpp>
+#include <opack/module/simple_agent.hpp>
 
 static void BM_create_n_simple_agent(benchmark::State& state) {
     auto world = opack::create_world();

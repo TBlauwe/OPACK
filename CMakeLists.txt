@@ -88,7 +88,7 @@ set(HEADER_LIST
     "include/opack/module/adl/api.hpp"
     "include/opack/module/adl.hpp"
     "include/opack/module/flows.hpp"
-    "include/opack/module/agents.hpp"
+    "include/opack/module/simple_agent.hpp"
 )
 
 set(SOURCE_LIST 
