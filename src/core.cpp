@@ -73,7 +73,6 @@ void opack::import_opack(World& world)
 		;
 
 	world.component<RequiredActuator>()
-		.member<flecs::entity_t>("entity")
 		;
 
 	world.component<By>(); 

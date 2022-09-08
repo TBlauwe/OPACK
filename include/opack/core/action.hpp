@@ -52,7 +52,7 @@ namespace opack
 		using HandleView::HandleView;
 	};
 
-	struct ActionHandle : Handle
+	struct ActionHandle : Handle, ActionHandleView
 	{
 		using Handle::Handle;
 
@@ -107,9 +107,16 @@ namespace opack
 	Entity current_action(Entity entity);
 
 	/**
-	@brief @c initiator is now acting with actuator @c to accomplish given @c action.
+	@brief @c initiator is now doing @c action.
 	*/
 	void act(Entity initiator, Entity action);
+
+	/**
+	@brief @c initiatior is now doing an action of type @c T
+	@return An @c ActionHandle if you need to tailor the action.
+	*/
+	template<ActionPrefab T>
+	ActionHandle act(Entity initiator);
 
 	/** Get the @c n -nth initiator of provided @c action.*/
 	inline Entity initiator(Entity& action, size_t n = 0)
@@ -118,6 +125,7 @@ namespace opack
 		return entity.mut(action);
 	}
 
+	//TODO Maybe use systems instead of callback ? Maybe systems are better overall, espially, that nothing prevents from adding multiple on_begin, etc.
 	template<ActionPrefab T>
 	void on_action_begin(World& world, std::function<void(Entity)> func)
 	{
@@ -148,14 +156,14 @@ namespace opack
 
 	inline ActionHandle& ActionHandle::require(const EntityView& actuator_prefab)
 	{
-		set<RequiredActuator>({ actuator_prefab });
+		override<RequiredActuator>(actuator_prefab);
 		return *this;
 	}
 
 	template<ActuatorPrefab T>
 	ActionHandle& ActionHandle::require()
 	{
-		set<RequiredActuator>({ world().entity<T>() });
+		override<RequiredActuator, T>();
 		return *this;
 	}
 
@@ -215,7 +223,7 @@ namespace opack
 
 	inline void act(Entity initiator, Entity action)
 	{
-		auto actuator = opack::actuator(action.get<RequiredActuator>()->entity, initiator);
+		auto actuator = opack::actuator(action.target<RequiredActuator>(), initiator);
 		auto last_action = actuator.template target<Doing>();
 		if (last_action)
 		{
@@ -224,5 +232,14 @@ namespace opack
 		}
 		action.mut(action).add<By>(initiator);
 		actuator.template add<Doing>(action);
+	}
+
+	template<ActionPrefab T>
+	ActionHandle act(Entity initiator)
+	{
+		auto world = initiator.world();
+		auto action = opack::spawn<T>(world);
+		act(initiation, action);
+		return ActionHandle(world, action);
 	}
 }

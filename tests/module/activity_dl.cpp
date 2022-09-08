@@ -918,8 +918,8 @@ TEST_CASE("Sample Activity-Tree")
 	adl::import(world);
 
 	opack::init<MyAgent>(world).add<MyFlow>();
-	auto actuator = opack::init<MyActuator>(world);
-	opack::init<MyAction>(world).set<opack::RequiredActuator>({actuator});
+	opack::init<MyActuator>(world);
+	opack::init<MyAction>(world).require<MyActuator>();
 	opack::add_actuator<MyActuator, MyAgent>(world);
 	using f = ActivityFlowBuilder<MyFlow, Handling>;
 	f(world).interval(2.0).build();

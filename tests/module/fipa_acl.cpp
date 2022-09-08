@@ -2,10 +2,10 @@
 #include <opack/core.hpp>
 #include <opack/module/fipa_acl.hpp>
 
-OPACK_SUB_PREFAB(MyAgent, opack::Agent);
 
 TEST_CASE("fipa-acl API")
 {
+	OPACK_AGENT(MyAgent);
     auto world = opack::create_world();
     fipa_acl::import(world);
 	opack::init<MyAgent>(world);
@@ -111,11 +111,13 @@ TEST_CASE("fipa-acl API")
 	}
 }
 
-OPACK_SENSE(Vision);
-struct A {};
 
 TEST_CASE("fipa_acl in systems")
 {
+	OPACK_SENSE(Vision);
+	struct A {};
+	OPACK_AGENT(MyAgent);
+
     auto world = opack::create_world();
     fipa_acl::import(world);
 	opack::init<Vision>(world);

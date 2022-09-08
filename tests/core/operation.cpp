@@ -8,9 +8,10 @@ OPACK_FLOW(MyFlow);
 OPACK_BEHAVIOUR(B1);
 OPACK_BEHAVIOUR(B2);
 OPACK_BEHAVIOUR(B3);
-OPACK_ACTION(Action1);
-OPACK_ACTION(Action2);
-OPACK_ACTION(Action3);
+OPACK_ACTION(MyAction);
+OPACK_SUB_ACTION(Action1, MyAction);
+OPACK_SUB_ACTION(Action2, MyAction);
+OPACK_SUB_ACTION(Action3, MyAction);
 OPACK_ACTUATOR(MyActuator);
 
 
@@ -22,10 +23,11 @@ TEST_CASE("Operation API Basics")
 {
 	auto world = opack::create_world();
 
-    auto actuator = opack::init<MyActuator>(world);
-    opack::init<Action1>(world).set<opack::RequiredActuator>({actuator});
-    opack::init<Action2>(world).set<opack::RequiredActuator>({actuator});
-    opack::init<Action3>(world).set<opack::RequiredActuator>({actuator});
+    opack::init<MyActuator>(world);
+    opack::init<MyAction>(world).require<MyActuator>();
+    opack::init<Action1>(world);
+    opack::init<Action2>(world);
+    opack::init<Action3>(world);
     opack::init<MyAgent>(world)
         .add<MyFlow>()
         .override<Data>().override<State>();
