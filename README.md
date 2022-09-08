@@ -47,12 +47,9 @@ int main()
 
 This example does nothing by itself. A __world__ needs to be populated with capabilities and concepts, _e.g, position, factions, ennemies, allies, etc.,_
 that you would typically define when building your game. It will form an ontology on which your agent will be able to reason.
-
 Here, we just spawned `simple::Agent`, which has one actuator `simple::Actuator` and one sense `simple::Sense`.
 
-First, let's see what is an agent :
-
-An agent is defined as an entity :
+First, let's see what is an agent. An agent is defined as an entity :
 * with __characteristics__, _e.g stress, personality traits, mood, etc,
 * with __knowledge__ about the world, _e.g other entities, activities, etc.
 

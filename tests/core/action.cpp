@@ -1,6 +1,6 @@
 #include <doctest/doctest.h>
 #include <opack/core.hpp>
-#include <opack/module/agents.hpp>
+#include <opack/module/simple_agent.hpp>
 
 
 
