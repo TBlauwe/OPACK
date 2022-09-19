@@ -23,11 +23,12 @@ include(cmake/target_default_compile_options.cmake)
 # Build options
 # =============
 option(OPACK_BUILD_EXAMPLES       "Build examples." OFF)
+option(OPACK_BUILD_EXPERIMENTS    "Build experiments." OFF)
 option(OPACK_BUILD_TESTS          "Build tests." OFF)
 option(OPACK_BUILD_BENCHMARKS     "Build benchmarks using google benchmarks." OFF)
 option(OPACK_DEVELOPPER_WARNINGS  "Enable more warnings when compiling" OFF)
 option(OPACK_ORGANIZE             "Enable organisation of entities, different from C++ namespace (mainly organisation for explorer). Disabling it may lead to more performance." ON)
-option(OPACK_ASSERTS              "Enable assertions. Disabling it may lead to more performance." ON)
+option(OPACK_ENABLE_ASSERTS       "Enable assertions. Disabling it may lead to more performance." ON)
 
 
 # Dependencies
@@ -106,6 +107,9 @@ set(SOURCE_LIST
 add_library (opack STATIC ${SOURCE_LIST} ${HEADER_LIST})
 target_include_directories(opack PUBLIC include)
 target_link_libraries(opack PUBLIC flecs_static fmt)
+if(${OPACK_ENABLE_ASSERTS})
+    target_compile_definitions(opack PUBLIC OPACK_ASSERTS)
+endif()
 target_compile_features(opack PUBLIC cxx_std_20)
 if(OPACK_DEVELOPPER_WARNINGS)
     target_set_compile_warnings_cxx(opack)
@@ -113,6 +117,19 @@ endif()
 
 if(OPACK_BUILD_EXAMPLES)
     add_subdirectory ("examples")
+endif()
+
+if(OPACK_BUILD_EXPERIMENTS)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+		message(WARNING "Matplot++ does not works with clang. Use MSVC. -- skipping experiments")
+    else()
+		find_package(Gnuplot)
+		if(GNUPLOT_FOUND)
+			add_subdirectory ("experiments")
+		else()
+			message(WARNING "GnuPlot not found -- skipping experiments (link : http://www.gnuplot.info/)")
+		endif()
+    endif()
 endif()
 
 if(OPACK_BUILD_BENCHMARKS)

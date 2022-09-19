@@ -186,9 +186,12 @@ namespace opack
 
 	inline Entity actuator(const EntityView& actuator_prefab, const EntityView& entity)
 	{
+#ifdef OPACK_ASSERTS
+		ecs_assert(actuator_prefab.is_valid(), ECS_INVALID_OPERATION, fmt::format("Actuator prefab is invalid").c_str());
+#endif
 		auto actuator = entity.target(actuator_prefab);
 #ifdef OPACK_ASSERTS
-		ecs_assert(actuator.is_valid(), ECS_INVALID_OPERATION, "No actuator \"{}\" for entity \"{}\". Make sure this was called : \"opack::add_actuator<{0}, YourPrefab>(world)\".", actuator_prefab, entity.path());
+		ecs_assert(actuator.is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("No actuator \"{0}\" for entity \"{1}\". Make sure this was called : \"opack::add_actuator<{0}, YourPrefab>(world)\"."), actuator_prefab.path(), entity.path()).c_str());
 #endif
 		return actuator;
 	}
@@ -198,7 +201,7 @@ namespace opack
 	{
 		auto actuator = entity.target<T>();
 #ifdef OPACK_ASSERTS
-		ecs_assert(actuator.is_valid(), ECS_INVALID_OPERATION, "No actuator \"{}\" for entity \"{}\". Make sure this was called : \"opack::add_actuator<{0}, YourPrefab>(world)\".", type_name_cstr<T>(), entity.path());
+		ecs_assert(actuator.is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("No actuator \"{0}\" for entity \"{1}\". Make sure this was called : \"opack::add_actuator<{0}, YourPrefab>(world)\"."), type_name_cstr<T>(), entity.path()).c_str());
 #endif
 		return actuator;
 	}
@@ -223,6 +226,9 @@ namespace opack
 
 	inline void act(Entity initiator, Entity action)
 	{
+#ifdef OPACK_ASSERTS
+		ecs_assert(action.target<RequiredActuator>().is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("Action {0} has no required actuator set ! Don't forget to call : opack::init<YourAction>(world).require<YourActuator>()."), action.path()).c_str());
+#endif
 		auto actuator = opack::actuator(action.target<RequiredActuator>(), initiator);
 		auto last_action = actuator.template target<Doing>();
 		if (last_action)
@@ -239,7 +245,7 @@ namespace opack
 	{
 		auto world = initiator.world();
 		auto action = opack::spawn<T>(world);
-		act(initiation, action);
+		act(initiator, action);
 		return ActionHandle(world, action);
 	}
 }

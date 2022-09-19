@@ -13,14 +13,16 @@ struct simple
 	OPACK_AGENT(Agent);
 	OPACK_ACTUATOR(Actuator);
 	OPACK_SENSE(Sense);
+	OPACK_FLOW(Flow);
 
-	simple(opack::World& _world)
+	simple(opack::World& world)
 	{
-		opack::init<Actuator>(_world);
-		opack::init<Sense>(_world);
-		opack::init<Agent>(_world);
-		opack::add_actuator<Actuator, Agent>(_world);
-		opack::add_sense<Sense, Agent>(_world);
+		opack::init<Actuator>(world);
+		opack::init<Sense>(world);
+		opack::init<Agent>(world);
+		opack::add_actuator<Actuator, Agent>(world);
+		opack::add_sense<Sense, Agent>(world);
+		opack::FlowBuilder<Flow>(world).build();
 	}
 
 	static opack::ActuatorHandle get_actuator(opack::World& world)

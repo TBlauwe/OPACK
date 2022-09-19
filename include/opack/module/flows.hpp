@@ -24,7 +24,7 @@ struct ActivityFlowBuilder : public opack::FlowBuilder<T>
 	{
 		opack::operation<T, SuitableActions, ActionSelection, Act>(world);
 		opack::default_impact<SuitableActions>(world,
-			[this](flecs::entity agent, auto& inputs)
+			[](flecs::entity agent, typename SuitableActions::inputs& inputs)
 			{
 				(add_activity<Activities>(agent, inputs), ...);
 				return opack::make_outputs<SuitableActions>();
@@ -61,7 +61,7 @@ struct ActivityFlowBuilder : public opack::FlowBuilder<T>
 
 private:
 	template<typename U>
-	void add_activity(flecs::entity agent, typename SuitableActions::inputs& inputs)
+	static void add_activity(flecs::entity agent, typename SuitableActions::inputs& inputs)
 	{
 		agent.each<U>([&inputs](flecs::entity target)
 			{

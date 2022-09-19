@@ -5,8 +5,6 @@ int main()
 {
 	auto world = opack::create_world();
 	world.import<simple>();
-	opack::spawn<simple::Agent>(world);
-	opack::spawn<simple::Agent>(world);
-	opack::spawn<simple::Agent>(world);
+	world.plecs_from_file("plecs/simple_agent.flecs");
 	opack::run_with_webapp(world);
 }

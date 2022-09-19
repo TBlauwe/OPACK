@@ -301,7 +301,7 @@ namespace opack
     inline Entity spawn(Entity& prefab)
     {
 #ifdef OPACK_ASSERTS
-        ecs_assert(prefab.has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to call : `opack::init<{0}>(world)`", type_name_cstr<T>()).c_str());
+        ecs_assert(prefab.has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to initialize it !", prefab.path()).c_str());
 #endif 
         return prefab.world().entity().is_a(prefab);
     }
@@ -309,7 +309,7 @@ namespace opack
     inline Entity spawn(Entity& prefab, const char * name)
     {
 #ifdef OPACK_ASSERTS
-        ecs_assert(prefab.has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to call : `opack::init<{0}>(world)`", type_name_cstr<T>()).c_str());
+        ecs_assert(prefab.has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to initialize it !", prefab.path()).c_str());
 #endif 
         return prefab.world().entity(name).is_a(prefab);
     }
