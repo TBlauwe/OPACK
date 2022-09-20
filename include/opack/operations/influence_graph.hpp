@@ -56,6 +56,7 @@ namespace opack::operations
 		struct Strategy : parent_t::template Strategy<T>
 		{
 			using parent_t::template Strategy<T>::Strategy;
+			using output_dataflow = opack::df<T, output>;
 
 			template<typename... Ts>
 			typename T::operation_outputs compute(Ts&... args)
@@ -68,11 +69,15 @@ namespace opack::operations
 					impact.func(this->agent, inputs);
 				}
 				auto result = ig.compute();
-				this->agent.set<T, ig_t>({ig});
-				return std::make_tuple(result == nullptr ? type() : *result);
+				this->agent.template set<T, ig_t>({ig});
+				return std::make_tuple(result ? type() : result.value());
 			}
 		};
 	};
 
-
+	template<typename T, typename U>
+	typename T::output output(typename U::inputs& inputs)
+	{
+		return std::get<typename T::template Strategy<T>::output_dataflow&>(inputs).value;
+	}
 }

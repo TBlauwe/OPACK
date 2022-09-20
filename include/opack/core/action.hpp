@@ -117,6 +117,11 @@ namespace opack
 	void act(Entity initiator, Entity action);
 
 	/**
+	@brief @c initiator is now doing @c action.
+	*/
+	void act(Entity initiator, EntityView action);
+
+	/**
 	@brief @c initiatior is now doing an action of type @c T
 	@return An @c ActionHandle if you need to tailor the action.
 	*/
@@ -235,6 +240,11 @@ namespace opack
 	Entity current_action(Entity entity)
 	{
 		return opack::actuator<T>(entity).template target<Doing>();
+	}
+
+	inline void act(Entity initiator, EntityView action)
+	{
+		act(initiator, action.mut(initiator));
 	}
 
 	inline void act(Entity initiator, Entity action)

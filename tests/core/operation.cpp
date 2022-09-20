@@ -156,9 +156,9 @@ TEST_CASE("Operation API Basics")
 
     SUBCASE("Operation ActionSelection")
     {
-        struct Op1 : opack::operations::Union<opack::Action_t> {};
+        struct Op1 : opack::operations::Union<flecs::entity_view> {};
         struct Op2 : opack::operations::SelectionByIGraph<Op1, Data> {};
-        struct Op3 : opack::operations::All<opack::df<Op2, opack::Action_t>> {};
+        struct Op3 : opack::operations::All<opack::df<Op2, flecs::entity_view>> {};
 
         opack::operation<MyFlow, Op1, Op2, Op3>(world);
 
@@ -201,7 +201,7 @@ TEST_CASE("Operation API Basics")
         opack::default_impact<Op3>(world,
             [](opack::Entity e, typename Op3::inputs& i1)
             {
-                auto action = std::get<opack::df<Op2, opack::Action_t>&>(i1).value;
+                auto action = opack::operations::output<Op2, Op3>(i1);
                 opack::act(e, action);
                 return opack::make_outputs<Op3>();
             }
