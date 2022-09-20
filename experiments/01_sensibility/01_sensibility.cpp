@@ -51,11 +51,6 @@ OPACK_BEHAVIOUR(Stressed);
 
 using namespace matplot;
 
-void generate_color_sequences(opack::World& world)
-{
-	
-}
-
 void generate_actions_sequence(opack::World& world, const char * filename)
 {
 	std::tuple<vector_2d, vector_2d, vector_2d> C;
@@ -82,6 +77,7 @@ void generate_actions_sequence(opack::World& world, const char * filename)
 		}
 	);
 	image(C);
+    grid(on);
 
 	std::vector<double> ticks(opack::count_instance<simple::Agent>(world));
 	std::iota(ticks.begin(), ticks.end(),1);

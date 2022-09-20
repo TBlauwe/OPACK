@@ -1,14 +1,24 @@
+// Prefab _ : Action { - Color{0, 0, 0}}
 Prefab _ : Action { - Color{255, 255, 255}}
 Prefab _ : Action { - Color{255, 0, 0}}
 Prefab _ : Action { - Color{0, 255, 0}}
 Prefab _ : Action { - Color{0, 0, 255}}
 
-MySuperAgent : simple.Agent 
+Baseline : simple.Agent
+{}
+
+LazyAgent : simple.Agent
+{
+	- Lazy
+}
+
+StressedAgent : simple.Agent 
 {
 	- Stressed
 }
-MyOtherSuperAgent : simple.Agent 
+
+LazyStressedAgent : simple.Agent 
 {
 	- Lazy
-	- Stressed 
+	- Stressed
 }
