@@ -248,7 +248,7 @@ namespace opack
     size_t count(const World& world, const Entity rel, const Entity obj);
 
     /**
-     *@brief For each instance of @c T, @c func is applied.
+     *@brief For each instance of @c T, @c func is applied every update.
      *@tparam T must be used as a prefab.
      *
      *TODO Why no concepts ? We can't know by its type if it's used as a prefab or not.

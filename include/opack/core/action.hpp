@@ -52,7 +52,7 @@ namespace opack
 		using HandleView::HandleView;
 	};
 
-	struct ActionHandle : Handle, ActionHandleView
+	struct ActionHandle : Handle
 	{
 		using Handle::Handle;
 
@@ -161,14 +161,14 @@ namespace opack
 
 	inline ActionHandle& ActionHandle::require(const EntityView& actuator_prefab)
 	{
-		override<RequiredActuator>(actuator_prefab);
+		set<RequiredActuator>({ actuator_prefab });
 		return *this;
 	}
 
 	template<ActuatorPrefab T>
 	ActionHandle& ActionHandle::require()
 	{
-		override<RequiredActuator, T>();
+		set<RequiredActuator>({ world().entity<T>() });
 		return *this;
 	}
 
@@ -241,17 +241,20 @@ namespace opack
 	{
 #ifdef OPACK_ASSERTS
 		ecs_assert(action.is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("Initiator {} is trying to do an invalid action !"), initiator.path()).c_str());
-		ecs_assert(action.target<RequiredActuator>().is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("Action {0} has no required actuator set ! Don't forget to call : opack::init<YourAction>(world).require<YourActuator>()."), action.path()).c_str());
+		ecs_assert(action.get<RequiredActuator>()->value.is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("Action {0} has no required actuator set ! Don't forget to call : opack::init<YourAction>(world).require<YourActuator>()."), action.path()).c_str());
 #endif
-		auto actuator = opack::actuator(action.target<RequiredActuator>(), initiator);
+		flecs::entity effective_action;
+		if (action.has(flecs::Prefab))
+			effective_action = opack::spawn(action);
+		else
+			effective_action = action;
+		auto actuator = opack::actuator(action.get<RequiredActuator>()->value, initiator);
 		auto last_action = actuator.template target<Doing>();
 		if (last_action)
-		{
-			last_action.mut(action)
-				.template add<Cancel>();
-		}
-		action.mut(action).add<By>(initiator);
-		actuator.template add<Doing>(action);
+			last_action.mut(action).template add<Cancel>();
+
+		effective_action.mut(action).add<By>(initiator);
+		actuator.mut(action).template add<Doing>(effective_action);
 	}
 
 	template<ActionPrefab T>
