@@ -46,6 +46,7 @@ namespace opack::operations
 			return std::get<id>(tuple);
 		}
 
+		//TODO improve api, so that this graph is localised to the current behaviour (so we do not have to pass the id or u each time).
 		static graph get_graph(typename parent_t::inputs& tuple)
 		{
 			return std::get<graph>(tuple);

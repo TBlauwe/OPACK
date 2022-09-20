@@ -24,11 +24,16 @@ uint8_t random_color()
     return dist(rng);
 }
 
+using rgb = color::rgb<uint8_t>;
 struct Color
 {
-    uint8_t r{random_color()};
-    uint8_t g{random_color()};
-    uint8_t b{random_color()};
+    uint8_t r{0};
+    uint8_t g{0};
+    uint8_t b{0};
+
+    explicit operator rgb() const { return rgb{ r, g, b }; }
+
+    friend auto operator<=>(const Color&, const Color&) = default;
 };
 
 struct Memory
@@ -41,6 +46,9 @@ struct SuitableActions : opack::operations::Union<opack::Action_t> {};
 struct ActionSelection : opack::operations::SelectionByIGraph<SuitableActions> {};
 struct Act : opack::operations::All<opack::df<ActionSelection, opack::Action_t>> {};
 
+OPACK_BEHAVIOUR(Lazy);
+OPACK_BEHAVIOUR(Stressed);
+
 using namespace matplot;
 
 void generate_color_sequences(opack::World& world)
@@ -48,14 +56,13 @@ void generate_color_sequences(opack::World& world)
 	
 }
 
-void generate_actions_sequence(opack::World& world)
+void generate_actions_sequence(opack::World& world, const char * filename)
 {
 	std::tuple<vector_2d, vector_2d, vector_2d> C;
 	auto &[r, g, b] = C;
 
-	int max_size = 0;
 	std::vector<std::string> tick_labels{};
-	world.filter<const Memory>().each([&r, &g, &b, &max_size, &tick_labels](opack::Entity agent, const Memory& memory)
+	world.filter<const Memory>().each([&r, &g, &b, &tick_labels](opack::Entity agent, const Memory& memory)
 		{
 			auto sub_r = vector_1d{};
 			auto sub_g = vector_1d{};
@@ -71,7 +78,7 @@ void generate_actions_sequence(opack::World& world)
 			r.push_back(sub_r);
 			g.push_back(sub_g);
 			b.push_back(sub_b);
-			tick_labels.push_back(agent.path().c_str());
+			tick_labels.push_back(agent.name().c_str());
 		}
 	);
 	image(C);
@@ -81,6 +88,7 @@ void generate_actions_sequence(opack::World& world)
 	yticks(ticks);
 	yticklabels(tick_labels);
 	show();
+    save(filename);
 }
 
 int main()
@@ -104,7 +112,7 @@ int main()
     opack::prefab<simple::Agent>(world).add<Memory>().add<simple::Flow>();
 
     // Instantiate "Action" prefab
-    opack::init<Action>(world).require<simple::Actuator>().override<Color>();
+    opack::init<Action>(world).require<simple::Actuator>().add<Color>();
     opack::on_action_begin<Action>(world, [](opack::Entity action)
     {
             auto agent = opack::initiator(action);
@@ -122,7 +130,14 @@ int main()
     opack::default_impact<SuitableActions>(world,
         [](opack::Entity e, auto& inputs)
 			{
-        		SuitableActions::iterator(inputs) = opack::action<Action>(e);
+				auto world = e.world();
+                world.filter_builder<const Color>()
+					.term(flecs::Prefab)
+					.build()
+        			.each([&inputs](opack::Entity action_prefab, const Color&)
+                    {
+                        SuitableActions::iterator(inputs) = opack::action(action_prefab);
+                    });
 
                 return opack::make_outputs<SuitableActions>();	
 			}
@@ -151,16 +166,63 @@ int main()
             return opack::make_outputs<Act>();
         }
     );
+    // =========================================================================== 
+    // Behaviour definition
+    // =========================================================================== 
+    opack::behaviour<Lazy>(world, opack::with<Lazy>);
+    opack::impact<ActionSelection, Lazy>(world, 
+        [](opack::Entity agent, ActionSelection::inputs& inputs)
+        {
+        	const auto id = ActionSelection::get_influencer(inputs);
+        	auto& actions = ActionSelection::get_choices(inputs);
+        	auto& graph = ActionSelection::get_graph(inputs);
+			for (auto& a : actions)
+			{
+                auto c = rgb(*a.get<Color>());
+                if(c == ::color::constant::black_t{}) 
+					graph.positive_influence(id, a);
+			}
+			return opack::make_outputs<ActionSelection>();
+
+        }
+    );
+
+    opack::behaviour<Stressed>(world, opack::with<Stressed>);
+    opack::impact<ActionSelection, Stressed>(world, 
+        [](opack::Entity agent, ActionSelection::inputs& inputs)
+        {
+        	const auto id = ActionSelection::get_influencer(inputs);
+        	auto& actions = ActionSelection::get_choices(inputs);
+        	auto& graph = ActionSelection::get_graph(inputs);
+            const auto& actions_done = agent.get<Memory>()->actions_done;
+			for (auto& a : actions)
+			{
+                auto color = *a.get<Color>();
+                auto c = rgb(color);
+                auto count = std::count_if(actions_done.begin(), actions_done.end(), 
+                    [&](const Color& action_color)
+                    {
+                        return color == action_color;
+                    }
+                );
+                if(color.r > 0  && count < 1) //Bug always one more ?
+					graph.positive_influence(id, a);
+                else if(color.r > 0  && count >= 1) 
+					graph.negative_influence(id, a);
+			}
+			return opack::make_outputs<ActionSelection>();
+
+        }
+    );
 
     // =========================================================================== 
     // World population
     // =========================================================================== 
-	opack::spawn<simple::Agent>(world);
-	opack::spawn<simple::Agent>(world);
+    world.plecs_from_file("configuration.flecs");
 
     opack::step_n(world, 10);
 	//opack::run_with_webapp(world);
 
-	generate_actions_sequence(world);
+	generate_actions_sequence(world,"test");
     return 0;
 }

@@ -1,1 +1,14 @@
-_ : Action { - Color{1, 1, 1}}
+Prefab _ : Action { - Color{255, 255, 255}}
+Prefab _ : Action { - Color{255, 0, 0}}
+Prefab _ : Action { - Color{0, 255, 0}}
+Prefab _ : Action { - Color{0, 0, 255}}
+
+MySuperAgent : simple.Agent 
+{
+	- Stressed
+}
+MyOtherSuperAgent : simple.Agent 
+{
+	- Lazy
+	- Stressed 
+}

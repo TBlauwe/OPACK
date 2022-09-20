@@ -75,6 +75,7 @@ namespace opack
 	template<std::derived_from<Behaviour> TBeh, typename ... TInputs, typename TFunc>
 	flecs::entity behaviour(World& world, TFunc&& func)
 	{
+		//TODO should probably check if behaviour is not already instantiated
 		auto behaviour = opack::init<TBeh>(world);
 
 		world.system<TInputs ...>()

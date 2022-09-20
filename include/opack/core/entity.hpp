@@ -77,6 +77,16 @@ namespace opack
 	template<typename T>
     bool is_a(Entity entity);
 
+    /** Always return true. */
+    inline bool always(opack::Entity) { return true; };
+
+    /** Always return false. */
+	inline bool never(opack::Entity) { return false; };
+
+    /** Returns true iff @c agent has all @c Ts. */
+	template<typename... Ts>
+	bool with(opack::Entity agent) { return (agent.has<Ts>() && ...); };
+
 
     // --------------------------------------------------------------------------- 
     // Definition

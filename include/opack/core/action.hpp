@@ -93,7 +93,12 @@ namespace opack
 	 * @brief Create an instanced action @c T.
 	 */
 	template<std::derived_from<opack::Action> T>
-	Entity action(const Entity& entity);
+	Entity action(Entity entity);
+
+	/**
+	 * @brief Create an instanced action from prefab @c action_prefab.
+	 */
+	Entity action(Entity action_prefab);
 
 	/**
 	@brief Return current action done by @c entity with @c actuator_prefab
@@ -207,10 +212,18 @@ namespace opack
 	}
 
 	template<std::derived_from<opack::Action> T>
-	Entity action(const Entity& entity)
+	Entity action(Entity entity)
 	{
 		auto world = entity.world();
 		return opack::spawn<T>(world);
+	}
+
+	inline Entity action(Entity action_prefab)
+	{
+#ifdef OPACK_ASSERTS
+		ecs_assert(action_prefab.is_valid(), ECS_INVALID_OPERATION, fmt::format("Trying to create an action from an invalid action prefab.").c_str());
+#endif
+		return opack::spawn(action_prefab);
 	}
 
 	inline Entity current_action(opack::Entity actuator_prefab, Entity entity)
@@ -227,6 +240,7 @@ namespace opack
 	inline void act(Entity initiator, Entity action)
 	{
 #ifdef OPACK_ASSERTS
+		ecs_assert(action.is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("Initiator {} is trying to do an invalid action !"), initiator.path()).c_str());
 		ecs_assert(action.target<RequiredActuator>().is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("Action {0} has no required actuator set ! Don't forget to call : opack::init<YourAction>(world).require<YourActuator>()."), action.path()).c_str());
 #endif
 		auto actuator = opack::actuator(action.target<RequiredActuator>(), initiator);
