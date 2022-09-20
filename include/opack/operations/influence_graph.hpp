@@ -68,6 +68,7 @@ namespace opack::operations
 					impact.func(this->agent, inputs);
 				}
 				auto result = ig.compute();
+				this->agent.set<T, ig_t>({ig});
 				return std::make_tuple(result == nullptr ? type() : *result);
 			}
 		};
