@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <optional>
 
 namespace opack
@@ -21,8 +22,8 @@ namespace opack
 
 		using Score = std::pair<VIndex, int>;
 
-		using Influences = std::unordered_multimap<UIndex, VIndex>;
-		using Preferences = std::unordered_multimap<UIndex, UIndex>;
+		using Influences = std::unordered_map<UIndex, std::unordered_set<VIndex>>;
+		using Preferences = std::unordered_map<UIndex, std::unordered_set<UIndex>>;
 		using Scores = std::unordered_map<VIndex, int>;
 
 	public:
@@ -128,26 +129,42 @@ namespace opack
 			return m_highest_scores;
 		}
 
+		template<typename T1, typename T2>
+		void print(T1&& f, T2&& g)
+		{
+			fmt::print(" --------- IG graph ----------\n");
+			for (auto& [u_idx, v_idxs] : positive_influences())
+			{
+				for(auto& v_idx : v_idxs)
+					fmt::print("({}) --- + ---> ({})\n", f(u_at(u_idx)), g(v_at(v_idx)));
+			}
+			for (auto& [u_idx, v_idxs] : negative_influences())
+			{
+				for(auto& v_idx : v_idxs)
+					fmt::print("({}) --- - ---> ({})\n", f(u_at(u_idx)), g(v_at(v_idx)));
+			}
+			for (auto& [v_idx, score] : scores())
+			{
+				fmt::print("({}) has {}\n", g(v_at(v_idx)), score);
+			}
+		}
+
 	private:
 
 		void positive_influence_from_id(UIndex u_idx, V_t v)
 		{
 			auto v_idx = v_index(v);
-			m_positive_influences.insert({ u_idx, v_idx });
-			if (m_scores.contains(v_idx))
-				m_scores.at(v_idx) += 1;
-			else
-				m_scores.insert_or_assign(v_idx, 1);
+			auto [_, added] = m_positive_influences.try_emplace(u_idx).first->second.emplace(v_idx);
+			if(added)
+				++m_scores.try_emplace(v_idx).first->second;
 		}
 
 		void negative_influence_from_id(UIndex u_idx, V_t v)
 		{
 			auto v_idx = v_index(v);
-			m_negative_influences.insert({ u_idx, v_idx });
-			if (m_scores.contains(v_idx))
-				m_scores.at(v_idx) -= 1;
-			else
-				m_scores.insert_or_assign(v_idx, -1);
+			auto [_, added] = m_negative_influences.try_emplace(u_idx).first->second.emplace(v_idx);
+			if(added)
+				--m_scores.try_emplace(v_idx).first->second;
 		}
 
 		void influence_from_id(UIndex u_idx, V_t v, bool is_positive)
@@ -205,6 +222,7 @@ namespace opack
 			IPGraph<U_t, V_t>& m_graph;
 			Index u_index;
 		};
+
 		UNode scope(U_t u)
 		{
 			return UNode(*this, u);

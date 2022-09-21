@@ -55,17 +55,17 @@ namespace opack::operations
 			template<typename... Ts>
 			typename T::operation_outputs compute(Ts&... args)
 			{
-				ig_t ig{ };
-				for (size_t i{ 0 }; i < this->impacts.size(); i++)
+				for (const auto impact : this->impacts)
 				{
-					const auto& impact = *this->impacts[i];
-					auto inputs = opack::make_inputs<T>(args..., impact.behaviour, ig.scope(impact.behaviour));
-					impact.func(this->agent, inputs);
+					auto inputs = opack::make_inputs<T>(args..., impact->behaviour, ig.scope(impact->behaviour));
+					impact->func(this->agent, inputs);
 				}
 				auto result = ig.compute();
 				this->agent.template set<T, ig_t>({ig});
 				return std::make_tuple(result ? result.value() : flecs::entity::null());
 			}
+
+			ig_t ig{ };
 		};
 	};
 }

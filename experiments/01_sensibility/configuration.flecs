@@ -7,6 +7,7 @@ Prefab White : Action { - Color{255, 255, 255}}
 Prefab Red : Action { - Color{255, 0, 0}}
 Prefab Green : Action { - Color{0, 255, 0}}
 Prefab Blue : Action { - Color{0, 0, 255}}
+Prefab Cyan : Action { - Color{0, 100, 100}}
 
 Baseline : simple.Agent
 {
@@ -15,9 +16,6 @@ Baseline : simple.Agent
 LazyAgent : simple.Agent
 {
 	- Lazy
-	- InspectMemory
-	- InspectCurrentAction
-	- InspectIGraph
 }
 
 StressedAgent : simple.Agent 
@@ -28,6 +26,9 @@ StressedAgent : simple.Agent
 EagerAgent : simple.Agent 
 {
 	- Eager
+//	- InspectMemory
+//	- InspectCurrentAction
+//	- InspectIGraph
 }
 
 LazyStressedAgent : simple.Agent 

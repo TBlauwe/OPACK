@@ -155,13 +155,9 @@ int main()
         .kind(flecs::PostUpdate)
         .each([](opack::Entity agent, ActionSelection::ig_t& ig)
             {
-                fmt::print("[INSPECTION] - {} influence graph scores : \n", agent.name());
-                for(auto& [idx, score] : ig.scores())
-                {
-                    fmt::print("----- {} : {}\n", ig.v_at(idx).path(), score);
-                }
+                fmt::print("[INSPECTION] - {} influence graph : \n", agent.name());
+                ig.print([](flecs::entity_view e) {return e.name(); }, [](flecs::entity_view e) {return e.name(); });
             });
-
 
     world.system()
         .kind(flecs::PostFrame)
@@ -276,9 +272,9 @@ int main()
                         return action == a;
                     }
                 );
-                if (c != ::color::constant::white_t{} && count == 0)
+                if (c != ::color::constant::black_t{} && count == 0)
 					graph.positive_influence(a);
-                else if (c != ::color::constant::white_t{} && count > 0)
+                else if (count > 0)
 					graph.negative_influence(a);
 			}
 			return opack::make_outputs<ActionSelection>();
@@ -291,8 +287,8 @@ int main()
     // =========================================================================== 
     world.plecs_from_file("configuration.flecs");
 
-    //opack::step_n(world, world.get<Configuration>()->turns + 1);
-	opack::run_with_webapp(world);
+    opack::step_n(world, world.get<Configuration>()->turns + 1);
+	//opack::run_with_webapp(world);
 
 	generate_actions_sequence(world,"test.png");
     return 0;

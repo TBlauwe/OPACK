@@ -5,24 +5,6 @@
 
 TEST_SUITE_BEGIN("Algorithm : influence graph");
 
-template<typename U, typename V>
-void print(opack::IPGraph<U, V>& ig)
-{
-	fmt::print(" --------- IG graph ----------\n");
-	for (auto& [u_idx, v_idx] : ig.positive_influences())
-	{
-		fmt::print("({}) --- + ---> ({})\n", ig.u_at(u_idx), ig.v_at(v_idx));
-	}
-	for (auto& [u_idx, v_idx] : ig.negative_influences())
-	{
-		fmt::print("({}) --- - ---> ({})\n", ig.u_at(u_idx), ig.v_at(v_idx));
-	}
-	for (auto& [v_idx, score] : ig.scores())
-	{
-		fmt::print("({}) has {}\n", ig.v_at(v_idx), score);
-	}
-}
-
 TEST_CASE("With int")
 {
 	opack::IPGraph<int, int> ig{ };
@@ -65,17 +47,17 @@ TEST_CASE("With entity")
 	std::array U{ world.entity(), world.entity(), world.entity(), world.entity() };
 	std::array V{ world.entity(), world.entity(), world.entity(), world.entity(), world.entity() };
 
-	ig.scope(U[0]).positive_influence(V[0]);
+	ig.positive_influence(U[0], V[0]);
 	CHECK(ig.score(V[0]) == 1);
 	CHECK(V[0] == ig.compute());
 
-	ig.scope(U[0]).negative_influence(V[1]);
+	ig.negative_influence(U[0], V[1]);
 	CHECK(ig.score(V[0]) == 1);
 	CHECK(ig.score(V[1]) == -1);
 	CHECK(V[0] == ig.compute());
 
-	ig.scope(U[1]).positive_influence(V[0]);
-	ig.scope(U[1]).positive_influence(V[0]);
+	ig.positive_influence(U[1], V[0]);
+	ig.positive_influence(U[2], V[0]);
 	CHECK(ig.score(V[0]) == 3);
 	CHECK(ig.score(V[1]) == -1);
 	CHECK(V[0] == ig.compute());
@@ -88,4 +70,5 @@ TEST_CASE("With entity")
 	CHECK(ig.score(V[1]) == -1);
 	CHECK(ig.score(V[2]) == 4);
 	CHECK(V[2] == ig.compute());
+
 }
