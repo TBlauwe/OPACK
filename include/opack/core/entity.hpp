@@ -51,7 +51,7 @@ namespace opack
     opack::is_a(a, e2); // false
     @endcode
     */
-    bool is_a(Entity prefab, Entity entity);
+    bool is_a(EntityView prefab, EntityView entity);
 
     /** 
     @brief Returns true if @c entity is an instance of prefab @c T.
@@ -75,29 +75,29 @@ namespace opack
     @endcode
     */
 	template<typename T>
-    bool is_a(Entity entity);
+    bool is_a(EntityView entity);
 
     /** Always return true. */
-    inline bool always(opack::Entity) { return true; };
+    inline bool always(EntityView) { return true; };
 
     /** Always return false. */
-	inline bool never(opack::Entity) { return false; };
+	inline bool never(EntityView) { return false; };
 
     /** Returns true iff @c agent has all @c Ts. */
 	template<typename... Ts>
-	bool with(opack::Entity agent) { return (agent.has<Ts>() && ...); };
+	bool with(EntityView agent) { return (agent.has<Ts>() && ...); };
 
 
     // --------------------------------------------------------------------------- 
     // Definition
     // --------------------------------------------------------------------------- 
-	inline bool is_a(Entity prefab, Entity entity)
+	inline bool is_a(EntityView prefab, EntityView entity)
 	{
 		return entity.has(flecs::IsA, prefab);
 	}
 
 	template<typename T>
-	bool is_a(Entity entity)
+	bool is_a(EntityView entity)
 	{
 		return is_a(entity.world().entity<T>(), entity);
 	}

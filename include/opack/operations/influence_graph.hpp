@@ -19,7 +19,7 @@ namespace opack::operations
 		opack::O<
 		opack::Inputs<opack::df<TOper, typename TOper::container_t>, Args...>,
 		opack::Outputs<typename TOper::type>,
-		opack::Inputs<flecs::entity_view, opack::InfluenceGraph<flecs::entity_view, typename TOper::type>&>,
+		opack::Inputs<flecs::entity_view, typename opack::IPGraph<flecs::entity_view, typename TOper::type>::UNode>,
 		opack::Outputs<>
 		>;
 
@@ -32,8 +32,8 @@ namespace opack::operations
 		using prev_operation = TOper;
 		using container = std::vector<type>;
 		using input_dataflow = opack::df<TOper, container>&;
-		using ig_t = opack::InfluenceGraph<flecs::entity_view, type>;
-		using graph = opack::InfluenceGraph<flecs::entity_view, type>&;
+		using ig_t = opack::IPGraph<flecs::entity_view, type>;
+		using graph = typename opack::IPGraph<flecs::entity_view, type>::UNode;
 		using id = flecs::entity_view;
 
 		static container& get_choices(typename parent_t::inputs& tuple)
@@ -41,12 +41,6 @@ namespace opack::operations
 			return std::get<input_dataflow>(tuple).value;
 		}
 
-		static id get_influencer(typename parent_t::inputs& tuple)
-		{
-			return std::get<id>(tuple);
-		}
-
-		//TODO improve api, so that this graph is localised to the current behaviour (so we do not have to pass the id or u each time).
 		static graph get_graph(typename parent_t::inputs& tuple)
 		{
 			return std::get<graph>(tuple);
@@ -65,19 +59,13 @@ namespace opack::operations
 				for (size_t i{ 0 }; i < this->impacts.size(); i++)
 				{
 					const auto& impact = *this->impacts[i];
-					auto inputs = opack::make_inputs<T>(args..., impact.behaviour, ig);
+					auto inputs = opack::make_inputs<T>(args..., impact.behaviour, ig.scope(impact.behaviour));
 					impact.func(this->agent, inputs);
 				}
 				auto result = ig.compute();
 				this->agent.template set<T, ig_t>({ig});
-				return std::make_tuple(result ? type() : result.value());
+				return std::make_tuple(result ? result.value() : flecs::entity::null());
 			}
 		};
 	};
-
-	template<typename T, typename U>
-	typename T::output output(typename U::inputs& inputs)
-	{
-		return std::get<typename T::template Strategy<T>::output_dataflow&>(inputs).value;
-	}
 }

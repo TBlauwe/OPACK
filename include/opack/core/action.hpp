@@ -2,7 +2,7 @@
  * \file   action.hpp
  * \brief  Action API.
  * 
- * \author Hyperenor
+ * \author Tristan
  * \date   August 2022
  *********************************************************************/
 #pragma once

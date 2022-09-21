@@ -276,6 +276,12 @@ namespace opack
          return world.prefab<T>();
     }
 
+    template<typename T>
+    Entity prefab(EntityView entity)
+    {
+         return entity.world().entity<T>();
+    }
+
     template<SubPrefab T>
     opack::Entity init(World& world)
     {

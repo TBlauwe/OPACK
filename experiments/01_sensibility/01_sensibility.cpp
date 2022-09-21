@@ -96,7 +96,6 @@ void generate_actions_sequence(opack::World& world, const char * filename)
 
 int main()
 {
-
     // =========================================================================== 
     // Parameters
     // =========================================================================== 
@@ -157,11 +156,10 @@ int main()
         .each([](opack::Entity agent, ActionSelection::ig_t& ig)
             {
                 fmt::print("[INSPECTION] - {} influence graph scores : \n", agent.name());
-                for(auto& [action, score] : ig.get_scores())
+                for(auto& [idx, score] : ig.scores())
                 {
-                    fmt::print("----- {} : {}\n", action->path(), score);
+                    fmt::print("----- {} : {}\n", ig.v_at(idx).path(), score);
                 }
-                
             });
 
 
@@ -200,10 +198,8 @@ int main()
 	opack::default_impact<ActionSelection>(world,
 		[](opack::Entity e, auto& inputs)
 		{
-			const auto id = ActionSelection::get_influencer(inputs);
-			auto& actions = ActionSelection::get_choices(inputs);
-			auto& graph = ActionSelection::get_graph(inputs);
-			for (auto& a : actions)
+			auto graph = ActionSelection::get_graph(inputs);
+			for (auto& a : ActionSelection::get_choices(inputs))
 			{
 				graph.entry(a);
 			}
@@ -227,14 +223,12 @@ int main()
     opack::impact<ActionSelection, Lazy>(world, 
         [](opack::Entity agent, ActionSelection::inputs& inputs)
         {
-        	const auto id = ActionSelection::get_influencer(inputs);
-        	auto& actions = ActionSelection::get_choices(inputs);
-        	auto& graph = ActionSelection::get_graph(inputs);
-			for (auto& a : actions)
+        	auto graph = ActionSelection::get_graph(inputs);
+			for (auto& a : ActionSelection::get_choices(inputs))
 			{
                 auto c = rgb(*a.get<Color>());
                 if(c == ::color::constant::black_t{}) 
-					graph.positive_influence(id, a);
+					graph.positive_influence(a);
 			}
 			return opack::make_outputs<ActionSelection>();
 
@@ -245,11 +239,9 @@ int main()
     opack::impact<ActionSelection, Stressed>(world, 
         [](opack::Entity agent, ActionSelection::inputs& inputs)
         {
-        	const auto id = ActionSelection::get_influencer(inputs);
-        	auto& actions = ActionSelection::get_choices(inputs);
-        	auto& graph = ActionSelection::get_graph(inputs);
+        	auto graph = ActionSelection::get_graph(inputs);
             const auto& actions_done = agent.get<Memory>()->actions_done;
-			for (auto& a : actions)
+			for (auto& a : ActionSelection::get_choices(inputs))
 			{
                 auto color = *a.get<Color>();
                 auto c = rgb(color);
@@ -260,12 +252,11 @@ int main()
                     }
                 );
                 if(color.r > 0  && count < 2)
-					graph.positive_influence(id, a);
+					graph.positive_influence(a);
                 else if(color.r > 0  && count >= 2) 
-					graph.negative_influence(id, a);
+					graph.negative_influence(a);
 			}
 			return opack::make_outputs<ActionSelection>();
-
         }
     );
 
@@ -273,11 +264,9 @@ int main()
     opack::impact<ActionSelection, Eager>(world, 
         [](opack::Entity agent, ActionSelection::inputs& inputs)
         {
-        	const auto id = ActionSelection::get_influencer(inputs);
-        	auto& actions = ActionSelection::get_choices(inputs);
-        	auto& graph = ActionSelection::get_graph(inputs);
+        	auto graph = ActionSelection::get_graph(inputs);
             const auto& actions_done = agent.get<Memory>()->actions_done;
-			for (auto& a : actions)
+			for (auto& a :  ActionSelection::get_choices(inputs))
 			{
                 auto color = *a.get<Color>();
                 auto c = rgb(color);
@@ -288,9 +277,9 @@ int main()
                     }
                 );
                 if (c != ::color::constant::white_t{} && count == 0)
-					graph.positive_influence(id, a);
+					graph.positive_influence(a);
                 else if (c != ::color::constant::white_t{} && count > 0)
-					graph.negative_influence(id, a);
+					graph.negative_influence(a);
 			}
 			return opack::make_outputs<ActionSelection>();
 

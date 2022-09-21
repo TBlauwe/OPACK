@@ -165,21 +165,21 @@ TEST_CASE("Operation API Basics")
         opack::impact<Op1, B1>(world,
             [](opack::Entity e, typename Op1::inputs& i1)
             {
-                Op1::iterator(i1) = opack::action<Action1>(e);
+                Op1::iterator(i1) = opack::prefab<Action1>(e);
                 return opack::make_outputs<Op1>();
             }
         );
         opack::impact<Op1, B2>(world,
             [](opack::Entity e, typename Op1::inputs& i1)
             {
-                Op1::iterator(i1) = opack::action<Action2>(e);
+                Op1::iterator(i1) = opack::prefab<Action2>(e);
                 return opack::make_outputs<Op1>();
             }
         );
         opack::impact<Op1, B3>(world,
             [](opack::Entity e, typename Op1::inputs& i1)
             {
-                Op1::iterator(i1) = opack::action<Action3>(e);
+                Op1::iterator(i1) = opack::prefab<Action3>(e);
                 return opack::make_outputs<Op1>();
             }
         );	
@@ -187,10 +187,8 @@ TEST_CASE("Operation API Basics")
         opack::default_impact<Op2>(world,
             [](opack::Entity e, typename Op2::inputs& i1)
             {
-                const auto id = Op2::get_influencer(i1);
-                auto& actions = Op2::get_choices(i1);
-                auto& graph = Op2::get_graph(i1);
-                for (auto& a : actions)
+                auto graph = Op2::get_graph(i1);
+                for (auto a : Op2::get_choices(i1))
                 {
                     graph.entry(a);
                 }
@@ -201,7 +199,7 @@ TEST_CASE("Operation API Basics")
         opack::default_impact<Op3>(world,
             [](opack::Entity e, typename Op3::inputs& i1)
             {
-                auto action = opack::operations::output<Op2, Op3>(i1);
+                auto action = std::get<opack::df<Op2, flecs::entity_view>&>(i1).value;
                 opack::act(e, action);
                 return opack::make_outputs<Op3>();
             }
@@ -209,8 +207,8 @@ TEST_CASE("Operation API Basics")
         
         opack::step(world, 1.0);
         {
-            auto action = opack::dataflow<Op2, opack::Action_t>(a1);
-            CHECK(action.is_a<Action1>());
+            CHECK(opack::dataflow<Op2, flecs::entity_view>(a1) == opack::prefab<Action1>(world));
+            CHECK(opack::is_a<Action1>(opack::current_action<MyActuator>(a1)));
         }
     }
 }

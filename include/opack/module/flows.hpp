@@ -34,10 +34,8 @@ struct ActivityFlowBuilder : public opack::FlowBuilder<T>
 		opack::default_impact<ActionSelection>(world,
 			[](flecs::entity agent, typename ActionSelection::inputs& inputs)
 			{				
-				const auto id = ActionSelection::get_influencer(inputs);
-				auto& actions = ActionSelection::get_choices(inputs);
-				auto& graph = ActionSelection::get_graph(inputs);
-				for (auto& a : actions)
+				auto graph = ActionSelection::get_graph(inputs);
+				for (auto& a : ActionSelection::get_choices(inputs))
 				{
 					graph.entry(a);
 				}
