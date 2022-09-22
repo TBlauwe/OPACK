@@ -30,13 +30,13 @@ namespace opack::operations
 		using type = typename TOper::type;
 		using output = typename TOper::type;
 		using prev_operation = TOper;
-		using container = std::vector<type>;
-		using input_dataflow = opack::df<TOper, container>&;
+		using container_t = typename TOper::container_t;
+		using input_dataflow = opack::df<TOper, container_t>&;
 		using ig_t = opack::IPGraph<flecs::entity_view, type>;
 		using graph = typename opack::IPGraph<flecs::entity_view, type>::UNode;
 		using id = flecs::entity_view;
 
-		static container& get_choices(typename parent_t::inputs& tuple)
+		static container_t& get_choices(typename parent_t::inputs& tuple)
 		{
 			return std::get<input_dataflow>(tuple).value;
 		}

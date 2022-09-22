@@ -106,7 +106,12 @@ namespace opack
 
 		int score(V_t v)
 		{
-			return m_scores.at(v_index(v));
+			return score_at_index(v_index(v));
+		}
+
+		int score_at_index(VIndex idx)
+		{
+			return m_scores.at(idx);
 		}
 
 		Scores& scores()

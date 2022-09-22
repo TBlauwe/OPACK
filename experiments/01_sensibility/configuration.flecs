@@ -26,9 +26,9 @@ StressedAgent : simple.Agent
 EagerAgent : simple.Agent 
 {
 	- Eager
-//	- InspectMemory
-//	- InspectCurrentAction
-//	- InspectIGraph
+	- InspectIGraph
+	- InspectMemory
+	- InspectCurrentAction
 }
 
 LazyStressedAgent : simple.Agent 

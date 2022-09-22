@@ -7,6 +7,8 @@
  *********************************************************************/
 #pragma once
 
+#include <unordered_set>
+
 #include <flecs.h>
 #include <opack/core/api_types.hpp>
 
@@ -140,7 +142,7 @@ namespace opack
 		struct Strategy
 		{
 			using impact_t = Impact<TOper>;
-			using impacts_t = std::vector<const impact_t*>;
+			using impacts_t = std::unordered_set<const impact_t*>;
 
 			Strategy(flecs::entity _agent) : agent{ _agent }
 			{
@@ -149,7 +151,7 @@ namespace opack
 					{
 						auto impact = object.get_second<TOper, impact_t>();
 						if (impact)
-							impacts.push_back(impact);
+							impacts.emplace(impact);
 					}
 				);
 			}

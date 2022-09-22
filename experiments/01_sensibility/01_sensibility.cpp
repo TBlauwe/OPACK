@@ -91,7 +91,9 @@ void generate_actions_sequence(opack::World& world, const char * filename)
 	yticks(ticks);
 	yticklabels(tick_labels);
 	show();
-    save(filename);
+    save(fmt::format("img/{}.tex", filename));
+    save(fmt::format("img/{}.html", filename));
+    save(fmt::format("img/{}.gif", filename));
 }
 
 int main()
@@ -157,7 +159,7 @@ int main()
             {
                 fmt::print("[INSPECTION] - {} influence graph : \n", agent.name());
                 ig.print([](flecs::entity_view e) {return e.name(); }, [](flecs::entity_view e) {return e.name(); });
-            });
+           });
 
     world.system()
         .kind(flecs::PostFrame)
@@ -290,6 +292,6 @@ int main()
     opack::step_n(world, world.get<Configuration>()->turns + 1);
 	//opack::run_with_webapp(world);
 
-	generate_actions_sequence(world,"test.png");
+	generate_actions_sequence(world,"test");
     return 0;
 }
