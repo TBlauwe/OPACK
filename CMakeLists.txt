@@ -65,6 +65,14 @@ CPMAddPackage(
 )
 set_target_properties(fmt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:fmt,INTERFACE_INCLUDE_DIRECTORIES>)
 
+# A convenient random API
+CPMAddPackage(
+		NAME random
+		GITHUB_REPOSITORY effolkronium/random
+		GIT_TAG master
+		OPTIONS
+)
+
 
 # OPACK Library
 # =============
@@ -105,7 +113,7 @@ set(SOURCE_LIST
 # Target : opack
 # ==============
 add_library (opack STATIC ${SOURCE_LIST} ${HEADER_LIST})
-target_include_directories(opack PUBLIC include)
+target_include_directories(opack PUBLIC include ${random_SOURCE_DIR}/include)
 target_link_libraries(opack PUBLIC flecs_static fmt)
 if(${OPACK_ENABLE_ASSERTS})
     target_compile_definitions(opack PUBLIC OPACK_ASSERTS)

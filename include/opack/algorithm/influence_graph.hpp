@@ -6,6 +6,8 @@
 #include <unordered_set>
 #include <optional>
 
+#include <effolkronium/random.hpp>
+
 namespace opack
 {
 	/**
@@ -55,7 +57,7 @@ namespace opack
 			}
 
 			if (!m_highest_scores.empty())
-				return V[m_highest_scores[rand() % (num_eligibles())]]; //TODO Better random or maybe determinist ?
+				return V[*effolkronium::random_static::get(m_highest_scores)];
 			return std::nullopt;
 		}
 
