@@ -7,13 +7,12 @@
  *********************************************************************/
 #pragma once
 
+#include <functional>
+
 #include <flecs.h>
 
 #include <opack/core/api_types.hpp>
 #include <opack/core/components.hpp>
-#include <opack/utils/type_name.hpp>
-
-#include <functional>
 
 /**
 @brief Shorthand for OPACK_SUB_PREFAB(name, opack::Action)
@@ -56,7 +55,7 @@ namespace opack
 	{
 		using Handle::Handle;
 
-		ActionHandle& require(const EntityView& actuator_prefab);
+		ActionHandle& require(EntityView actuator_prefab);
 
 		template<ActuatorPrefab T>
 		ActionHandle& require();
@@ -78,7 +77,7 @@ namespace opack
 	/**
 	 * @brief Retrieve actuator from prefab @c actuator_prefab for current @c entity.
 	 */
-	Entity actuator(const EntityView& actuator_prefab, const EntityView& entity);
+	Entity actuator(EntityView actuator_prefab, EntityView entity);
 
 	/**
 	 * @brief Retrieve instanced actuator @c T for current entity.
@@ -87,29 +86,29 @@ namespace opack
 	 * @c T, use @ref entity<T>.
 	 */
 	template<ActuatorPrefab T>
-	Entity actuator(const EntityView& entity);
+	Entity actuator(EntityView entity);
 
 	/**
 	 * @brief Create an instanced action @c T.
 	 */
 	template<std::derived_from<opack::Action> T>
-	Entity action(Entity entity);
+	Entity action(EntityView entity);
 
 	/**
 	 * @brief Create an instanced action from prefab @c action_prefab.
 	 */
-	Entity action(Entity action_prefab);
+	Entity action(EntityView action_prefab);
 
 	/**
 	@brief Return current action done by @c entity with @c actuator_prefab
 	*/
-	Entity current_action(Entity actuator_prefab, Entity entity);
+	Entity current_action(EntityView actuator_prefab, EntityView entity);
 
 	/**
 	@brief Return current action done by @c entity with actuator @c T
 	*/
 	template<ActuatorPrefab T>
-	Entity current_action(Entity entity);
+	Entity current_action(EntityView entity);
 
 	/**
 	@brief @c initiator is now doing @c action.
@@ -119,7 +118,7 @@ namespace opack
 	/**
 	@brief @c initiator is now doing @c action.
 	*/
-	void act(Entity initiator, EntityView action);
+	void act(Entity initiator, EntityView action_prefab);
 
 	/**
 	@brief @c initiatior is now doing an action of type @c T
@@ -129,7 +128,7 @@ namespace opack
 	ActionHandle act(Entity initiator);
 
 	/** Get the @c n -nth initiator of provided @c action.*/
-	inline Entity initiator(Entity& action, size_t n = 0)
+	inline Entity initiator(EntityView action, size_t n = 0)
 	{
 		auto entity = action.target<By>(static_cast<int>(n));
 		return entity.mut(action);
@@ -164,7 +163,7 @@ namespace opack
 	// Definition
 	// --------------------------------------------------------------------------- 
 
-	inline ActionHandle& ActionHandle::require(const EntityView& actuator_prefab)
+	inline ActionHandle& ActionHandle::require(EntityView actuator_prefab)
 	{
 		set<RequiredActuator>({ actuator_prefab });
 		return *this;
@@ -194,70 +193,66 @@ namespace opack
 		).template child_of<world::dynamics>();
 	}
 
-	inline Entity actuator(const EntityView& actuator_prefab, const EntityView& entity)
+	inline Entity actuator(EntityView actuator_prefab, EntityView entity)
 	{
-#ifdef OPACK_ASSERTS
-		ecs_assert(actuator_prefab.is_valid(), ECS_INVALID_OPERATION, fmt::format("Actuator prefab is invalid").c_str());
-#endif
-		auto actuator = entity.target(actuator_prefab);
-#ifdef OPACK_ASSERTS
-		ecs_assert(actuator.is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("No actuator \"{0}\" for entity \"{1}\". Make sure this was called : \"opack::add_actuator<{0}, YourPrefab>(world)\"."), actuator_prefab.path(), entity.path()).c_str());
-#endif
-		return actuator;
+		opack_assert(entity.is_valid(), "Given entity is invalid.");
+		opack_assert(actuator_prefab.is_valid(), "Given actuator prefab is invalid");
+		opack_assert(entity.target(actuator_prefab).is_valid(), "No actuator \"{0}\" for entity \"{1}\". Make sure this was called : \"opack::add_actuator<{0}, YourPrefab>(world)\".", actuator_prefab.path(), entity.path());
+		return entity.target(actuator_prefab);
 	}
 
 	template<ActuatorPrefab T>
-	Entity actuator(const opack::EntityView& entity)
+	Entity actuator(EntityView entity)
 	{
-		auto actuator = entity.target<T>();
-#ifdef OPACK_ASSERTS
-		ecs_assert(actuator.is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("No actuator \"{0}\" for entity \"{1}\". Make sure this was called : \"opack::add_actuator<{0}, YourPrefab>(world)\"."), type_name_cstr<T>(), entity.path()).c_str());
-#endif
-		return actuator;
+		opack_assert(entity.target<T>().is_valid(), "No actuator \"{0}\" for entity \"{1}\". Make sure this was called : \"opack::add_actuator<{0}, YourPrefab>(world)\".", type_name_cstr<T>(), entity.path());
+		return entity.target<T>();
 	}
 
 	template<std::derived_from<opack::Action> T>
-	Entity action(Entity entity)
+	Entity action(EntityView entity)
 	{
+		opack_assert(entity.is_valid(), "Given entity is invalid.");
 		auto world = entity.world();
 		return opack::spawn<T>(world);
 	}
 
-	inline Entity action(Entity action_prefab)
+	inline Entity action(EntityView action_prefab)
 	{
-#ifdef OPACK_ASSERTS
-		ecs_assert(action_prefab.is_valid(), ECS_INVALID_OPERATION, fmt::format("Trying to create an action from an invalid action prefab.").c_str());
-#endif
+		opack_assert(action_prefab.is_valid(), "Trying to create an action from an invalid action prefab.");
 		return opack::spawn(action_prefab);
 	}
 
-	inline Entity current_action(opack::Entity actuator_prefab, Entity entity)
+	inline Entity current_action(EntityView actuator_prefab, EntityView entity)
 	{
+		opack_assert(entity.is_valid(), "Given entity is invalid.");
+		opack_assert(actuator_prefab.is_valid(), "Given actuator prefab is invalid");
 		return opack::actuator(actuator_prefab, entity).template target<Doing>();
 	}
 
 	template<ActuatorPrefab T>
 	Entity current_action(Entity entity)
 	{
+		opack_assert(entity.is_valid(), "Given entity is invalid.");
 		return opack::actuator<T>(entity).template target<Doing>();
 	}
 
 	inline void act(Entity initiator, EntityView action)
 	{
+		opack_assert(initiator.is_valid(), "Given initiator is invalid.");
+		opack_assert(action.is_valid(), "Given action is invalid.");
 		act(initiator, action.mut(initiator));
 	}
 
 	inline void act(Entity initiator, Entity action)
 	{
-#ifdef OPACK_ASSERTS
-		ecs_assert(action.is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("Initiator {} is trying to do an invalid action !"), initiator.path()).c_str());
-		ecs_assert(action.get<RequiredActuator>()->value.is_valid(), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("Action {0} has no required actuator set ! Don't forget to call : opack::init<YourAction>(world).require<YourActuator>()."), action.path()).c_str());
-#endif
-		flecs::entity effective_action;
+		opack_assert(initiator.is_valid(), "Given initiator is invalid.");
+		opack_assert(action.is_valid(), "Given action is invalid.");
+		opack_assert(action.get<RequiredActuator>()->value.is_valid(), "Action {0} has no required actuator set ! Did you call : opack::init<YourAction>(world).require<YourActuator>().", action.path());
+
+		flecs::entity effective_action{action};
 		if (action.has(flecs::Prefab))
-			effective_action = opack::spawn(action);
-		else
-			effective_action = action;
+			effective_action = spawn(action);
+
 		auto actuator = opack::actuator(action.get<RequiredActuator>()->value, initiator);
 		auto last_action = actuator.template target<Doing>();
 		if (last_action)

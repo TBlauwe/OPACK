@@ -120,15 +120,10 @@ namespace opack
 	 * @c T, use @ref entity<T>.
 	 */
 	template<SensePrefab T>
-	Entity sense(const Entity& entity)
+	Entity sense(EntityView entity)
 	{
-#ifdef OPACK_ASSERTS
-		auto sense = entity.target<T>();
-		ecs_assert(sense.is_valid(), ECS_INVALID_OPERATION, "No sense for given entity. Make sure to add sense to its prefab (or to it directly).");
-		return sense;
-#else 
+		opack_assert(entity.target<T>(), "No sense {0} for entity {1}. Did you called : `opack::add_sense<{0}, YourAgentType>(world) ?", type_name_cstr<T>(), entity.path());
 		return entity.target<T>();
-#endif
 	}
 
 	/**
@@ -155,7 +150,7 @@ namespace opack
     @endcode
 	*/
 	template<SensePrefab ... T>
-	void perceive(Entity observer, Entity subject)
+	void perceive(EntityView observer, EntityView subject)
 	{
 		(opack::sense<T>(observer).add(subject), ...);
 	}
@@ -164,7 +159,7 @@ namespace opack
 	@brief @c source is now not able to perceive @c target through @c T sense.
 	*/
 	template<SensePrefab ...T>
-	void conceal(Entity observer, Entity subject)
+	void conceal(EntityView observer, EntityView subject)
 	{
 		(opack::sense<T>(observer).remove(subject), ...);
 	}
@@ -183,7 +178,7 @@ namespace opack
 	 */
 	struct perception 
 	{
-		perception(Entity _observer) : observer{_observer}{}
+		perception(EntityView _observer) : observer{_observer}{}
 
 		/**
 		 *@brief Check if @c observer is perceiving @c subject with sense @c T.
@@ -195,7 +190,7 @@ namespace opack
         When possible, you should specify a sense.
 		 */
 		template<std::derived_from<Sense> T = opack::Sense>
-	    bool perceive(const Entity subject) const
+	    bool perceive(EntityView subject) const
         {
 			if constexpr (!std::same_as<T, opack::Sense>)
 				return opack::sense<T>(observer).has(subject);
@@ -213,7 +208,7 @@ namespace opack
         When possible, you should specify a sense.
 		 */
 		template<std::derived_from<Sense> T = opack::Sense, typename C>
-	    bool perceive(const Entity subject) const
+	    bool perceive(EntityView subject) const
         {
 			if constexpr (!std::same_as<T, opack::Sense>)
 			{
@@ -238,7 +233,7 @@ namespace opack
         When possible, you should specify a sense.
 		 */
 		template<std::derived_from<Sense> T = opack::Sense>
-	    bool perceive(const Entity subject, const Entity object) const
+	    bool perceive(EntityView subject, EntityView object) const
         {
 			if constexpr (!std::same_as<T, opack::Sense>)
 			{
@@ -264,7 +259,7 @@ namespace opack
         When possible, you should specify a sense.
 		 */
 		template<std::derived_from<Sense> T = opack::Sense, typename R>
-	    bool perceive(const Entity subject, const Entity object) const
+	    bool perceive(EntityView subject, EntityView object) const
         {
 			if constexpr (!std::same_as<T, opack::Sense>)
 			{
@@ -291,7 +286,7 @@ namespace opack
         When possible, you should specify a sense.
 		 */
 		template<std::derived_from<Sense> T = opack::Sense, typename C>
-	    const C* value(const Entity subject) const
+	    const C* value(EntityView subject) const
         {
 			if constexpr (!std::same_as<T, opack::Sense>)
 			{
@@ -323,7 +318,7 @@ namespace opack
 			 );
 		}
 
-		Entity observer;
+		EntityView observer;
 	};
 
     //template<typename R = void, std::derived_from<Sense> T = opack::Sense>

@@ -9,7 +9,6 @@
 
 #include <tuple>
 #include <concepts>
-#include <functional>
 
 #include <flecs.h>
 

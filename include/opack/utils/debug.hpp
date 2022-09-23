@@ -25,7 +25,7 @@
  */
 #ifdef OPACK_RUNTIME_CHECK
 #define opack_assert(condition, message, ...)\
-	ecs_assert(condition, ECS_INVALID_PARAMETER, fmt::format(message, __VA_ARGS__).c_str())
+	ecs_assert(condition, ECS_INVALID_PARAMETER, fmt::format(fmt::runtime(message), __VA_ARGS__).c_str())
 #else
 #define opack_assert(condition, message, ...)
 #endif
