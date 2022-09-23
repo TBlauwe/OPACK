@@ -8,6 +8,7 @@
 #include <opack/module/simple_agent.hpp>
 #include <matplot/matplot.h>
 #include <color/color.hpp>
+#include <rigtorp/SPSCQueue.h>
 
 template<typename T>
 double percentage(const T& min, const T& max, const T& value)
@@ -27,9 +28,11 @@ struct Color
     friend auto operator<=>(const Color&, const Color&) = default;
 };
 
+template<typename T>
+using ring_buffer = rigtorp::SPSCQueue<T>;
 struct Memory
 {
-    std::vector<flecs::entity> actions_done;
+    ring_buffer<flecs::entity> actions_done;
 };
 struct InspectMemory {};
 struct InspectIGraph {};

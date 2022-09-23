@@ -90,6 +90,13 @@ CPMAddPackage(
 		OPTIONS
 )
 
+# A bounded single-producer single-consumer wait-free and lock-free queue written in C++11. Not needed to have a thread safe ring buffer.
+CPMAddPackage(
+		NAME SPSCQueue
+		GITHUB_REPOSITORY rigtorp/SPSCQueue 
+		GIT_TAG master
+		OPTIONS
+)
 
 # OPACK Library
 # =============
@@ -131,7 +138,7 @@ set(SOURCE_LIST
 # Target : opack
 # ==============
 add_library (opack STATIC ${SOURCE_LIST} ${HEADER_LIST})
-target_include_directories(opack PUBLIC include ${random_SOURCE_DIR}/include)
+target_include_directories(opack PUBLIC include ${random_SOURCE_DIR}/include ${SPSCQueue_SOURCE_DIR}/include)
 target_link_libraries(opack PUBLIC flecs_static fmt)
 if(${OPACK_ENABLE_RUNTIME_CHECK})
     target_compile_definitions(opack PUBLIC OPACK_RUNTIME_CHECK)
