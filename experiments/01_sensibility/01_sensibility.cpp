@@ -15,14 +15,6 @@ double percentage(const T& min, const T& max, const T& value)
     return (value - min) / (max - min);
 }
 
-uint8_t random_color()
-{
-    static std::random_device dev;
-    static std::mt19937 rng(dev());
-    static std::uniform_int_distribution<std::mt19937::result_type> dist(0,255); // distribution in range [1, 6]
-    return dist(rng);
-}
-
 using rgb = color::rgb<uint8_t>;
 struct Color
 {
@@ -221,13 +213,12 @@ int main()
     opack::impact<ActionSelection, Lazy>(world, 
         [](opack::Entity agent, ActionSelection::inputs& inputs)
         {
-        	auto graph = ActionSelection::get_graph(inputs);
-			for (auto& a : ActionSelection::get_choices(inputs))
-			{
-                auto c = rgb(*a.get<Color>());
-                if(c == ::color::constant::black_t{}) 
-					graph.positive_influence(a);
-			}
+            ActionSelection::each(inputs, [](auto& graph, const auto& action)
+                {
+                    auto c = rgb(*action.template get<Color>());
+                    if (c == ::color::constant::black_t{})
+                        graph.positive_influence(action);
+                });
 			return opack::make_outputs<ActionSelection>();
 
         }

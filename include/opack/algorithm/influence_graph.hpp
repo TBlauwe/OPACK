@@ -62,17 +62,17 @@ namespace opack
 		}
 
 
-		void positive_influence(U_t u, V_t v)
+		void positive_influence(const U_t u, const V_t v)
 		{
 			positive_influence_from_id(u_index(u), v);
 		}
 
-		void negative_influence(U_t u, V_t v)
+		void negative_influence(const U_t u, const V_t v)
 		{
 			negative_influence_from_id(u_index(u), v);
 		}
 
-		void influence(U_t u, V_t v, bool is_positive)
+		void influence(const U_t u, const V_t v, bool is_positive)
 		{
 			if (is_positive)
 				positive_influence(u, v);
@@ -80,7 +80,7 @@ namespace opack
 				negative_influence(u, v);
 		}
 
-		void entry(V_t v)
+		void entry(const V_t v)
 		{
 			if (size_t idx = v_index(v); !m_scores.contains(idx))
 				m_scores.insert({ idx, 0 });
@@ -96,22 +96,22 @@ namespace opack
 			return m_negative_influences;
 		}
 
-		U_t u_at(UIndex idx)
+		U_t u_at(const UIndex idx)
 		{
 			return U.at(idx);
 		}
 
-		V_t v_at(VIndex idx)
+		V_t v_at(const VIndex idx)
 		{
 			return V.at(idx);
 		}
 
-		int score(V_t v)
+		int score(const V_t v)
 		{
 			return score_at_index(v_index(v));
 		}
 
-		int score_at_index(VIndex idx)
+		int score_at_index(const VIndex idx)
 		{
 			return m_scores.at(idx);
 		}
@@ -121,7 +121,7 @@ namespace opack
 			return m_scores;
 		}
 
-		bool is_highest(V_t v)
+		bool is_highest(const V_t v)
 		{
 			return std::find(m_highest_scores.begin(), m_highest_scores.end(), v_index(v)) != m_highest_scores.end();
 		}
@@ -158,7 +158,7 @@ namespace opack
 
 	private:
 
-		void positive_influence_from_id(UIndex u_idx, V_t v)
+		void positive_influence_from_id(const UIndex u_idx, const V_t v)
 		{
 			auto v_idx = v_index(v);
 			auto [_, added] = m_positive_influences.try_emplace(u_idx).first->second.emplace(v_idx);
@@ -166,7 +166,7 @@ namespace opack
 				++m_scores.try_emplace(v_idx).first->second;
 		}
 
-		void negative_influence_from_id(UIndex u_idx, V_t v)
+		void negative_influence_from_id(const UIndex u_idx, const V_t v)
 		{
 			auto v_idx = v_index(v);
 			auto [_, added] = m_negative_influences.try_emplace(u_idx).first->second.emplace(v_idx);
@@ -174,7 +174,7 @@ namespace opack
 				--m_scores.try_emplace(v_idx).first->second;
 		}
 
-		void influence_from_id(UIndex u_idx, V_t v, bool is_positive)
+		void influence_from_id(const UIndex u_idx, const V_t v, bool is_positive)
 		{
 			if (is_positive)
 				positive_influence_from_id(u_idx, v);
@@ -182,7 +182,7 @@ namespace opack
 				negative_influence_from_id(u_idx, v);
 		}
 
-		UIndex u_index(U_t u)
+		UIndex u_index(const U_t u)
 		{
 			UIndex idx = std::distance(U.begin(), std::find(U.begin(), U.end(), u));
 			if (idx >= U.size())
@@ -190,7 +190,7 @@ namespace opack
 			return idx;
 		}
 
-		VIndex v_index(V_t v)
+		VIndex v_index(const V_t v)
 		{
 			VIndex idx = std::distance(V.begin(), std::find(V.begin(), V.end(), v));
 			if (idx >= V.size())
@@ -206,22 +206,22 @@ namespace opack
 			UNode(IPGraph<U_t, V_t>& graph, U_t u) : m_graph(graph), u_index(graph.u_index(u)) {}
 			UNode(IPGraph<U_t, V_t>& graph, Index u_index) : m_graph(graph), u_index(u_index) {}
 
-			void entry(V_t v)
+			void entry(const V_t v)
 			{
 				m_graph.entry(v);
 			}
 
-			void influence(V_t v, bool is_positive)
+			void influence(const V_t v, bool is_positive)
 			{
 				m_graph.influence_from_id(u_index, v, is_positive);
 			}
 
-			void positive_influence(V_t v)
+			void positive_influence(const V_t v)
 			{
 				m_graph.positive_influence_from_id(u_index, v);
 			}
 
-			void negative_influence(V_t v)
+			void negative_influence(const V_t v)
 			{
 				m_graph.negative_influence_from_id(u_index, v);
 			}

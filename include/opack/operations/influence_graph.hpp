@@ -46,6 +46,15 @@ namespace opack::operations
 			return std::get<graph>(tuple);
 		}
 
+		static void each(typename parent_t::inputs& tuple, std::function<void(graph&, const type&)> func)
+		{
+			auto graph = get_graph(tuple);
+			for (const auto& a : get_choices(tuple))
+			{
+				func(graph, a);
+			}
+		}
+
 		template<typename T>
 		struct Strategy : parent_t::template Strategy<T>
 		{
