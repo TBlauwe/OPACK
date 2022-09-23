@@ -173,7 +173,7 @@ namespace adl
 	}
 
 	/** Returns an ordered map of @c task children. */
-	std::map<size_t, opack::Entity> children(opack::Entity task);
+	std::unordered_map<size_t, opack::Entity> children(opack::Entity task);
 
 	/** Add potential actions to output iterator @c out and returns true if task is satisfied.*/
 	template<typename OutputIterator>
@@ -193,7 +193,7 @@ namespace adl
 			ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a temporal constructor component.");
 
 			// 1. Retrieve all children and sort them by their orders.
-			std::map<size_t, opack::Entity> subtasks{};
+			std::unordered_map<size_t, opack::Entity> subtasks{};
 			task.children
 			(
 				[&subtasks](opack::Entity e)

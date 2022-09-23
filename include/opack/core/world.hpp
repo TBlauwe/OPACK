@@ -7,8 +7,8 @@
  *********************************************************************/
 #pragma once
 
+#include <functional>
 #include <flecs.h>
-
 #include <opack/core/api_types.hpp>
 
 namespace opack
@@ -140,7 +140,7 @@ namespace opack
     opack::is_a<A>(e); // true
     @endcode
     */
-    Entity spawn(Entity& prefab);
+    Entity spawn(EntityView prefab);
 
     /**
     @brief Spawn a new entity instantiated from @c prefab, with @c name.
@@ -156,7 +156,7 @@ namespace opack
     auto e = opack::spawn(prefab, "my_instance");
     @endcode
     */
-    Entity spawn(Entity& prefab, const char * name);
+    Entity spawn(EntityView prefab, const char * name);
 
 
     /**
@@ -221,7 +221,7 @@ namespace opack
     @return Numbers of matching pattern : entity--T-->obj.
     */
     template<typename T>
-    size_t count(const World& world, const Entity obj)
+    size_t count(const World& world, EntityView obj)
     {
         return static_cast<size_t>(world.count<T>(obj));
     }
@@ -235,6 +235,7 @@ namespace opack
     template<typename T>
     size_t count_instance(World& world)
     {
+        opack_warn_if(opack::entity<T>(world).has(flecs::Prefab), "Tried counting number of instance of {}, but it is not associated with a prefab. Has `opack::init<{}>(world)` been called ?", type_name_cstr<T>());
         return static_cast<size_t>(world.count(flecs::IsA, opack::entity<T>(world)));
     }
 
@@ -245,7 +246,7 @@ namespace opack
     @param obj Object entity.
     @return Numbers of matching pattern : entity--rel-->obj.
     */
-    size_t count(const World& world, const Entity rel, const Entity obj);
+    size_t count(const World& world, EntityView rel, EntityView obj);
 
     /**
      *@brief For each instance of @c T, @c func is applied every update.
@@ -277,7 +278,7 @@ namespace opack
     }
 
     template<typename T>
-    Entity prefab(EntityView entity)
+    Entity prefab(const EntityView entity)
     {
          return entity.world().entity<T>();
     }
@@ -285,9 +286,7 @@ namespace opack
     template<SubPrefab T>
     opack::Entity init(World& world)
     {
-        auto e = prefab<T>(world);
-        e.template is_a<typename T::base_t>();
-        return e;
+        return prefab<T>(world).template is_a<typename T::base_t>();
     }
 
     template<typename T>
@@ -299,33 +298,27 @@ namespace opack
         return typename T::handle_t(world, e);
     }
 
-	inline size_t count(const World& world, const Entity rel, const Entity obj)
+	inline size_t count(const World& world, EntityView rel, EntityView obj)
 	{
 		return static_cast<size_t>(world.count(rel, obj));
 	}
 
-    inline Entity spawn(Entity& prefab)
+    inline Entity spawn(EntityView prefab)
     {
-#ifdef OPACK_ASSERTS
-        ecs_assert(prefab.has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to initialize it !", prefab.path()).c_str());
-#endif 
+        opack_assert(prefab.has(flecs::Prefab), "\"{}\" is not a prefab ! Is it initialized ? (opack::init<T>(world) if it's a type).", prefab.path());
         return prefab.world().entity().is_a(prefab);
     }
 
-    inline Entity spawn(Entity& prefab, const char * name)
+    inline Entity spawn(EntityView prefab, const char * name)
     {
-#ifdef OPACK_ASSERTS
-        ecs_assert(prefab.has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to initialize it !", prefab.path()).c_str());
-#endif 
+        opack_assert(prefab.has(flecs::Prefab), "\"{}\" is not a prefab ! Is it initiliazed it ? (opack::init<T>(world) if it's a type).", prefab.path());
         return prefab.world().entity(name).is_a(prefab);
     }
 
     template<typename T>
     Entity spawn(World& world)
     {
-#ifdef OPACK_ASSERTS
-        ecs_assert(world.entity<T>().has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to call : `opack::init<{0}>(world)`", type_name_cstr<T>()).c_str());
-#endif 
+        opack_assert(world.entity<T>().has(flecs::Prefab), "\"{0}\" is not a prefab ! Has this been called : `opack::init<{0}>(world)` ?", type_name_cstr<T>());
         auto e = world.entity().is_a<T>();
         internal::organize_entity<T>(e);
         return e;
@@ -334,9 +327,7 @@ namespace opack
     template<typename T>
     Entity spawn(World& world, const char* name)
     {
-#ifdef OPACK_ASSERTS
-        ecs_assert(world.entity<T>().has(flecs::Prefab), ECS_INVALID_PARAMETER, fmt::format("Type \"{0}\" has not been initialized. Don't forget to call : `opack::init<{0}>(world)`", type_name_cstr<T>()).c_str());
-#endif 
+        opack_assert(world.entity<T>().has(flecs::Prefab), "\"{0}\" is not a prefab ! Has this been called : `opack::init<{0}>(world)` ?", type_name_cstr<T>());
         auto e = world.entity(name).is_a<T>();
         internal::organize_entity<T>(e);
         return e;

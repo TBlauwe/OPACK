@@ -7,6 +7,7 @@
 
 #include <flecs.h>
 #include <fmt/core.h>
+#include <opack/utils/type_name.hpp>
 
 namespace opack::internal
 {

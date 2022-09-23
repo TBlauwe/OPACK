@@ -19,6 +19,14 @@ set(CPM_DOWNLOAD_VERSION 0.35.0)
 include(cmake/FindCPM.cmake)
 include(cmake/target_default_compile_options.cmake)
 
+# TODO : Since we output build files in a bin/ instead of out/, it doesn't semmes to work.
+# CCache must be installed and available in your path !
+# enables CCACHE support through the USE_CCACHE flag possible values are: YES, NO or equivalent.
+#CPMAddPackage(
+#  NAME Ccache.cmake
+#  GITHUB_REPOSITORY TheLartians/Ccache.cmake
+#  VERSION 1.2
+#)
 
 # Build options
 # =============
@@ -28,11 +36,20 @@ option(OPACK_BUILD_TESTS          "Build tests." OFF)
 option(OPACK_BUILD_BENCHMARKS     "Build benchmarks using google benchmarks." OFF)
 option(OPACK_DEVELOPPER_WARNINGS  "Enable more warnings when compiling" OFF)
 option(OPACK_ORGANIZE             "Enable organisation of entities, different from C++ namespace (mainly organisation for explorer). Disabling it may lead to more performance." ON)
-option(OPACK_ENABLE_ASSERTS       "Enable assertions. Disabling it may lead to more performance." ON)
+option(OPACK_ENABLE_RUNTIME_CHECK "Enable runtime check (assertion). Disabling it may lead to more performance." ON)
 
 
 # Dependencies
 # ============
+
+# Boost provides free peer-reviewed portable C++ source libraries
+#CPMAddPackage(
+#  NAME Boost 
+#  GITHUB_REPOSITORY "boostorg/boost"
+#  GIT_TAG "boost-1.80.0"
+#  OPTIONS
+#    "BOOST_RUNTIME_LINK static"
+#)
 
 # General-purpose Parallel and Heterogeneous Task Programming System
 #CPMAddPackage(
@@ -79,6 +96,7 @@ CPMAddPackage(
 set(HEADER_LIST 
 	"include/opack/utils/type_map.hpp"
     "include/opack/utils/flecs_helper.hpp" 
+    "include/opack/utils/debug.hpp" 
     "include/opack/utils/type_name.hpp"
     "include/opack/core/macros.hpp"
     "include/opack/core/api_types.hpp"
@@ -115,8 +133,8 @@ set(SOURCE_LIST
 add_library (opack STATIC ${SOURCE_LIST} ${HEADER_LIST})
 target_include_directories(opack PUBLIC include ${random_SOURCE_DIR}/include)
 target_link_libraries(opack PUBLIC flecs_static fmt)
-if(${OPACK_ENABLE_ASSERTS})
-    target_compile_definitions(opack PUBLIC OPACK_ASSERTS)
+if(${OPACK_ENABLE_RUNTIME_CHECK})
+    target_compile_definitions(opack PUBLIC OPACK_RUNTIME_CHECK)
 endif()
 target_compile_features(opack PUBLIC cxx_std_20)
 if(OPACK_DEVELOPPER_WARNINGS)

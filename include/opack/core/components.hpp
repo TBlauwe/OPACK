@@ -8,6 +8,7 @@
 #pragma once
 
 #include <unordered_set>
+#include <functional>
 
 #include <flecs.h>
 #include <opack/core/api_types.hpp>

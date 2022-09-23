@@ -13,7 +13,8 @@
                 "OPACK_BUILD_EXPERIMENTS": "ON",
                 "OPACK_BUILD_TESTS": "ON",
                 "OPACK_DEVELOPPER_WARNINGS": "ON",
-                "CPM_SOURCE_CACHE": "D:/dev/.cache"
+                "CPM_SOURCE_CACHE": "D:/dev/.cache",
+                "USE_CCACHE": "ON"
             },
             "condition": {
                 "type": "equals",
@@ -72,7 +73,8 @@
             "displayName": "x64 Release (MSVC)",
             "inherits": "x64-debug-msvc",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+              "CMAKE_BUILD_TYPE": "Release",
+              "OPACK_ENABLE_RUNTIME_CHECK" : "OFF"
             }
         },
         {
@@ -92,7 +94,7 @@
             "displayName": "x64 Release (Clang)",
             "inherits": "x64-debug-clang",
             "cacheVariables": {
-              "OPACK_ASSERTS" : "OFF",
+              "OPACK_ENABLE_RUNTIME_CHECK" : "OFF",
               "OPACK_ORGANIZE" : "OFF",
               "CMAKE_BUILD_TYPE": "Release"
             }

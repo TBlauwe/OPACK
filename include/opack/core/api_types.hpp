@@ -7,16 +7,14 @@
  *********************************************************************/
 #pragma once
 
-#include <functional>
 #include <unordered_map>
-#include <map>
 #include <concepts>
 
 #include <flecs.h>
 #include <fmt/core.h>
 
+#include <opack/utils/debug.hpp>			// So it's available everywhere
 #include <opack/utils/flecs_helper.hpp>
-#include <opack/utils/type_name.hpp>
 #include <opack/core/macros.hpp>
 
 /**
