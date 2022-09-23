@@ -107,26 +107,26 @@ CPMAddPackage(
         NAME opack 
         GITHUB_REPOSITORY TBlauwe/OPACK
         OPTIONS
-			"OPACK_BUILD_EXAMPLES       OFF"
-			"OPACK_BUILD_TESTS          OFF"
-			"OPACK_BUILD_BENCHMARKS     OFF"
-			"OPACK_DEVELOPPER_WARNINGS  OFF"
-			"OPACK_ORGANIZE             ON"
-			"OPACK_ASSERTS              ON"
+			"OPACK_BUILD_EXAMPLES           OFF"
+			"OPACK_BUILD_TESTS              OFF"
+			"OPACK_BUILD_BENCHMARKS         OFF"
+			"OPACK_DEVELOPPER_WARNINGS      OFF"
+			"OPACK_ORGANIZE                 ON"
+			"OPACK_ENABLE_RUNTIME ASSERTS   ON"
 )
 ```
 
 
 #### CMake options
 
-| Options                    | Default  | Description                                              |
-| -------------------------- | -------- | -------------------------------------------------------- |
-| OPACK_BUILD_EXAMPLES       | OFF      | "Build examples." |
-| OPACK_BUILD_TESTS          | OFF      | "Build tests using doctest." |
-| OPACK_BUILD_BENCHMARKS     | OFF      | "Build benchmarks using google benchmarks." |
-| OPACK_DEVELOPPER_WARNINGS  | OFF      | "Enable more warnings when compiling" |
-| OPACK_ORGANIZE             | ON       | "Enable organisation of entities, different from C++ namespace (mainly organisation for explorer). Disabling it may lead to more performance." |
-| OPACK_ASSERTS              | ON       | "Enable assertions. Disabling it may lead to more performance." |
+| Options                      | Default  | Description                                              |
+| ---------------------------- | -------- | -------------------------------------------------------- |
+| OPACK_BUILD_EXAMPLES         | OFF      | "Build examples." |
+| OPACK_BUILD_TESTS            | OFF      | "Build tests using doctest." |
+| OPACK_BUILD_BENCHMARKS       | OFF      | "Build benchmarks using google benchmarks." |
+| OPACK_DEVELOPPER_WARNINGS    | OFF      | "Enable more warnings when compiling" |
+| OPACK_ORGANIZE               | ON       | "Enable organisation of entities, different from C++ namespace (mainly organisation for explorer). Disabling it may lead to more performance." |
+| OPACK_ENABLE_RUNTIME_ASSERTS | ON       | "Enable assertions. Disabling it may lead to more performance." |
 
 
 ### Prerequisites
@@ -170,4 +170,5 @@ This line will generate a json file with 'Release' in its name. It will also rep
 * **[Doxygen-awesome](https://github.com/jothepro/doxygen-awesome-css)**
 * **[Flecs](https://github.com/SanderMertens/flecs)**
 * **[fmt](https://github.com/fmtlib/fmt)**
+* **[effolkronium/random](https://github.com/effolkronium/random)**
 * **[Google Benchmark](https://github.com/google/benchmark)**
