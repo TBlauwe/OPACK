@@ -114,10 +114,10 @@ namespace opack
 	void impact(World& world, TFunc&& func)
     {
         auto behaviour = opack::entity<T>(world);
-#ifdef OPACK_ASSERTS
-		//ecs_assert(opack::entity<TOper>(world).has, ECS_INVALID_OPERATION, fmt::format(fmt::runtime("Behaviour was not instantiated \"{0}\" ! Make sure this was called : \"opack::operation<YourFlow, {0}>(world)\"."), behaviour.path()).c_str());
-		//ecs_assert(opack::is_a<Behaviour>(behaviour), ECS_INVALID_OPERATION, fmt::format(fmt::runtime("Behaviour was not instantiated \"{0}\" ! Make sure this was called : \"opack::operation<YourFlow, {0}>(world)\"."), behaviour.path()).c_str());
-#endif
+		if constexpr (!std::same_as<T,Behaviour>)
+		{
+			opack_assert(opack::is_a<Behaviour>(behaviour), "Behaviour [{0}] was not instantiated ! Did you called : \"opack::behaviour<{0}>(..)\", to initialize it ?", type_name_cstr<T>());
+		}
         behaviour.template set<TOper, Impact<TOper>> ({ behaviour, func });
     };
 
