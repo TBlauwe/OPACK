@@ -13,7 +13,7 @@
                 "OPACK_BUILD_EXPERIMENTS": "ON",
                 "OPACK_BUILD_TESTS": "ON",
                 "OPACK_DEVELOPPER_WARNINGS": "ON",
-                "CPM_SOURCE_CACHE": "D:/dev/.cache",
+                "CPM_SOURCE_CACHE": "C:/dev/.cache",
                 "USE_CCACHE": "ON"
             },
             "condition": {

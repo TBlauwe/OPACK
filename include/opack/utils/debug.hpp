@@ -25,9 +25,9 @@
  */
 #ifdef OPACK_RUNTIME_CHECK
 #define opack_assert(condition, message, ...)\
-	ecs_assert(condition, ECS_INVALID_PARAMETER, fmt::format(fmt::runtime(message), __VA_ARGS__).c_str())
+	ecs_assert(condition, ECS_INVALID_PARAMETER, fmt::format(fmt::runtime(message) __VA_OPT__(,) __VA_ARGS__).c_str())
 #else
-#define opack_assert(condition, message, ...)
+#define opack_assert(condition, message, ...) ((void)0)
 #endif
 
 /** Runtime warning emitted only when @c OPACK_RUNTIME_CHECK is true.
@@ -41,9 +41,9 @@
  */
 #ifdef OPACK_RUNTIME_CHECK
 #define opack_warn_if(condition, message, ...)\
-	if(!condition) flecs::log::warn(message, __VA_ARGS__)
+	if(!condition) flecs::log::warn(message __VA_OPT__(,) __VA_ARGS__)
 #else
-#define opack_warn_if(condition, message, ...)
+#define opack_warn_if(condition, message, ...) ((void)0)
 #endif
 
 /** Runtime trace emitted only when @c OPACK_RUNTIME_CHECK is true.
@@ -57,9 +57,9 @@
  */
 #ifdef OPACK_RUNTIME_CHECK
 #define opack_trace_if(condition, message, ...)\
-	if(!condition) flecs::log::trace(message, __VA_ARGS__)
+	if(!condition) flecs::log::trace(message __VA_OPT__(,) __VA_ARGS__)
 #else
-#define opack_trace_if(condition, message, ...)
+#define opack_trace_if(condition, message, ...) ((void)0)
 #endif
 
 /** Runtime trace emitted only when @c OPACK_RUNTIME_CHECK is true.
@@ -72,7 +72,7 @@
  */
 #ifdef OPACK_RUNTIME_CHECK
 #define opack_trace(message, ...)\
-	opack_trace_if(true, message, __VA_ARGS__)
+	opack_trace_if(true, message __VA_OPT__(,) __VA_ARGS__)
 #else
-#define opack_trace(true, message, ...)
+#define opack_trace(true, message, ...) ((void)0)
 #endif

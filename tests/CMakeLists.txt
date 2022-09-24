@@ -2,6 +2,7 @@
 # ==============
 set(SOURCE_LIST 
 	"main.cpp"
+    "utils/ring_buffer.cpp"
     "core/types.cpp"
     "core/basic.cpp"
     "core/simulation.cpp"
@@ -11,7 +12,7 @@ set(SOURCE_LIST
     "algorithm/influence_graph.cpp" 
     "module/fipa_acl.cpp"
     "module/activity_dl.cpp"
-)
+ )
 
 # Dependencies
 # ============

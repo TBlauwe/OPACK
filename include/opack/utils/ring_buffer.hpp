@@ -1,20 +1,23 @@
 #include <vector>
-#include <ranges>
 
-#include <fmt/core.h>
 
 template<typename T>
 class RingBuffer
 {
-    using container = std::vector<T>;
-    using iterator = typename std::vector<T>::iterator;
-    using reverse_iterator = typename std::vector<T>::reverse_iterator;
-    using const_iterator = typename std::vector<T>::const_iterator;
-    using const_reverse_iterator = typename std::vector<T>::const_reverse_iterator;
+    template<typename, bool> struct iterator_t; // Forward declaration
 
 public:
-    RingBuffer() : RingBuffer(1){};
-    RingBuffer(std::size_t size) : m_container(size), pos{m_container.begin()}
+    using container = std::vector<T>;
+    using container_iterator = typename std::vector<T>::iterator;
+    using iterator = iterator_t<T, false>;
+    using reverse_iterator = iterator_t<T, true>;
+    using const_iterator = iterator_t<const T, false>;
+    using const_reverse_iterator = iterator_t<const T, true>;
+    static constexpr std::size_t default_size = 1;
+
+public:
+    RingBuffer() : RingBuffer(default_size){};
+    RingBuffer(std::size_t size) : m_container(size)
     {}
 
     T& at(std::size_t n)
@@ -22,19 +25,21 @@ public:
        return m_container.at(n);
     }
 
-    iterator begin() { return m_container.begin(); }
-    const_iterator begin() const { return m_container.cbegin(); }
-    iterator end() { return m_container.end(); }
-    const_iterator end() const { return m_container.cend(); }
-    reverse_iterator rbegin() { return m_container.rbegin(); }
-    const_reverse_iterator rbegin() const { return m_container.rbegin(); }
-    reverse_iterator rend() { return m_container.rend(); }
-    const_reverse_iterator rend() const { return m_container.rend(); }
+    iterator begin() { return iterator(*this, static_cast<T*>(& *last)); }
+    const_iterator begin() const { return const_iterator(*this, static_cast<const T*>(& *last)); }
+    iterator end() { return iterator(*this, nullptr); }
+    const_iterator end() const { return const_iterator(*this, nullptr); }
+
+    reverse_iterator rbegin() { return reverse_iterator(*this, static_cast<T*>(& *pos)); }
+    const_reverse_iterator rbegin() const { return const_reverse_iterator(*this, static_cast<const T*>(& *pos)); }
+    reverse_iterator rend() { return reverse_iterator(*this, nullptr); }
+    const_reverse_iterator rend() const { return const_reverse_iterator(*this, nullptr); }
 
     template<typename... Args>
     void push(Args&&... args)
     {
         *pos = T{std::forward<Args>(args)...};
+        last = pos;
         std::advance(pos, 1);
         if(pos == m_container.end())
             pos = m_container.begin();
@@ -51,35 +56,85 @@ public:
     }
 
 private:
+
     container m_container {};
-    iterator pos {m_container.begin()};
+    container_iterator pos {m_container.begin()};
+    container_iterator last {std::prev(m_container.end())};
+
+    template<typename TValue, bool is_reverse>
+    struct iterator_t
+    {
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+        using value_type        = TValue;
+        using pointer           = value_type*; 
+        using reference         = value_type&;
+        using container         = const RingBuffer<std::remove_const_t<value_type>>;
+
+        iterator_t(container& rg, pointer ptr) : m_rg{ rg }, m_ptr { ptr }{}
+
+        reference operator*() const { return *m_ptr; }
+        pointer operator->() { return m_ptr; }
+
+        // Prefix increment
+        iterator_t& operator++() 
+        { 
+            if constexpr (is_reverse)
+                return backward();
+            else
+                return forward();
+        }  
+
+        iterator_t& operator--() 
+        { 
+            if constexpr (is_reverse)
+                return forward();
+            else
+                return backward();
+        }  
+
+        iterator_t& forward()
+        {
+            if (m_ptr == &*m_rg.pos)
+                m_ptr = nullptr;
+            else if (m_ptr == &*m_rg.m_container.begin())
+            {
+                if constexpr (std::is_const_v<value_type>)
+                    m_ptr = &*m_rg.m_container.rbegin();
+                else
+                    m_ptr = const_cast<value_type*>(&*m_rg.m_container.rbegin());
+            }
+            else
+                m_ptr--; 
+            return *this; 
+        }
+
+        iterator_t& backward()
+        {
+            if (m_ptr == &*m_rg.last)
+                m_ptr = nullptr;
+            else if (m_ptr == &*m_rg.m_container.rbegin())
+            {
+                if constexpr (std::is_const_v<value_type>)
+                    m_ptr = &*m_rg.m_container.begin();
+                else
+                    m_ptr = const_cast<value_type*>(&*m_rg.m_container.begin());
+            }
+            else
+                m_ptr++; 
+            return *this; 
+        }
+
+        iterator_t operator++(int) { iterator_t tmp = *this; ++(*this); return tmp; }
+        iterator_t operator--(int) { iterator_t tmp = *this; --(*this); return tmp; }
+
+        friend bool operator== (const iterator_t& a, const iterator_t& b) { return a.m_ptr == b.m_ptr; };
+        friend bool operator!= (const iterator_t& a, const iterator_t& b) { return a.m_ptr != b.m_ptr; };  
+
+    private:
+        pointer m_ptr;
+        container& m_rg;
+    };
+
+
 };
-
-template<typename T>
-void print(const RingBuffer<T>& rg)
-{
-    fmt::print("Size : {}\n", rg.size());
-    fmt::print("Capacity : {}\n", rg.capacity());
-    fmt::print("Value : [");
-    for (auto i = rg.rbegin(); i != rg.rend(); ++i )
-    { 
-        fmt::print("{} ", *i);
-    } 
-    fmt::print("]\n");
-}
-
-auto main() -> int
-{
-    auto rg = RingBuffer<int>(3);
-    rg.push(1);
-    print(rg);
-    rg.push(2);
-    print(rg);
-    rg.push(3);
-    print(rg);
-    rg.push(4);
-    print(rg);
-    rg.push(5);
-    print(rg);
-
-}
