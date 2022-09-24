@@ -123,7 +123,7 @@ void opack::import_opack(World& world)
 		.term(flecs::IsA).second<opack::Actuator>()
 		.each([](flecs::entity actuator, LastActions& last_actions)
 			{
-				last_actions.previous_prefabs_done.push(actuator.target<Doing>());
+				last_actions.previous_prefabs_done.push(actuator.target<Doing>().target(flecs::IsA));
 			});
 
 	world.system("CleanCancelledActions")

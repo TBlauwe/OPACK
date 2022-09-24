@@ -122,7 +122,7 @@ namespace opack
 	template<SensePrefab T>
 	Entity sense(EntityView entity)
 	{
-		opack_assert(entity.target<T>(), "No sense {0} for entity {1}. Did you called : `opack::add_sense<{0}, YourAgentType>(world) ?", type_name_cstr<T>(), entity.path());
+		opack_assert(entity.target<T>(), "No sense {0} for entity {1}. Did you called : `opack::add_sense<{0}, YourAgentType>(world) ?", type_name_cstr<T>(), entity.path().c_str());
 		return entity.target<T>();
 	}
 

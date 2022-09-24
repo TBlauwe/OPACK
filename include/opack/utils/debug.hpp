@@ -46,6 +46,22 @@
 #define opack_warn_if(condition, message, ...) ((void)0)
 #endif
 
+/** Runtime warning emitted only when @c OPACK_RUNTIME_CHECK is true.
+ *	@param message A fmt string literal, followed by your arguments
+ *
+ *	Usage:
+ *	@code{.cpp}
+ *	opack_warn("This will emit a warning and this {} will be formatted", "argument");
+ *	@endcode
+ */
+#ifdef OPACK_RUNTIME_CHECK
+#define opack_warn(message, ...)\
+	opack_warn_if(true, message __VA_OPT__(,) __VA_ARGS__)
+#else
+#define opack_warn(true, message, ...) ((void)0)
+#endif
+
+
 /** Runtime trace emitted only when @c OPACK_RUNTIME_CHECK is true.
  *	@param condition Emits a trace if @c condition is false
  *	@param message A fmt string literal, followed by your arguments

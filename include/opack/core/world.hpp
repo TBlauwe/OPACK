@@ -272,6 +272,13 @@ namespace opack
     }
 
     template<typename T>
+        requires HasHandle<T>
+    typename T::handle_t entity(World& world)
+    {
+        return typename T::handle_t(world, world.entity<T>());
+    }
+
+    template<typename T>
     Entity prefab(World& world)
     {
          return world.prefab<T>();
@@ -305,13 +312,13 @@ namespace opack
 
     inline Entity spawn(EntityView prefab)
     {
-        opack_assert(prefab.has(flecs::Prefab), "\"{}\" is not a prefab ! Is it initialized ? (opack::init<T>(world) if it's a type).", prefab.path());
+        opack_assert(prefab.has(flecs::Prefab), "\"{}\" is not a prefab ! Is it initialized ? (opack::init<T>(world) if it's a type).", prefab.path().c_str());
         return prefab.world().entity().is_a(prefab);
     }
 
     inline Entity spawn(EntityView prefab, const char * name)
     {
-        opack_assert(prefab.has(flecs::Prefab), "\"{}\" is not a prefab ! Is it initiliazed it ? (opack::init<T>(world) if it's a type).", prefab.path());
+        opack_assert(prefab.has(flecs::Prefab), "\"{}\" is not a prefab ! Is it initiliazed it ? (opack::init<T>(world) if it's a type).", prefab.path().c_str());
         return prefab.world().entity(name).is_a(prefab);
     }
 

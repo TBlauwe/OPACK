@@ -45,6 +45,14 @@ namespace opack
 		LastActions() = default;
 		LastActions(size_t ring_buffer_size) : previous_prefabs_done{ ring_buffer_size } {}
 		ring_buffer<EntityView> previous_prefabs_done;
+
+        /**
+         * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value.
+         * Assert if @c n is superior or equal to @c size().
+         */
+		EntityView peek(std::size_t n) const { return previous_prefabs_done.peek(n); }
+
+		bool has_done(EntityView action_prefab) const { return previous_prefabs_done.contains(action_prefab); }
 	};
 
 	/** Indicates the minimum and maximum of entities needed by an action. */

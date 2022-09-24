@@ -32,13 +32,24 @@ public:
         return *it;
     }
 
+    /**
+     * Return last @c n th element s. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value.
+     * Assert if @c n is superior or equal to @c size().
+     */
     const T& peek(std::size_t n = 0) const
     {
-        assert(n >= size());
+        assert(n >= 0 && n < size());
         auto it = begin();
         std::advance(it, n);
         return *it;
     }
+
+    /** True if contains @c value, false otherwise. */
+    bool contains(const T& value) const
+    {
+        return std::find(m_container.begin(), m_container.end(), value) != m_container.end();
+    }
+
 
     template<typename... Args>
     void push(Args&&... args)
@@ -151,8 +162,8 @@ private:
         friend bool operator!= (const iterator_t& a, const iterator_t& b) { return a.m_ptr != b.m_ptr; }
 
     private:
-        pointer m_ptr;
         container& m_rg;
+        pointer m_ptr;
     };
 
 

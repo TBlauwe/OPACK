@@ -115,3 +115,33 @@ TEST_CASE("Action API")
     CHECK(action.has<opack::End, opack::Timestamp>());
     CHECK(counter == 3);
 }
+
+TEST_CASE("Action API : tracking")
+{
+    OPACK_ACTION(SomeAction);
+
+    auto world = opack::create_world();
+    world.import<simple>();
+    auto action_prefab = opack::init<SomeAction>(world).require<simple::Actuator>();
+
+    int buffer_size{ 0 };
+    SUBCASE("1")
+    {
+        buffer_size = 1;
+        opack::entity<simple::Actuator>(world).track(buffer_size);
+    }
+
+    SUBCASE("3")
+    {
+        buffer_size = 3;
+        opack::entity<simple::Actuator>(world).track(buffer_size);
+    }
+
+    auto e1 = opack::spawn<simple::Agent>(world, "my_agent");
+    auto action = opack::spawn(action_prefab);
+    opack::act(e1, action);
+    CHECK(opack::current_action<simple::Actuator>(e1) == action);
+    opack::step(world);
+    CHECK(opack::has_done<SomeAction>(e1));
+    CHECK(opack::last_action<simple::Actuator>(e1, 0) == action_prefab);
+}
