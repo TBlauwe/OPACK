@@ -5,6 +5,7 @@
 #include <opack/core.hpp>
 #include <opack/operations/basic.hpp>
 #include <opack/operations/influence_graph.hpp>
+#include <opack/utils/ring_buffer.hpp>
 #include <opack/module/simple_agent.hpp>
 #include <matplot/matplot.h>
 #include <color/color.hpp>
@@ -28,12 +29,11 @@ struct Color
     friend auto operator<=>(const Color&, const Color&) = default;
 };
 
-template<typename T>
-using ring_buffer = rigtorp::SPSCQueue<T>;
 struct Memory
 {
-    ring_buffer<flecs::entity> actions_done;
+    opack::ring_buffer<flecs::entity_view> actions_done;
 };
+
 struct InspectMemory {};
 struct InspectIGraph {};
 struct InspectCurrentAction {};

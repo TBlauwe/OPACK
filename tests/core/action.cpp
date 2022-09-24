@@ -2,8 +2,6 @@
 #include <opack/core.hpp>
 #include <opack/module/simple_agent.hpp>
 
-
-
 TEST_CASE("Action API")
 {
     OPACK_ACTION(MoveTo);

@@ -3,7 +3,7 @@
 #include <fmt/core.h>
 
 template<typename T>
-void print(const RingBuffer<T>& rg)
+void print(const ring_buffer<T>& rg)
 {
     fmt::print("Size : {}\n", rg.size());
     fmt::print("Capacity : {}\n", rg.capacity());
@@ -17,28 +17,28 @@ void print(const RingBuffer<T>& rg)
 
 TEST_CASE("Ring Buffer validity")
 {
-    RingBuffer<int> rg;
+    ring_buffer<int> rg;
     SUBCASE("No size")
     {
-        rg = RingBuffer<int>();
-        CHECK(rg.size() == RingBuffer<int>::default_size);
+        rg = ring_buffer<int>();
+        CHECK(rg.size() == ring_buffer<int>::default_size);
     }
 
     SUBCASE("Size 1")
     {
-        rg = RingBuffer<int>(1);
+        rg = ring_buffer<int>(1);
         CHECK(rg.size() == 1);
     }
 
     SUBCASE("Size 2")
     {
-        rg = RingBuffer<int>(2);
+        rg = ring_buffer<int>(2);
         CHECK(rg.size() == 2);
     }
 
     SUBCASE("Size 10")
     {
-        rg = RingBuffer<int>(10);
+        rg = ring_buffer<int>(10);
         CHECK(rg.size() == 10);
     }
 
@@ -95,7 +95,7 @@ TEST_CASE("Ring Buffer validity")
 
 TEST_CASE("Ring Buffer")
 {
-    auto rg = RingBuffer<int>(3);
+    auto rg = ring_buffer<int>(3);
     SUBCASE("0 elements")
     {
         std::vector<int> vector;
@@ -104,6 +104,9 @@ TEST_CASE("Ring Buffer")
             vector.push_back(v);
         }
         CHECK(vector == std::vector{0, 0, 0});
+        CHECK(rg[0] == 0);
+        CHECK(rg[1] == 0);
+        CHECK(rg[2] == 0);
     }
 
     rg.push(1);
@@ -115,6 +118,9 @@ TEST_CASE("Ring Buffer")
             vector.push_back(v);
         }
         CHECK(vector == std::vector{1, 0, 0});
+        CHECK(rg.peek(0) == 1);
+        CHECK(rg.peek(1) == 0);
+        CHECK(rg.peek(2) == 0);
     }
 
     rg.push(2);
@@ -126,6 +132,9 @@ TEST_CASE("Ring Buffer")
             vector.push_back(v);
         }
         CHECK(vector == std::vector{2, 1, 0});
+        CHECK(rg.peek(0) == 2);
+        CHECK(rg.peek(1) == 1);
+        CHECK(rg.peek(2) == 0);
     }
 
     rg.push(3);
@@ -137,6 +146,9 @@ TEST_CASE("Ring Buffer")
             vector.push_back(v);
         }
         CHECK(vector == std::vector{3, 2, 1});
+        CHECK(rg.peek(0) == 3);
+        CHECK(rg.peek(1) == 2);
+        CHECK(rg.peek(2) == 1);
     }
 
     rg.push(4);
@@ -148,5 +160,8 @@ TEST_CASE("Ring Buffer")
             vector.push_back(v);
         }
         CHECK(vector == std::vector{4, 3, 2});
+        CHECK(rg[0] == 4);
+        CHECK(rg[1] == 3);
+        CHECK(rg[2] == 2);
     }
 }

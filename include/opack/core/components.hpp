@@ -11,6 +11,7 @@
 #include <functional>
 
 #include <flecs.h>
+#include <opack/utils/ring_buffer.hpp>
 #include <opack/core/api_types.hpp>
 
 namespace opack
@@ -33,12 +34,17 @@ namespace opack
 	 */
 	struct On {};	
 
-	/**
-	 * Indicate which actuator is required for the action.
-	 */
+	/** Indicate which actuator is required for the action. */
 	struct RequiredActuator
 	{
 		flecs::entity_view value;
+	};
+
+	struct LastActions
+	{
+		LastActions() = default;
+		LastActions(size_t ring_buffer_size) : previous_prefabs_done{ ring_buffer_size } {}
+		ring_buffer<EntityView> previous_prefabs_done;
 	};
 
 	/** Indicates the minimum and maximum of entities needed by an action. */

@@ -41,7 +41,7 @@
  */
 #ifdef OPACK_RUNTIME_CHECK
 #define opack_warn_if(condition, message, ...)\
-	if(!condition) flecs::log::warn(message __VA_OPT__(,) __VA_ARGS__)
+	if(!(condition)) flecs::log::warn(message __VA_OPT__(,) __VA_ARGS__)
 #else
 #define opack_warn_if(condition, message, ...) ((void)0)
 #endif
@@ -57,7 +57,7 @@
  */
 #ifdef OPACK_RUNTIME_CHECK
 #define opack_trace_if(condition, message, ...)\
-	if(!condition) flecs::log::trace(message __VA_OPT__(,) __VA_ARGS__)
+	if(!(condition)) flecs::log::trace(message __VA_OPT__(,) __VA_ARGS__)
 #else
 #define opack_trace_if(condition, message, ...) ((void)0)
 #endif

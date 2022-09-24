@@ -44,6 +44,9 @@ namespace opack
 	struct ActuatorHandle : Handle
 	{
 		using Handle::Handle;
+
+		/** Should this actuator track last @c ring_buffer_size previous actions done. */
+		ActuatorHandle& track(std::size_t ring_buffer_size);
 	};
 
 	struct ActionHandleView : HandleView
@@ -55,8 +58,10 @@ namespace opack
 	{
 		using Handle::Handle;
 
+		/** Indicates which actuator should be used to enact this. */
 		ActionHandle& require(EntityView actuator_prefab);
 
+		/** Indicates which actuator should be used to enact this. */
 		template<ActuatorPrefab T>
 		ActionHandle& require();
 	};
@@ -162,6 +167,13 @@ namespace opack
 	// --------------------------------------------------------------------------- 
 	// Definition
 	// --------------------------------------------------------------------------- 
+
+	inline ActuatorHandle& ActuatorHandle::track(std::size_t ring_buffer_size)
+	{
+		opack_warn_if(ring_buffer_size != 0, "Ring buffer size is equal to zero ! Fallback to a value of 1. A ring buffer of size zero is invalid.");
+		set<LastActions>({ ring_buffer_size ? ring_buffer_size : 1 });
+		return *this;
+	}
 
 	inline ActionHandle& ActionHandle::require(EntityView actuator_prefab)
 	{
