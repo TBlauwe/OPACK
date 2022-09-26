@@ -263,6 +263,7 @@ namespace opack
 		return opack::spawn<T>(world);
 	}
 
+	//TODO Wrong logic, or I should add another call to cover case when you give an actuator_prefab.
     /**
      * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value..
 	 * If @c actuator do not track actions, the null entity is returned.

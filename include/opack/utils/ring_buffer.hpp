@@ -1,4 +1,4 @@
-#include <assert.h>
+#include <cassert>
 #include <vector>
 
 template<typename T>
@@ -15,7 +15,6 @@ public:
     using const_reverse_iterator = iterator_t<const T, true>;
     static constexpr std::size_t default_size = 1;
 
-public:
     ring_buffer() : ring_buffer(default_size){}
     ring_buffer(std::size_t size) : m_container(size)
     {}
@@ -165,6 +164,4 @@ private:
         container& m_rg;
         pointer m_ptr;
     };
-
-
 };

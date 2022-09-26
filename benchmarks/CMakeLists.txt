@@ -5,7 +5,7 @@ set(SOURCE_LIST
     "core/perception.cpp"
     "core/action.cpp"
     "module/agents.cpp"
-
+    "utils/ring_buffer.cpp"
 )
 
 # Dependencies
