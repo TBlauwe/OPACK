@@ -1,10 +1,8 @@
 #include "opack/module/fipa_acl.hpp"
 #include <unordered_set>
 
-void fipa_acl::import(opack::World& world)
+fipa_acl::fipa_acl(opack::World& world)
 {
-	auto scope = world.entity("::opack::modules::fipa_acl");
-	auto prev = world.set_scope(scope);
 	world.component<Message>().is_a<opack::Message>();
 	world.component<Sender>().add(flecs::Exclusive);
 	world.component<Receiver>();
@@ -63,7 +61,6 @@ void fipa_acl::import(opack::World& world)
 				e.destruct();
 			}
 	);
-    world.set_scope(prev);
 }
 
 fipa_acl::MessageBuilder::MessageBuilder(opack::World& world)

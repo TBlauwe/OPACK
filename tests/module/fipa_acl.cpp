@@ -7,7 +7,7 @@ TEST_CASE("fipa-acl API")
 {
 	OPACK_AGENT(MyAgent);
     auto world = opack::create_world();
-    fipa_acl::import(world);
+    world.import<fipa_acl>();
 	opack::init<MyAgent>(world);
 
 	auto sender	  = opack::spawn<MyAgent>(world);
@@ -119,7 +119,7 @@ TEST_CASE("fipa_acl in systems")
 	OPACK_AGENT(MyAgent);
 
     auto world = opack::create_world();
-    fipa_acl::import(world);
+    world.import<fipa_acl>();
 	opack::init<Vision>(world);
 	opack::init<MyAgent>(world);
 	opack::add_sense<Vision, MyAgent>(world);

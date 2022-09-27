@@ -12,9 +12,9 @@
 #include <opack/core.hpp>
 #include <opack/utils/flecs_helper.hpp>
 
-namespace fipa_acl
+struct fipa_acl
 {
-	void import(opack::World& world);
+	fipa_acl(opack::World& world);
 
 	// --------------------------------------------------------------------------- 
 	// Message Structure
@@ -36,7 +36,7 @@ namespace fipa_acl
 	// --------------------------------------------------------------------------- 
 
 	/**  A performative indicates the intention behind a message. */
-	enum class Performative : uint32_t
+	enum class Performative
 	{
 		None = 0,
 	    // Accepts a previously submitted proposal to perform an action.
@@ -105,7 +105,7 @@ namespace fipa_acl
 		ReplyBuilder(opack::Entity message);
 	};
 
-	void consume(opack::Entity message, opack::Entity reader);
+	static void consume(opack::Entity message, opack::Entity reader);
 
 	/**
 	 * @brief Allows to retrieve messages from a template.
@@ -126,43 +126,43 @@ namespace fipa_acl
 	 *@brief Returns a message builder with the sender already initialized to entity.
 	 *@param sender Automatically set as the sender.
 	 */
-	MessageBuilder message(opack::Entity sender);
+	static MessageBuilder message(opack::Entity sender);
 
 	/**
 	 *@brief Sends the messages, so that other can read it.
 	 *@param sender Automatically set as the sender.
 	 */
-	void send(opack::Entity sender);
+	static void send(opack::Entity sender);
 
 
     /**
      *@brief Return an iterable to retrieve messages matching template. More performant if you need to have multiple calls.
      */
-	Inbox inbox(opack::Entity entity, Performative performative = Performative::None);
+	static Inbox inbox(opack::Entity entity, Performative performative = Performative::None);
 
 	/**
 	 *@brief Retrieve the first message addressed to this entity, matching the template.
 	 *It's a shortcut to using the inbox. However, if you need to receive multiple messages, prefer to use @ref inbox.
 	 */
-	opack::Entity receive(opack::Entity entity, Performative performative = Performative::None);
+	static opack::Entity receive(opack::Entity entity, Performative performative = Performative::None);
 
 	/**
 	 *@brief Create a reply from given message.
 	 *@param message Reply to this message.
 	 */
-	ReplyBuilder reply(opack::Entity message);
+	static ReplyBuilder reply(opack::Entity message);
 
 	// Setter
-	opack::Entity& performative(opack::Entity message, fipa_acl::Performative performative);
-	opack::Entity& sender(opack::Entity message, opack::Entity sender);
+	static opack::Entity& performative(opack::Entity message, fipa_acl::Performative performative);
+	static opack::Entity& sender(opack::Entity message, opack::Entity sender);
 
 	// Getter
-	Performative performative(opack::Entity message);
-	opack::Entity sender(opack::Entity message);
-	int conversation_id(opack::Entity message);
-	float timestamp(opack::Entity message);
-	bool has_receiver(opack::Entity message, opack::Entity receiver);
-	bool has_been_read_by(opack::Entity message, opack::Entity reader);
+	static Performative performative(opack::Entity message);
+	static opack::Entity sender(opack::Entity message);
+	static int conversation_id(opack::Entity message);
+	static float timestamp(opack::Entity message);
+	static bool has_receiver(opack::Entity message, opack::Entity receiver);
+	static bool has_been_read_by(opack::Entity message, opack::Entity reader);
 
 	struct queries
 	{
