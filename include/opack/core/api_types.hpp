@@ -98,12 +98,22 @@ namespace opack
 
 	class HandleView : public flecs::entity_view
 	{
-		using flecs::entity_view::entity_view;
+		using entity_view::entity_view;
 	};
 
-	struct Handle : public flecs::entity
+	struct Handle : flecs::entity
 	{
-		using flecs::entity::entity;
+		using entity::entity;
+	};
+
+	struct MessageHandleView : HandleView
+	{
+		using HandleView::HandleView;
+	};
+
+	struct MessageHandle : Handle
+	{
+		using Handle::Handle;
 	};
 
 	/** @}*/ //End of group
