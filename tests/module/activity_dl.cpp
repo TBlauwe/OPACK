@@ -18,7 +18,7 @@ TEST_CASE("API Activity-DL")
 	OPACK_ACTION(Action3);
 
 	auto world = opack::create_world();
-	adl::import(world);
+	world.import<adl>();
 
 	opack::init<Action1>(world);
 	opack::init<Action2>(world);
@@ -180,7 +180,7 @@ TEST_CASE("API Activity-DL - Operators")
 	OPACK_ACTION(Action3);
 
 	auto world = opack::create_world();
-	adl::import(world);
+	world.import<adl>();
 
 	opack::init<Action1>(world);
 	opack::init<Action2>(world);
@@ -915,7 +915,7 @@ TEST_CASE("Sample Activity-Tree")
 	struct Handling {};
 
 	auto world = opack::create_world();
-	adl::import(world);
+	world.import<adl>();
 
 	opack::init<MyAgent>(world).add<MyFlow>();
 	opack::init<MyActuator>(world);
