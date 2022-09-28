@@ -117,14 +117,15 @@ void opack::import_opack(World& world)
 	world.component<Cancel>();
 	world.component<End>();
 
-	world.system<LastActions>()
+	world.system<LastActions>("SystemRememberLastActions")
 		.kind<Act::PreUpdate>()
 		.term<Doing>(flecs::Wildcard)
 		.term(flecs::IsA).second<opack::Actuator>()
 		.each([](flecs::entity actuator, LastActions& last_actions)
 			{
 				last_actions.previous_prefabs_done.push(actuator.target<Doing>().target(flecs::IsA));
-			});
+			}
+	).child_of<opack::world::dynamics>();
 
 	world.system("CleanCancelledActions")
 		.kind<Act::PreUpdate>()
