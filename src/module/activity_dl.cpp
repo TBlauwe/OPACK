@@ -5,24 +5,20 @@
 adl::adl(opack::World& world)
 {
 	world.entity<Activity::entities_folder_t>().add(flecs::Module);
-	opack::prefab<Task>(world)
-		.add<LogicalConstructor>()
-		.add<TemporalConstructor>();
-	opack::prefab<Activity>(world).is_a<Task>();
 
 	world.component<Order>()
 		.member<size_t>("value");
 	world.component<LogicalConstructor>()
-		.constant("AND", static_cast<int>(LogicalConstructor::AND))
-		.constant("OR", static_cast<int>(LogicalConstructor::OR))
-		.add(flecs::Union);
+		.constant("AND", static_cast<int32_t>(LogicalConstructor::AND))
+		.constant("OR", static_cast<int32_t>(LogicalConstructor::OR))
+		;
 	world.component<TemporalConstructor>()
-		.constant("IND", static_cast<int>(TemporalConstructor::IND))
-		.constant("SEQ_ORD", static_cast<int>(TemporalConstructor::SEQ_ORD))
-		.constant("ORD", static_cast<int>(TemporalConstructor::ORD))
-		.constant("SEQ", static_cast<int>(TemporalConstructor::SEQ))
-		.constant("PAR", static_cast<int>(TemporalConstructor::PAR))
-		.add(flecs::Union);
+		.constant("IND", static_cast<int32_t>(TemporalConstructor::IND))
+		.constant("SEQ_ORD", static_cast<int32_t>(TemporalConstructor::SEQ_ORD))
+		.constant("ORD", static_cast<int32_t>(TemporalConstructor::ORD))
+		.constant("SEQ", static_cast<int32_t>(TemporalConstructor::SEQ))
+		.constant("PAR", static_cast<int32_t>(TemporalConstructor::PAR))
+		;
 	world.component<Constructor>()
 		.member<LogicalConstructor>("logical")
 		.member<TemporalConstructor>("temporal");
@@ -32,6 +28,12 @@ adl::adl(opack::World& world)
 	world.component<Nomological>();
 	world.component<Regulatory>();
 	world.component<Satisfaction>();
+
+	auto task = opack::prefab<Task>(world);
+	condition<Satisfaction>(task, is_finished);
+	opack::prefab<Activity>(world).is_a<Task>();
+	auto action = opack::init<Action>(world).add<opack::DoNotClean>();
+	condition<Satisfaction>(action, is_finished);
 }
 
 opack::Entity adl::task(const char* name, opack::Entity parent, LogicalConstructor logical, TemporalConstructor temporal, size_t arity_max, size_t arity_min)

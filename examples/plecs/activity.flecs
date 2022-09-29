@@ -1,0 +1,32 @@
+using adl
+using LogicalConstructor
+using TemporalConstructor
+
+Prefab MyAction : BaseAction
+
+Prefab Root : Activity
+{
+	- Constructor{AND, SEQ_ORD}
+
+	Prefab Task : Task
+	{
+		- Order{0}
+		- Constructor{AND, SEQ_ORD}
+		DoThis : MyAction { -Order{0} }
+		AndAlsoDoThis : MyAction { -Order{1}}
+	}
+
+	Prefab Subtask : Task
+	{
+		- Order{1}
+		- Constructor{AND, SEQ_ORD}
+		OrThis : MyAction { -Order{0} }
+	}
+}
+
+instance : Root
+
+MyAgent : simple.Agent
+{
+	- (Activity, instance)	
+}

@@ -3,6 +3,7 @@
 set(OPACK_EXAMPLES
 	00_empty
 	01_simple_agent
+	02_activity
 )
 
 set(EXAMPLE_OUTPUT_DIR "${OPACK_SOURCE_DIR}/bin/examples")

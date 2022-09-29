@@ -12,6 +12,7 @@
 /** Shorthand for creating an activity type.*/
 #define ADL_ACTIVITY(name) OPACK_SUB_PREFAB(name, adl::Activity)
 
+// TODO Should improve potential actions call to tell whether or not an instance is finished or not.
 /**
  * Module for anything related to Activity-DL.
  * It's a domain language to represent an activity by a hierarchy of tasks.
@@ -29,6 +30,8 @@ struct adl
 	{
         using entities_folder_t = activities;
 	};
+
+	OPACK_ACTION(Action);
 
 
 	/** Contains order of a task in regards to its parent. */

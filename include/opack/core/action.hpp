@@ -343,7 +343,8 @@ namespace opack
 	{
 		opack_assert(initiator.is_valid(), "Given initiator is invalid.");
 		opack_assert(action.is_valid(), "Given action is invalid.");
-		opack_assert(action.get<RequiredActuator>()->value.is_valid(), "Action {0} has no required actuator set ! Did you call : opack::init<YourAction>(world).require<YourActuator>().", action.path().c_str());
+		opack_assert(action.has<RequiredActuator>(), "Action {0} has no required actuator set ! Did you call : opack::init<YourAction>(world).require<YourActuator>().", action.path().c_str());
+		opack_assert(action.get<RequiredActuator>()->value.is_valid(), "Action required actuator set is invalid ! Did you call : opack::init<YourAction>(world).require(required_actuator) with a correct actuator ?", action.path().c_str());
 
 		flecs::entity effective_action{action};
 		if (action.has(flecs::Prefab))

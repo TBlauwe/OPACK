@@ -225,6 +225,8 @@ namespace opack
 			{
 				m_graph.negative_influence_from_id(u_index, v);
 			}
+
+			IPGraph<U_t, V_t>& global_graph() { return m_graph; };
 		private:
 			IPGraph<U_t, V_t>& m_graph;
 			Index u_index;

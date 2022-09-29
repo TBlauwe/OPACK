@@ -43,18 +43,17 @@ struct ActivityFlowBuilder : opack::FlowBuilder<T>
 			}
 		);
 
-		//opack::default_impact<Act>(world,
-		//	[](flecs::entity agent, Act::inputs& inputs)
-		//	{				
-		//		auto action = std::get<opack::df<ActionSelection, ActionSelection::output>&>(inputs).value;
-		//		if (action)
-		//		{
-		//			std::cout << "Doing : " << action.path() << "\n";
-		//			// TODO opack::act<Hand>(agent, action);
-		//		}
-		//		return opack::make_outputs<Act>();
-		//	}
-		//);
+		opack::default_impact<Act>(world,
+			[](flecs::entity agent, typename Act::inputs& inputs)
+			{				
+				auto action = std::get<opack::df<ActionSelection, typename ActionSelection::output>&>(inputs).value;
+				if (action)
+				{
+					opack::act(agent, action);
+				}
+				return opack::make_outputs<Act>();
+			}
+		);
 	}
 
 private:
