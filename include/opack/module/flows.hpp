@@ -13,7 +13,7 @@
 #include <opack/module/adl.hpp>
 
 template<std::derived_from<opack::Flow> T, typename... Activities>
-struct ActivityFlowBuilder : public opack::FlowBuilder<T>
+struct ActivityFlowBuilder : opack::FlowBuilder<T>
 {
 	struct SuitableActions : opack::operations::Union<opack::Action_t> {};
 	struct ActionSelection : opack::operations::SelectionByIGraph<SuitableActions> {};

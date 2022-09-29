@@ -15,7 +15,7 @@ namespace opack::internal
 	void name_entity_after_type(flecs::entity entity)
 	{
 #ifndef OPACK_ORGANIZE
-		entity.set_name(fmt::format("{} - {}", type_name_cstr<T>(), entity).c_str());
+		entity.set_name(fmt::format("{}_{}", type_name_cstr<T>(), entity).c_str());
 #endif
 	}
 
