@@ -23,5 +23,7 @@ int main()
 	ActivityFlowBuilder<MyFlow, adl::Activity>(world).interval(1.0).build();
 
 	world.plecs_from_file("plecs/activity.flecs");
+
+	world.lookup("instance").children([](flecs::entity child) { fmt::print("{}", child.path()); });
 	opack::run_with_webapp(world);
 }

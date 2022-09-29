@@ -13,6 +13,7 @@
 #define ADL_ACTIVITY(name) OPACK_SUB_PREFAB(name, adl::Activity)
 
 // TODO Should improve potential actions call to tell whether or not an instance is finished or not.
+// TODO Should automatically add default condition to actions prefab
 /**
  * Module for anything related to Activity-DL.
  * It's a domain language to represent an activity by a hierarchy of tasks.
