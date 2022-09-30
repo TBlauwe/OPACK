@@ -65,11 +65,8 @@ namespace opack
 		template<ActuatorPrefab T>
 		ActionHandle& require();
 
-		/** Delay action beginning by value (in seconds). */
-		ActionHandle& delay(float value);
-
 		/** Set action duration by value (in seconds). */
-		ActionHandle& timer(float value);
+		ActionHandle& duration(float value);
 
 		/** Called when action is beginning (after delay so).
 		 * First argument is the action entity
@@ -212,7 +209,7 @@ namespace opack
 		world.system()
 			.kind<Act::PreUpdate>()
 			.term(flecs::IsA).second<T>()
-			.term(ActionStatus::waiting)
+			.term(ActionStatus::starting)
 			.each([func](flecs::entity action)
 				{
 					func(action);
@@ -280,15 +277,9 @@ namespace opack
 		return *this;
 	}
 
-	inline ActionHandle& ActionHandle::delay(float value)
+	inline ActionHandle& ActionHandle::duration(float value)
 	{
-		set<Delay>({ value });
-		return *this;
-	}
-
-	inline ActionHandle& ActionHandle::timer(float value)
-	{
-		set<Timer>({ value });
+		set<Duration>({ value });
 		return *this;
 	}
 
@@ -455,7 +446,10 @@ namespace opack
 		if (last_action)
 			last_action.mut(action); //TODO
 
-		effective_action.mut(action).add<By>(initiator);
+		effective_action.mut(action)
+			.add<By>(initiator)
+			.add(ActionStatus::starting)
+		;
 		actuator.mut(action).template add<Doing>(effective_action);
 	}
 

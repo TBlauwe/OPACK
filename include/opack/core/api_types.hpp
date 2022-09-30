@@ -221,6 +221,7 @@ namespace opack
 	enum class ActionStatus
 	{
 		waiting,
+		starting,
 		running,
 		suspended,
 		resumed,
