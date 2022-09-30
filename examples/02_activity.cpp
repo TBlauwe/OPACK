@@ -20,7 +20,7 @@ int main()
 	world.entity<simple::Agent>().add<MyFlow>();
 	opack::init<BaseAction>(world)
 		.require<simple::Actuator>()
-		.duration(2.0f)
+		.duration(10.0f)
 		.on_action_begin<BaseAction>([](flecs::entity action) { fmt::print("{} is beginning with duration {}\n", action.path().c_str(), action.get<opack::Duration>()->value);  })
 		.on_action_end<BaseAction>([](flecs::entity action) { fmt::print("{} is done\n", action.path().c_str()); });
 

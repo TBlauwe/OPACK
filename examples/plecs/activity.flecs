@@ -2,8 +2,6 @@ using adl
 using LogicalConstructor
 using TemporalConstructor
 
-Prefab MyAction : BaseAction
-
 Prefab Root : Activity
 {
 	- Constructor{AND, SEQ_ORD}
@@ -12,36 +10,36 @@ Prefab Root : Activity
 	{
 		- Order{0}
 		- Constructor{AND, SEQ_ORD}
-		DoThis : MyAction { -Order{0} }
-		AndAlsoDoThis : MyAction { -Order{1} }
+		DoThis : BaseAction { -Order{0} }
+		AndAlsoDoThis : BaseAction { -Order{1} }
 	}
 
 	Prefab Task2 : Task
 	{
 		- Order{1}
 		- Constructor{AND, SEQ_ORD}
-		OrThis : MyAction { -Order{0} }
+		OrThis : BaseAction { -Order{0} }
 	}
 
 	Prefab Task3 : Task
 	{
 		- Order{1}
 		- Constructor{AND, SEQ_ORD}
-		OrThis : MyAction { -Order{0} }
+		OrThis : BaseAction { -Order{0} }
 	}
 
 	Prefab Task4 : Task
 	{
 		- Order{1}
 		- Constructor{AND, SEQ_ORD}
-		OrThis : MyAction { -Order{0} }
+		OrThis : BaseAction { -Order{0} }
 	}
 
 	Prefab Task5 : Task
 	{
 		- Order{1}
 		- Constructor{AND, SEQ_ORD}
-		OrThis : MyAction { -Order{0} }
+		OrThis : BaseAction { -Order{0} }
 	}
 }
 

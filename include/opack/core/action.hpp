@@ -279,7 +279,7 @@ namespace opack
 
 	inline ActionHandle& ActionHandle::duration(float value)
 	{
-		set<Duration>({ value });
+		set_override<Duration>({ value });
 		return *this;
 	}
 
