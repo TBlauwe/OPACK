@@ -7,6 +7,7 @@
  *********************************************************************/
 #pragma once
 
+#include <map>
 #include <opack/core.hpp>
 
 /** Shorthand for creating an activity type.*/
@@ -38,7 +39,7 @@ struct adl
 	/** Contains order of a task in regards to its parent. */
 	struct Order
 	{
-		size_t value{ 0 };
+		std::size_t value{ 0 };
 	};
 
 	enum class LogicalConstructor { AND, OR };
@@ -72,8 +73,8 @@ struct adl
 		opack::Entity parent,
 		LogicalConstructor logical = LogicalConstructor::AND,
 		TemporalConstructor temporal = TemporalConstructor::SEQ_ORD,
-		size_t arity_max = 1,
-		size_t arity_min = 1
+		std::size_t arity_max = 1,
+		std::size_t arity_min = 1
 	);
 
 	/** True if @c task has any children, i.e sub-tasks or actions, false otherwise.*/
@@ -95,13 +96,13 @@ struct adl
 	static bool in_progress(opack::Entity task);
 
 	/** Returns order of @c task in regards to its parent. */
-	static size_t order(opack::Entity task);
+	static std::size_t order(opack::Entity task);
 
 	/** Returns number of direct children of @c task. */
-	static size_t children_count(opack::Entity task);
+	static std::size_t children_count(opack::Entity task);
 
 	/** Returns number of direct and indirect children of @c task. */
-	static size_t size(opack::Entity task);
+	static std::size_t size(opack::Entity task);
 
 	/** Returns parent task of @c task, null entity otherwise. */
 	static opack::Entity parent_of(opack::Entity task);
@@ -118,7 +119,7 @@ struct adl
 	static bool is_potential(opack::Entity task);
 
 	/** Returns the @c n -th agent doing this @c task. */
-	static opack::Entity initiator(opack::Entity task, size_t n = 0);
+	static opack::Entity initiator(opack::Entity task, std::size_t n = 0);
 
 	/** Retrieve pointer to value @c T, stored in context
 	 *(either from current task or parent tasks).
@@ -177,7 +178,7 @@ struct adl
 	template<std::derived_from<Condition> T>
 	static void condition(opack::Entity& task, cond_func_t func)
 	{
-		task.emplace<T>(func);
+		task.set<T>({ func });
 	}
 
 	/** Check if condition @c T of @c task is true or false. */
@@ -194,8 +195,8 @@ struct adl
 		opack::World& world,
 		LogicalConstructor logical = LogicalConstructor::AND,
 		TemporalConstructor temporal = TemporalConstructor::SEQ_ORD,
-		size_t arity_max = 1,
-		size_t arity_min = 1
+		std::size_t arity_max = 1,
+		std::size_t arity_min = 1
 	)
 	{
 		return opack::init<T>(world)
@@ -227,7 +228,7 @@ struct adl
 	}
 
 	/** Returns an ordered map of @c task children. */
-	static std::unordered_map<size_t, opack::Entity> children(opack::Entity task);
+	static std::map<std::size_t, opack::Entity> children(opack::Entity task);
 
 	/** Add potential actions to output iterator @c out and returns true if task is satisfied.*/
 	template<typename OutputIterator>
@@ -238,16 +239,16 @@ struct adl
 
 		if (!has_children(task))
 		{
-			ecs_assert(opack::is_a<opack::Action>(task), ECS_INVALID_PARAMETER, "Leaf task is not an action.");
+			opack_assert(opack::is_a<opack::Action>(task), "Leaf task {} is not an action. Does it inherit from opack::Action or adl::Action ?", task.path().c_str());
 			if (is_potential(task))
 				*out++ = task;
 		}
 		else
 		{
-			ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a temporal constructor component.");
+			opack_assert(task.has<Constructor>(), "Task {} doesn't have a temporal constructor component.", task.path().c_str());
 
 			// 1. Retrieve all children and sort them by their orders.
-			std::unordered_map<size_t, opack::Entity> subtasks{};
+			std::unordered_map<std::size_t, opack::Entity> subtasks{};
 			task.children
 			(
 				[&subtasks](opack::Entity e)

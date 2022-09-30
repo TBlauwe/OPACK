@@ -7,7 +7,7 @@ adl::adl(opack::World& world)
 	world.entity<Activity::entities_folder_t>().add(flecs::Module);
 
 	world.component<Order>()
-		.member<size_t>("value");
+		.member<std::size_t>("value");
 	world.component<LogicalConstructor>()
 		.constant("AND", static_cast<int32_t>(LogicalConstructor::AND))
 		.constant("OR", static_cast<int32_t>(LogicalConstructor::OR))
@@ -36,7 +36,7 @@ adl::adl(opack::World& world)
 	condition<Satisfaction>(action, is_finished);
 }
 
-opack::Entity adl::task(const char* name, opack::Entity parent, LogicalConstructor logical, TemporalConstructor temporal, size_t arity_max, size_t arity_min)
+opack::Entity adl::task(const char* name, opack::Entity parent, LogicalConstructor logical, TemporalConstructor temporal, std::size_t arity_max, std::size_t arity_min)
 {
 	auto entity = parent.world().prefab(name).is_a<Task>();
 	entity.child_of(parent);
@@ -54,9 +54,9 @@ bool adl::has_children(opack::Entity task)
 bool adl::is_finished(opack::Entity task)
 {
 	bool result{ true };
-	if (adl::has_children(task))
+	if (has_children(task))
 	{
-		ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a logical constructor component.");
+		opack_assert(task.has<Constructor>(), "Task {} doesn't have a logical constructor component.", task.path().c_str());
 		// False if children are not finished 
 		task.children([&result](opack::Entity e) {result &= is_finished(e); });
 		switch (task.get<Constructor>()->logical)
@@ -92,19 +92,19 @@ bool adl::has_started(opack::Entity task)
 	return result;
 }
 
-size_t adl::order(opack::Entity task)
+std::size_t adl::order(opack::Entity task)
 {
 	return task.get<Order>()->value;
 }
 
-size_t adl::children_count(opack::Entity task)
+std::size_t adl::children_count(opack::Entity task)
 {
 	return opack::internal::children_count(task);
 }
 
-size_t adl::size(opack::Entity task)
+std::size_t adl::size(opack::Entity task)
 {
-	size_t count{ 0 };
+	std::size_t count{ 0 };
 	traverse_dfs(task, [&count](opack::Entity) {count++; });
 	return count;
 }
@@ -154,9 +154,9 @@ bool adl::is_potential(opack::Entity task)
 	return check_condition<Contextual>(task);
 }
 
-std::unordered_map<size_t, opack::Entity> adl::children(opack::Entity task)
+std::map<std::size_t, opack::Entity> adl::children(opack::Entity task)
 {
-	std::unordered_map<size_t, opack::Entity> subtasks{};
+	std::map<std::size_t, opack::Entity> subtasks{};
 	task.children
 	(
 		[&subtasks](opack::Entity e)
@@ -178,7 +178,7 @@ bool adl::in_progress(opack::Entity task)
 	return has_started(task) && !is_finished(task);
 }
 
-opack::Entity adl::initiator(opack::Entity action, size_t n)
+opack::Entity adl::initiator(opack::Entity action, std::size_t n)
 {
 	return action.target<opack::By>(static_cast<int>(n));
 }

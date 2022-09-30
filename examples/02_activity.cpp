@@ -22,6 +22,12 @@ int main()
 
 	ActivityFlowBuilder<MyFlow, adl::Activity>(world).interval(1.0).build();
 
+	world.observer()
+		.term<const adl::Constructor>()
+		.term(flecs::ChildOf, flecs::Wildcard)
+		.event(flecs::OnAdd)
+		.each([](flecs::entity entity) {fmt::print("Number of child {} : {}\n", entity.path(), opack::internal::children_count(entity.parent())); });
+
 	world.plecs_from_file("plecs/activity.flecs");
 
 	world.lookup("instance").children([](flecs::entity child) { fmt::print("{}", child.path()); });
