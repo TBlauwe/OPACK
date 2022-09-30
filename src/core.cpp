@@ -72,8 +72,7 @@ void opack::import_opack(World& world)
 		.add(flecs::Exclusive)
 		;
 
-	world.component<RequiredActuator>()
-		;
+	world.component<RequiredActuator>();
 
 	world.component<By>(); 
 	world.component<On>();
@@ -133,6 +132,7 @@ void opack::import_opack(World& world)
         .term<DoNotClean>().optional()
 		.term<Cancel>()
 		.term<Begin, Timestamp>()
+        .term<End, Timestamp>().not_()
 		.term(flecs::IsA).second<opack::Action>()
 		.each([](flecs::iter& it, size_t index)
 			{
@@ -210,6 +210,7 @@ void opack::import_opack(World& world)
 	).child_of<opack::world::dynamics>();
 
 	world.system<Duration>("UpdateDuration")
+        .term<End, Timestamp>().not_()
 		.each([](flecs::iter& iter, size_t, Duration& duration)
 			{
 					duration.value += iter.delta_system_time();
