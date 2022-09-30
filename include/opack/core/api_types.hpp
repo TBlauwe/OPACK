@@ -143,7 +143,7 @@ namespace opack
 	{};
 
     OPACK_FUNDAMENTAL_TYPE(Action, actions)
-	{};
+    {};
 
     OPACK_FUNDAMENTAL_TYPE(Actuator, actuators)
 	{};
@@ -177,10 +177,14 @@ namespace opack
     Afterwards, during "Reason" phases, this is where all reasoning is happening, even action selection.
 
     Phases in "Act" are reserved to handle actions update. Three phases are necessary in order to begin action,
-    tick them and ending them.
+    tick them and ending them in one cycle.
 
 	@{
 	*/
+	namespace Cycle
+	{
+		struct Begin{};
+	}
 	namespace Perceive
 	{
 	    struct PreUpdate{};
@@ -202,12 +206,27 @@ namespace opack
 	    struct PostUpdate{};
 	};
 
+	namespace Cycle
+	{
+		struct End{};
+	}
+
 	/** @}*/ //End of group
 
 	// A - Action
 	//-----------
 	using Actions_t = std::vector<flecs::entity>;
 	using Action_t = flecs::entity;
+
+	enum class ActionStatus
+	{
+		waiting,
+		running,
+		suspended,
+		resumed,
+		aborted,//TODO should add unaboratble and unresumable action logic + abortable and resumable logic
+		finished	
+	};
 
 	// K - Knowledge
 	//--------------

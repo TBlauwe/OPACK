@@ -40,17 +40,17 @@ namespace opack
 		flecs::entity_view value;
 	};
 
-	struct LastActions
+	struct LastActionPrefabs
 	{
-		LastActions() = default;
-		LastActions(size_t ring_buffer_size) : previous_prefabs_done{ ring_buffer_size } {}
+		LastActionPrefabs() = default;
+		LastActionPrefabs(size_t ring_buffer_size) : previous_prefabs_done{ ring_buffer_size } {}
 		ring_buffer<EntityView> previous_prefabs_done;
 
         /**
          * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value.
          * Assert if @c n is superior or equal to @c size().
          */
-		EntityView peek(std::size_t n) const { return previous_prefabs_done.peek(n); }
+		EntityView peek(std::size_t n = 0) const { return previous_prefabs_done.peek(n); }
 
 		bool has_done(EntityView action_prefab) const { return previous_prefabs_done.contains(action_prefab); }
 	};
@@ -61,7 +61,6 @@ namespace opack
 	/** Indicates how much time is left, before action is started. */
 	struct Delay { float value{ 1 }; };
 
-	/** Measure since how long it has been added. */
 	struct Duration { float value{ 0.0 }; };
 
 	/** Removed once value reaches zero. */
@@ -82,24 +81,8 @@ namespace opack
 	using TickTimeout = Timeout<size_t>;
 	using TimeTimeout = Timeout<float>;
 
-	struct EventCallable
-	{
-		std::function<void(Entity)> func;
-	};
-
-	struct EventCallableWithDelta
-	{
-		std::function<void(Entity, float)> func;
-	};
-
 	struct Begin {};
-	struct Cancel {};
 	struct End {};
-
-	using OnBegin = flecs::pair<Begin, EventCallable>;
-	using OnUpdate = EventCallableWithDelta;
-	using OnCancel = flecs::pair<Cancel, EventCallable>;
-	using OnEnd = flecs::pair<End, EventCallable>;
 
     /** Relation used to indicate active behaviors. */
 	struct HasBehaviour {};

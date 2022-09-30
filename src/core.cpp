@@ -9,6 +9,11 @@ opack::World opack::create_world()
 	return world;
 }
 
+namespace opack
+{
+	void define_action_systems(World& world);
+}
+
 void opack::import_opack(World& world)
 {
 	world.import<flecs::units>();
@@ -48,7 +53,9 @@ void opack::import_opack(World& world)
     ;
     opack::prefab<Artefact>(world).is_a<Tangible>();
 	opack::prefab<Action>(world)
-		.add<Arity>();
+		.add<Arity>()
+		.add(ActionStatus::waiting)
+		;
 	opack::prefab<Actuator>(world)
 		;
 	opack::prefab<Sense>(world)
@@ -66,6 +73,15 @@ void opack::import_opack(World& world)
 	world.component<Arity>()
 		.member<size_t>("min")
 		.member<size_t>("max")
+		;
+
+	world.component<ActionStatus>()
+		.constant("waiting", static_cast<int32_t>(ActionStatus::waiting))
+		.constant("running", static_cast<int32_t>(ActionStatus::running))
+		.constant("suspended", static_cast<int32_t>(ActionStatus::suspended))
+		.constant("resumed", static_cast<int32_t>(ActionStatus::resumed))
+		.constant("aborted", static_cast<int32_t>(ActionStatus::aborted))
+		.constant("finished", static_cast<int32_t>(ActionStatus::finished))
 		;
 
 	world.component<Doing>()
@@ -101,7 +117,8 @@ void opack::import_opack(World& world)
 
 	// Phases
 	// --------
-	world.entity<Perceive::PreUpdate>().add(flecs::Phase).depends_on(flecs::OnUpdate);
+	world.entity<Cycle::Begin>().add(flecs::Phase).depends_on(flecs::OnUpdate);
+	world.entity<Perceive::PreUpdate>().add(flecs::Phase).depends_on<Cycle::Begin>();
 	world.entity<Perceive::Update>().add(flecs::Phase).depends_on<Perceive::PreUpdate>();
 	world.entity<Perceive::PostUpdate>().add(flecs::Phase).depends_on<Perceive::Update>();
 	world.entity<Reason::PreUpdate>().add(flecs::Phase).depends_on<Perceive::PostUpdate>();
@@ -110,110 +127,21 @@ void opack::import_opack(World& world)
 	world.entity<Act::PreUpdate>().add(flecs::Phase).depends_on<Reason::PostUpdate>();
 	world.entity<Act::Update>().add(flecs::Phase).depends_on<Act::PreUpdate>();
 	world.entity<Act::PostUpdate>().add(flecs::Phase).depends_on<Act::Update>();
+	world.entity<Cycle::End>().add(flecs::Phase).depends_on<Act::PostUpdate>();
 
-	world.component<EventCallable>();
 	world.component<Begin>();
-	world.component<Cancel>();
 	world.component<End>();
 
-	world.system<LastActions>("SystemRememberLastActions")
-		.kind<Act::PreUpdate>()
+	define_action_systems(world);
+
+	world.system<LastActionPrefabs>("System_RememberLastActionsPrefabs")
+		.kind<Act::Update>()
 		.term<Doing>(flecs::Wildcard)
 		.term(flecs::IsA).second<opack::Actuator>()
-		.each([](flecs::entity actuator, LastActions& last_actions)
+		.each([](flecs::entity actuator, LastActionPrefabs& last_actions)
 			{
-				last_actions.previous_prefabs_done.push(actuator.target<Doing>().target(flecs::IsA));
-			}
-	).child_of<opack::world::dynamics>();
-
-	world.system("CleanCancelledActions")
-		.kind<Act::PreUpdate>()
-		.term<OnCancel>().optional()
-        .term<DoNotClean>().optional()
-		.term<Cancel>()
-		.term<Begin, Timestamp>()
-        .term<End, Timestamp>().not_()
-		.term(flecs::IsA).second<opack::Action>()
-		.each([](flecs::iter& it, size_t index)
-			{
-				auto e = it.entity(index);
-				if (it.is_set(1))
-				{
-					it.field<OnCancel>(1)->func(e);
-				}
-				if (!it.is_set(2))
-		            e.destruct();
-				else 
-					e.set<End, Timestamp>({ it.world().time()});
-			}
-	).child_of<opack::world::dynamics>();
-
-	world.system<Timer>("TimerFinishedActions")
-		.kind<Act::PreUpdate>()
-		.term<Begin, Timestamp>()
-		.term(flecs::IsA).second<opack::Action>()
-		.each([](flecs::entity e, Timer& timer)
-			{
-				if(timer.value == 0.0f)
-		            e.remove<Timer>();
-			}
-	).child_of<opack::world::dynamics>();
-
-	world.system("StartActions")
-		.kind<Act::PreUpdate>()
-		.term<OnBegin>().optional()
-		.term(flecs::IsA).second<opack::Action>()
-		.term<By>(flecs::Wildcard)
-		.term<Begin, Timestamp>().not_()
-        .term<Delay>().not_()
-		.each([](flecs::iter& it, size_t index)
-			{
-				auto e = it.entity(index);
-		        e.set<Begin, Timestamp>({e.world().time()});
-		        e.add<Duration>();
-				if (it.is_set(1))
-					it.field<OnBegin>(1)->func(e);
-			}
-	).child_of<opack::world::dynamics>();
-
-	world.system<OnUpdate>("UpdateAction")
-		.kind<Act::Update>()
-		.term(flecs::IsA).second<opack::Action>()
-        .term<Delay>().not_()
-		.term<Begin, Timestamp>()
-        .term<End, Timestamp>().not_()
-		.each([](flecs::iter& it, size_t index, OnUpdate& callable)
-			{
-		        callable.func(it.entity(index), it.delta_time());
-			}
-	).child_of<opack::world::dynamics>();
-
-	world.system<OnEnd>("EndAction")
-		.kind<Act::PostUpdate>()
-		.term_at(1).optional()
-		.term<DoNotClean>().optional()
-		.term(flecs::IsA).second<opack::Action>()
-		.term<Timer>().not_()
-		.term<Delay>().not_()
-		.term<Begin, Timestamp>()
-        .term<End, Timestamp>().not_()
-		.each([](flecs::iter& it, size_t index, EventCallable& callable)
-			{
-				auto entity = it.entity(index);
-				if(it.is_set(1))
-					callable.func(entity);
-				if(it.is_set(2))
-				    entity.set<End, Timestamp>({ it.world().time()});
-				else
-				    entity.destruct();
-			}
-	).child_of<opack::world::dynamics>();
-
-	world.system<Duration>("UpdateDuration")
-        .term<End, Timestamp>().not_()
-		.each([](flecs::iter& iter, size_t, Duration& duration)
-			{
-					duration.value += iter.delta_system_time();
+				if(auto prefab = actuator.target<Doing>().target(flecs::IsA) ; prefab != last_actions.peek())
+					last_actions.previous_prefabs_done.push(prefab);
 			}
 	).child_of<opack::world::dynamics>();
 
@@ -251,4 +179,62 @@ void opack::import_opack(World& world)
 						iter.entity(i).destruct();
 			}
 	).child_of<opack::world::dynamics>();
+}
+
+void opack::define_action_systems(opack::World& world)
+{
+	world.system("System_BeginAction")
+		.kind<Act::Update>()
+		.term(flecs::IsA).second<opack::Action>()
+		.term<By>(flecs::Wildcard)
+		.term(ActionStatus::waiting)
+		.term(ActionStatus::running).write()
+		.term<Begin, Timestamp>().not_().write()
+		.each([](flecs::entity action)
+			{
+		        action.set<Begin, Timestamp>({action.world().time()});
+				action.add(ActionStatus::running);
+			}
+	).child_of<opack::world::dynamics>();
+
+	world.system<Duration>("System_UpdateActionDuration")
+		.kind<Act::Update>()
+		.term(flecs::IsA).second<opack::Action>()
+		.term(ActionStatus::running)
+		.each([](flecs::iter& it, size_t index, Duration& duration)
+			{
+				duration.value -= it.delta_system_time();
+				if(duration.value <= 0.0f)
+		            it.entity(index).remove<Duration>();
+			}
+	).child_of<opack::world::dynamics>();
+
+	world.system("System_EndAction")
+		.kind<Act::PostUpdate>()
+		.term(flecs::IsA).second<opack::Action>()
+		.term<By>(flecs::Wildcard)
+		.term<Duration>().not_()
+		.term(ActionStatus::running)
+		.term(ActionStatus::finished).write()
+		.term<End, Timestamp>().not_().write()
+		.each([](flecs::entity action)
+			{
+		        action.set<End, Timestamp>({action.world().time()});
+				action.add(ActionStatus::finished);
+			}
+	).child_of<opack::world::dynamics>();
+
+	world.system("System_CleanAction")
+		.kind<Cycle::End>()
+		.term(flecs::IsA).second<opack::Action>()
+		.term<By>(flecs::Wildcard)
+		.term(ActionStatus::finished).or_()
+		.term(ActionStatus::aborted).or_()
+		.term<DoNotClean>().not_()
+		.each([](flecs::entity action)
+			{
+				action.destruct();
+			}
+	).child_of<opack::world::dynamics>();
+
 }

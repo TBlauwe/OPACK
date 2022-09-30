@@ -37,8 +37,10 @@ struct ActivityFlowBuilder : opack::FlowBuilder<T>
 				auto graph = ActionSelection::get_graph(inputs);
 				for (auto& a : ActionSelection::get_choices(inputs))
 				{
+					fmt::print("Action {}\n", a.path().c_str());
 					graph.entry(a);
 				}
+				graph.global_graph().print([](flecs::entity_view e) {return e.path(); }, [](flecs::entity_view e) {return e.path(); });
 				return opack::make_outputs<ActionSelection>();
 			}
 		);

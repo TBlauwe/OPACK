@@ -77,6 +77,8 @@ namespace opack
 	template<typename T>
     bool is_a(EntityView entity);
 
+    inline void print(EntityView entity);
+
     /** Always return true. */
     inline bool always(EntityView) { return true; };
 
@@ -100,6 +102,11 @@ namespace opack
 	bool is_a(EntityView entity)
 	{
 		return is_a(entity.world().entity<T>(), entity);
+	}
+
+	inline void print(EntityView entity)
+	{
+		fmt::print("Entity : {}\n", entity.path());
 	}
 }
 

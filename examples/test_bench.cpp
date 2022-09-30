@@ -9,6 +9,11 @@ enum class Status
 
 struct R{};
 
+inline void print(flecs::entity_view entity)
+{
+	fmt::print("Entity path {}\n", entity.path());
+}
+
 int main(int, char* [])
 {
     flecs::world ecs;
@@ -16,10 +21,9 @@ int main(int, char* [])
         .constant("FREE", static_cast<int32_t>(Status::FREE))
         .constant("TAKEN", static_cast<int32_t>(Status::TAKEN))
         ;
-    ecs.entity()
-		.add(Status::FREE)
-		.add<R>(Status::FREE)
-		.add<R>(Status::TAKEN);
-    fmt::print("{}", ecs.to_entity(Status::FREE).name());
+    auto prefab = ecs.prefab("TestEntity").add(Status::FREE);
+    auto entity = ecs.entity("TestEntity2").is_a(prefab);
+    fmt::print("{}", entity.has(Status::FREE));
+    ecs.system().term(Status::FREE).each(print);
     ecs.app().enable_rest().run();
 }

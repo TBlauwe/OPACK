@@ -18,12 +18,14 @@ int main()
 	world.import<fipa_acl>();
 
 	world.entity<simple::Agent>().add<MyFlow>();
-	opack::init<BaseAction>(world).require<simple::Actuator>();
+	opack::init<BaseAction>(world)
+		.require<simple::Actuator>()
+		.timer(2.0f)
+		.on_action_end<BaseAction>([](flecs::entity action) { fmt::print("{} is done\n", action.path().c_str()); });
 
 	ActivityFlowBuilder<MyFlow, adl::Activity>(world).interval(1.0).build();
 
 	world.plecs_from_file("plecs/activity.flecs");
 
-	world.lookup("instance").children([](flecs::entity child) { fmt::print("{}", child.path()); });
 	opack::run_with_webapp(world);
 }

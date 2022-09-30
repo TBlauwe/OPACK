@@ -1,7 +1,7 @@
 /*****************************************************************//**
  * \file   action.hpp
  * \brief  Action API.
- * 
+ *
  * \author Tristan
  * \date   August 2022
  *********************************************************************/
@@ -14,24 +14,24 @@
 #include <opack/core/api_types.hpp>
 #include <opack/core/components.hpp>
 
-/**
-@brief Shorthand for OPACK_SUB_PREFAB(name, opack::Action)
-*/
+ /**
+ @brief Shorthand for OPACK_SUB_PREFAB(name, opack::Action)
+ */
 #define OPACK_ACTION(name) OPACK_SUB_PREFAB(name, opack::Action)
 
-/**
-@brief Identical to OPACK_SUB_PREFAB(name, base)
-*/
+ /**
+ @brief Identical to OPACK_SUB_PREFAB(name, base)
+ */
 #define OPACK_SUB_ACTION(name, base) OPACK_SUB_PREFAB(name, base)
 
-/**
-@brief Shorthand for OPACK_SUB_PREFAB(name, opack::Actuator)
-*/
+ /**
+ @brief Shorthand for OPACK_SUB_PREFAB(name, opack::Actuator)
+ */
 #define OPACK_ACTUATOR(name) OPACK_SUB_PREFAB(name, opack::Actuator)
 
-/**
-@brief Identical to OPACK_SUB_PREFAB(name, base)
-*/
+ /**
+ @brief Identical to OPACK_SUB_PREFAB(name, base)
+ */
 #define OPACK_SUB_ACTUATOR(name, base) OPACK_SUB_PREFAB(name, base)
 
 namespace opack
@@ -64,6 +64,35 @@ namespace opack
 		/** Indicates which actuator should be used to enact this. */
 		template<ActuatorPrefab T>
 		ActionHandle& require();
+
+		/** Delay action beginning by value (in seconds). */
+		ActionHandle& delay(float value);
+
+		/** Set action duration by value (in seconds). */
+		ActionHandle& timer(float value);
+
+		/** Called when action is beginning (after delay so).
+		 * First argument is the action entity
+		 * Second argument is the simulation time when it began.
+		 */
+		template<std::derived_from<opack::Action> T>
+		ActionHandle& on_action_begin(std::function<void(Entity)> func);
+
+		/** Called when action has begun and is not finished yet.
+		 * First argument is the action entity
+		 * Second argument is the simulation time when it began.
+		 * Third argument is delta time (last_time since this was called
+		 */
+		template<std::derived_from<opack::Action> T>
+		ActionHandle& on_action_update(std::function<void(Entity, float)> func);
+
+		/** Called when action has ended
+		 * First argument is the action entity
+		 * Second argument is the simulation time when it began.
+		 * Third argument is delta time (last_time since this was called
+		 */
+		template<std::derived_from<opack::Action> T>
+		ActionHandle& on_action_end(std::function<void(Entity)> func);
 	};
 
 	/**
@@ -72,9 +101,9 @@ namespace opack
 	 *@code{.cpp}
 	 OPACK_SUB_PREFAB(MyAgent, opack::Agent)
 	 OPACK_SUB_PREFAB(MyActuator, opack::Actuator)
-     //...
-     opack::add_actuator<MyActuator, MyAgent>(world); 
-	 *@endcode 
+	 //...
+	 opack::add_actuator<MyActuator, MyAgent>(world);
+	 *@endcode
 	 */
 	template<ActuatorPrefab TActuator, std::derived_from<Agent> TAgent>
 	void add_actuator(World& world);
@@ -117,29 +146,29 @@ namespace opack
 	template<ActuatorPrefab T>
 	Entity current_action(EntityView entity);
 
-    /**
-     * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value..
+	/**
+	 * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value..
 	 * If @c actuator do not track actions, the null entity is returned.
-     */
+	 */
 	EntityView last_action(EntityView entity, EntityView actuator, std::size_t n = 0);
 
-    /**
-     * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value..
+	/**
+	 * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value..
 	 * If @c actuator do not track actions, the null entity is returned.
-     */
+	 */
 	template<ActuatorPrefab T>
 	EntityView last_action(EntityView entity, std::size_t n = 0);
 
-    /**
-     * Return true if @c entity has done @c action_prefab. False otherwise, even more if
+	/**
+	 * Return true if @c entity has done @c action_prefab. False otherwise, even more if
 	 * @c actuator do not track actions.
-     */
+	 */
 	bool has_done(EntityView entity, EntityView action_prefab);
 
-    /**
-     * Return true if @c entity has done @c T. False otherwise, even more if
+	/**
+	 * Return true if @c entity has done @c T. False otherwise, even more if
 	 * @c actuator do not track actions.
-     */
+	 */
 	template<ActionPrefab T>
 	bool has_done(EntityView entity);
 
@@ -152,6 +181,16 @@ namespace opack
 	@brief @c initiator is now doing @c action.
 	*/
 	void act(Entity initiator, EntityView action_prefab);
+
+	/**
+	@brief Returns current action status of @c action.
+	*/
+	ActionStatus action_status(EntityView action);
+
+	/**
+	@brief Returns duration of action is simulation time (seconds).
+	*/
+	float duration(EntityView action);
 
 	/**
 	@brief @c initiatior is now doing an action of type @c T
@@ -167,29 +206,54 @@ namespace opack
 		return entity.mut(action);
 	}
 
-	//TODO Maybe use systems instead of callback ? Maybe systems are better overall, espially, that nothing prevents from adding multiple on_begin, etc.
-	template<ActionPrefab T>
+	template<std::derived_from<Action> T>
 	void on_action_begin(World& world, std::function<void(Entity)> func)
 	{
-		opack::prefab<T>(world).template set<OnBegin>({ func });
+		world.system()
+			.kind<Act::PreUpdate>()
+			.term(flecs::IsA).second<T>()
+			.term(ActionStatus::waiting)
+			.each([func](flecs::entity action)
+				{
+					func(action);
+				}
+			).template child_of<opack::world::dynamics>()
+		.set_doc_name(fmt::format(fmt::runtime("System_OnBegin_{}"), type_name_cstr<T>()).c_str());
 	}
 
-	template<ActionPrefab T>
+	template<std::derived_from<opack::Action> T>
 	void on_action_update(World& world, std::function<void(Entity, float)> func)
 	{
-		opack::prefab<T>(world).template set<OnUpdate>({ func });
+		world.system()
+			.kind<Act::Update>()
+			.term(flecs::IsA).second<T>()
+			.term(ActionStatus::running)
+			.each([func](flecs::iter& it, size_t index)
+				{
+					func(it.entity(index), it.delta_system_time());
+				}
+			).template child_of<opack::world::dynamics>()
+		.set_doc_name(fmt::format(fmt::runtime("System_OnUpdate_{}"), type_name_cstr<T>()).c_str());
 	}
 
-	template<ActionPrefab T>
+	template<std::derived_from<opack::Action> T>
 	void on_action_cancel(World& world, std::function<void(Entity)> func)
 	{
-		opack::prefab<T>(world).template set<OnCancel>({ func });
 	}
 
-	template<ActionPrefab T>
+	template<std::derived_from<opack::Action> T>
 	void on_action_end(World& world, std::function<void(Entity)> func)
 	{
-		opack::prefab<T>(world).template set<OnEnd>({ func });
+		world.system()
+			.kind<Act::PostUpdate>()
+			.term(flecs::IsA).second<T>()
+			.term(ActionStatus::finished)
+			.each([func](flecs::entity entity)
+				{
+					func(entity);
+				}
+			).template child_of<opack::world::dynamics>()
+		.set_doc_name(fmt::format(fmt::runtime("System_OnEnd{}"), type_name_cstr<T>()).c_str());
 	}
 
 	// --------------------------------------------------------------------------- 
@@ -199,7 +263,7 @@ namespace opack
 	inline ActuatorHandle& ActuatorHandle::track(std::size_t ring_buffer_size)
 	{
 		opack_warn_if(ring_buffer_size != 0, "Ring buffer size is equal to zero ! Fallback to a value of 1. A ring buffer of size zero is invalid.");
-		set<LastActions>({ ring_buffer_size ? ring_buffer_size : 1 });
+		set<LastActionPrefabs>({ ring_buffer_size ? ring_buffer_size : 1 });
 		return *this;
 	}
 
@@ -213,6 +277,42 @@ namespace opack
 	ActionHandle& ActionHandle::require()
 	{
 		set<RequiredActuator>({ world().entity<T>() });
+		return *this;
+	}
+
+	inline ActionHandle& ActionHandle::delay(float value)
+	{
+		set<Delay>({ value });
+		return *this;
+	}
+
+	inline ActionHandle& ActionHandle::timer(float value)
+	{
+		set<Timer>({ value });
+		return *this;
+	}
+
+	template<std::derived_from<opack::Action> T>
+	ActionHandle& ActionHandle::on_action_begin(std::function<void(Entity)> func)
+	{
+		auto world_ = world();
+		opack::on_action_begin<T>(world_, func);
+		return *this;
+	}
+
+	template<std::derived_from<opack::Action> T>
+	ActionHandle& ActionHandle::on_action_update(std::function<void(Entity, float)> func)
+	{
+		auto world_ = world();
+		opack::on_action_update<T>(world_, func);
+		return *this;
+	}
+
+	template<std::derived_from<opack::Action> T>
+	ActionHandle& ActionHandle::on_action_end(std::function<void(Entity)> func)
+	{
+		auto world_ = world();
+		opack::on_action_end<T>(world_, func);
 		return *this;
 	}
 
@@ -264,17 +364,17 @@ namespace opack
 	}
 
 	//TODO Wrong logic, or I should add another call to cover case when you give an actuator_prefab.
-    /**
-     * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value..
+	/**
+	 * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value..
 	 * If @c actuator do not track actions, the null entity is returned.
-     */
+	 */
 	inline EntityView last_action(EntityView entity, EntityView actuator, std::size_t n)
 	{
 		opack_assert(entity.is_valid(), "Given entity is invalid.");
 		opack_assert(actuator.is_valid(), "Given actuator is invalid.");
-		if (actuator.has<LastActions>())
+		if (actuator.has<LastActionPrefabs>())
 		{
-			return actuator.get<LastActions>()->peek(n);
+			return actuator.get<LastActionPrefabs>()->peek(n);
 		}
 		else
 		{
@@ -294,9 +394,9 @@ namespace opack
 		opack_assert(entity.is_valid(), "Given entity is invalid.");
 		opack_assert(action_prefab.is_valid(), "Given action_prefab is invalid.");
 		auto actuator = opack::actuator(opack::get_required_actuator(action_prefab), entity);
-		if (actuator.has<LastActions>())
+		if (actuator.has<LastActionPrefabs>())
 		{
-			return actuator.get<LastActions>()->has_done(action_prefab);
+			return actuator.get<LastActionPrefabs>()->has_done(action_prefab);
 		}
 		else
 		{
@@ -346,14 +446,14 @@ namespace opack
 		opack_assert(action.has<RequiredActuator>(), "Action {0} has no required actuator set ! Did you call : opack::init<YourAction>(world).require<YourActuator>().", action.path().c_str());
 		opack_assert(action.get<RequiredActuator>()->value.is_valid(), "Action required actuator set is invalid ! Did you call : opack::init<YourAction>(world).require(required_actuator) with a correct actuator ?", action.path().c_str());
 
-		flecs::entity effective_action{action};
+		flecs::entity effective_action{ action };
 		if (action.has(flecs::Prefab))
 			effective_action = spawn(action);
 
 		auto actuator = opack::actuator(action.get<RequiredActuator>()->value, initiator);
 		auto last_action = actuator.template target<Doing>();
 		if (last_action)
-			last_action.mut(action).template add<Cancel>();
+			last_action.mut(action); //TODO
 
 		effective_action.mut(action).add<By>(initiator);
 		actuator.mut(action).template add<Doing>(effective_action);
@@ -366,5 +466,20 @@ namespace opack
 		auto action = opack::spawn<T>(world);
 		act(initiator, action);
 		return ActionHandle(world, action);
+	}
+
+	inline ActionStatus action_status(EntityView action)
+	{
+		opack_assert(action.has<ActionStatus>(flecs::Wildcard), "Action {} has no action status.\n", action.path().c_str());
+		return *action.get<ActionStatus>();
+	}
+
+	inline float duration(EntityView action)
+	{
+		if (!action.has<Begin, Timestamp>())
+			return 0.0f;
+		if (action.has<End, Timestamp>())
+			return action.get<End, Timestamp>()->value - action.get<Begin, Timestamp>()->value;
+		return action.world().time() - action.get<Begin, Timestamp>()->value;
 	}
 }
