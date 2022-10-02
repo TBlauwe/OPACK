@@ -19,6 +19,8 @@ namespace opack
     /** Do not clean entities with this component. */
     struct DoNotClean {};
 
+    struct Token {};
+
 	/** Relation between an action and an entity.
 	 * Actuator "X" is doing action "Y".
 	 */

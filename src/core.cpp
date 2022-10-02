@@ -18,6 +18,9 @@ void opack::import_opack(World& world)
 {
 	world.import<flecs::units>();
 
+	world.component<DoNotClean>();
+	world.component<Token>();
+
 	// -------------------------------------------------------
 	// Folders
 	// -------------------------------------------------------
@@ -53,6 +56,7 @@ void opack::import_opack(World& world)
     ;
     opack::prefab<Artefact>(world).is_a<Tangible>();
 	opack::prefab<Action>(world)
+		.override<Token>()
 		.add<Arity>()
 		.add(ActionStatus::waiting)
 		;
@@ -200,6 +204,7 @@ void opack::define_action_systems(opack::World& world)
 
 	world.system<Duration>("System_UpdateActionDuration")
 		.kind<Act::Update>()
+		.term_at(1).self()
 		.term(flecs::IsA).second<opack::Action>()
 		.term(ActionStatus::running)
 		.each([](flecs::iter& it, size_t index, Duration& duration)
@@ -214,7 +219,7 @@ void opack::define_action_systems(opack::World& world)
 		.kind<Act::PostUpdate>()
 		.term(flecs::IsA).second<opack::Action>()
 		.term<By>(flecs::Wildcard)
-		.term<Duration>().not_()
+		.term<Duration>().self().not_()
 		.term(ActionStatus::running)
 		.term(ActionStatus::finished).write()
 		.term<End, Timestamp>().not_().write()
@@ -227,14 +232,17 @@ void opack::define_action_systems(opack::World& world)
 
 	world.system("System_CleanAction")
 		.kind<Cycle::End>()
+		.term<DoNotClean>().optional()
 		.term(flecs::IsA).second<opack::Action>()
 		.term<By>(flecs::Wildcard)
 		.term(ActionStatus::finished).or_()
 		.term(ActionStatus::aborted).or_()
-		.term<DoNotClean>().not_()
-		.each([](flecs::entity action)
+		.each([](flecs::iter& it, size_t index)
 			{
-				action.destruct();
+				if(auto action = it.entity(index) ; it.is_set(1))
+					action.remove<Token>();
+				else
+					action.destruct();
 			}
 	).child_of<opack::world::dynamics>();
 

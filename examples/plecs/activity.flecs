@@ -23,21 +23,21 @@ Prefab Root : Activity
 
 	Prefab Task3 : Task
 	{
-		- Order{1}
+		- Order{2}
 		- Constructor{AND, SEQ_ORD}
 		OrThis : BaseAction { -Order{0} }
 	}
 
 	Prefab Task4 : Task
 	{
-		- Order{1}
+		- Order{3}
 		- Constructor{AND, SEQ_ORD}
 		OrThis : BaseAction { -Order{0} }
 	}
 
 	Prefab Task5 : Task
 	{
-		- Order{1}
+		- Order{4}
 		- Constructor{AND, SEQ_ORD}
 		OrThis : BaseAction { -Order{0} }
 	}

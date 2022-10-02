@@ -245,6 +245,7 @@ namespace opack
 			.kind<Act::PostUpdate>()
 			.term(flecs::IsA).second<T>()
 			.term(ActionStatus::finished)
+			.template term<Token>().self()
 			.each([func](flecs::entity entity)
 				{
 					func(entity);
