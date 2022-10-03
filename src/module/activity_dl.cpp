@@ -29,6 +29,18 @@ adl::adl(opack::World& world)
 	world.component<Regulatory>();
 	world.component<Satisfaction>();
 
+	// So we do not have to specify the order when it's omitted (e.g. in plecs file)
+	world.observer()
+		.event(flecs::OnAdd)
+		.term<Constructor>().parent()
+		.term<Order>().not_()
+		.each(
+		[](opack::Entity e)
+		{
+			e.set<Order>({ children_count(e.parent()) - 1 });
+		}
+	);
+
 	auto task = opack::prefab<Task>(world);
 	condition<Satisfaction>(task, is_finished);
 	opack::prefab<Activity>(world).is_a<Task>();
@@ -94,6 +106,7 @@ bool adl::has_started(opack::Entity task)
 
 std::size_t adl::order(opack::Entity task)
 {
+	opack_assert(task.has<Order>(), "Somehow task {} does not have an order. It should never happen. File an issue.", task.path().c_str());
 	return task.get<Order>()->value;
 }
 

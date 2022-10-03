@@ -8,38 +8,33 @@ Prefab Root : Activity
 
 	Prefab Task : Task
 	{
-		- Order{0}
 		- Constructor{AND, SEQ_ORD}
-		DoThis : BaseAction { -Order{0} }
-		AndAlsoDoThis : BaseAction { -Order{1} }
+		DoThis : BaseAction
+		AndAlsoDoThis : BaseAction
 	}
 
 	Prefab Task2 : Task
 	{
-		- Order{1}
 		- Constructor{AND, SEQ_ORD}
-		OrThis : BaseAction { -Order{0} }
+		OrThis : BaseAction
 	}
 
 	Prefab Task3 : Task
 	{
-		- Order{2}
 		- Constructor{AND, SEQ_ORD}
-		OrThis : BaseAction { -Order{0} }
+		OrThis : BaseAction
 	}
 
 	Prefab Task4 : Task
 	{
-		- Order{3}
 		- Constructor{AND, SEQ_ORD}
-		OrThis : BaseAction { -Order{0} }
+		OrThis : BaseAction
 	}
 
 	Prefab Task5 : Task
 	{
-		- Order{4}
 		- Constructor{AND, SEQ_ORD}
-		OrThis : BaseAction { -Order{0} }
+		OrThis : BaseAction
 	}
 }
 
