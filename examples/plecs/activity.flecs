@@ -1,3 +1,4 @@
+using opack
 using adl
 using LogicalConstructor
 using TemporalConstructor
@@ -11,6 +12,9 @@ Prefab Root : Activity
 		- Constructor{AND, SEQ_ORD}
 		DoThis : BaseAction
 		AndAlsoDoThis : BaseAction
+		{
+			- Duration {1}
+		}
 	}
 
 	Prefab Task2 : Task
