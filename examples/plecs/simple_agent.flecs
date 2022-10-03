@@ -1,2 +1,8 @@
 MyAgent : simple.Agent
 MySuperAgent : simple.Agent
+{
+	simple__Sense
+	{
+		-MyAgent
+	}
+}

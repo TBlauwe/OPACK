@@ -319,7 +319,7 @@ namespace opack
 				[](flecs::entity e)
 				{
 					auto child = e.world().entity().is_a<TActuator>().child_of(e);
-					internal::name_entity_after_type<TActuator>(child);
+					child.set_name(friendly_type_name<TActuator>().c_str());
 					e.add<TActuator>(child);
 				}
 		).template child_of<world::dynamics>();

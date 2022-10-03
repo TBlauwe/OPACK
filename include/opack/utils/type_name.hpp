@@ -5,6 +5,7 @@
 #include <array>
 #include <cstddef>
 #include <string_view>
+#include <string>
 
 namespace impl
 {
@@ -66,4 +67,12 @@ template <typename T>
 [[nodiscard]] constexpr const char * type_name_cstr()
 {
     return impl::type_name_storage<T>.data();
+}
+
+template <typename T>
+[[nodiscard]] constexpr std::string friendly_type_name()
+{
+    std::string tmp{ impl::type_name_storage<T>.data() };
+	std::ranges::replace(tmp, ':', '_');
+    return tmp;
 }
