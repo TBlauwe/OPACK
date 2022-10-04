@@ -10,8 +10,8 @@ Prefab Root : Activity
 	Prefab Task : Task
 	{
 		- Constructor{AND, SEQ_ORD}
-		DoThis : BaseAction
-		AndAlsoDoThis : BaseAction
+		DoThis : MyAction
+		AndAlsoDoThis : MyAction
 		{
 			- Duration {1}
 		}
@@ -20,25 +20,25 @@ Prefab Root : Activity
 	Prefab Task2 : Task
 	{
 		- Constructor{AND, SEQ_ORD}
-		OrThis : BaseAction
+		OrThis : MyAction
 	}
 
 	Prefab Task3 : Task
 	{
 		- Constructor{AND, SEQ_ORD}
-		OrThis : BaseAction
+		OrThis : MyAction
 	}
 
 	Prefab Task4 : Task
 	{
 		- Constructor{AND, SEQ_ORD}
-		OrThis : BaseAction
+		OrThis : MyAction
 	}
 
 	Prefab Task5 : Task
 	{
 		- Constructor{AND, SEQ_ORD}
-		OrThis : BaseAction
+		OrThis : MyAction
 	}
 }
 

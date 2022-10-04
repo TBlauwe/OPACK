@@ -30,7 +30,7 @@ adl::adl(opack::World& world)
 	world.component<Satisfaction>();
 
 	// So we do not have to specify the order when it's omitted (e.g. in plecs file)
-	world.observer()
+	world.observer("Observer_IfMissing_AddOrder")
 		.event(flecs::OnAdd)
 		.term<Constructor>().parent()
 		.term<Order>().not_()
@@ -39,10 +39,10 @@ adl::adl(opack::World& world)
 		{
 			e.set<Order>({ children_count(e.parent()) - 1 });
 		}
-	);
+	).child_of<opack::world::dynamics>();
 
-	// So we do not have to specify the order when it's omitted (e.g. in plecs file)
-	world.observer()
+	// So we do not have to specify a satisfaction condition when it's omitted (e.g. in plecs file)
+	world.observer("Observer_IfMissing_AddSatisfaction")
 		.event(flecs::OnAdd)
 		.term<Constructor>().parent()
 		.term<Satisfaction>().not_()
@@ -51,7 +51,19 @@ adl::adl(opack::World& world)
 		{
 			condition<Satisfaction>(task, is_finished);
 		}
-	);
+	).child_of<opack::world::dynamics>();
+
+	// So we do not have to specify DoNotClean when it's omitted (e.g. in plecs file)
+	world.observer("Observer_IfMissing_AddDoNotClean")
+		.event(flecs::OnAdd)
+		.term<Constructor>().parent()
+		.term<opack::DoNotClean>().not_()
+		.each(
+		[](opack::Entity task)
+		{
+				task.add<opack::DoNotClean>();
+		}
+	).child_of<opack::world::dynamics>();
 
 	auto task = opack::prefab<Task>(world);
 	condition<Satisfaction>(task, is_finished);

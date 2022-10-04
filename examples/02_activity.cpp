@@ -7,7 +7,7 @@
 #include <opack/module/flows.hpp>
 
 OPACK_FLOW(MyFlow);
-OPACK_SUB_ACTION(BaseAction, adl::Action);
+OPACK_ACTION(MyAction);
 
 int main()
 {
@@ -15,14 +15,13 @@ int main()
 
 	world.import<simple>();
 	world.import<adl>();
-	world.import<fipa_acl>();
 
 	world.entity<simple::Agent>().add<MyFlow>();
-	opack::init<BaseAction>(world)
+	opack::init<MyAction>(world)
 		.require<simple::Actuator>()
 		.duration(10.0f)
-		.on_action_begin<BaseAction>([](flecs::entity action) { fmt::print("{} is beginning with duration {}\n", action.path().c_str(), action.get<opack::Duration>()->value);  })
-		.on_action_end<BaseAction>([](flecs::entity action) { fmt::print("{} is done\n", action.path().c_str()); });
+		.on_action_begin<MyAction>([](flecs::entity action) { fmt::print("{} is beginning with duration {}\n", action.path().c_str(), action.get<opack::Duration>()->value);  })
+		.on_action_end<MyAction>([](flecs::entity action) { fmt::print("{} is done\n", action.path().c_str()); });
 
 	ActivityFlowBuilder<MyFlow, adl::Activity>(world).interval(1.0).build();
 
