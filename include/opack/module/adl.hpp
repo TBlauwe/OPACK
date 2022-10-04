@@ -130,8 +130,7 @@ struct adl
 		const T* result = task.get<T>();
 		if(!result)
 		{
-			auto parent = task.parent();
-			if (opack::is_a<Task>(parent))
+			if(auto parent = parent_of(task))
 				result = ctx_value<T>(parent);
 		}
 		return result;
@@ -141,8 +140,7 @@ struct adl
 	template<typename T>
 	static void ctx_value(opack::Entity task, T&& value)
 	{
-        auto parent = task.parent();
-		if (opack::is_a<Task>(parent))
+		if(auto parent = parent_of(task))
 			ctx_value<T>(parent, std::forward<T>(value));
 		else
 			task.set<T>({ value });
@@ -155,10 +153,8 @@ struct adl
 		auto result = task.target<R>();
 		if(!result)
 		{
-			auto parent = task.parent();
-			if (opack::is_a<Task>(parent))
+			if(auto parent = parent_of(task))
 				result = ctx_entity<R>(parent);
-
 		}
 		return result;
 	}
@@ -167,8 +163,7 @@ struct adl
 	template<typename R>
 	static void ctx_entity(opack::Entity task, opack::Entity entity)
 	{
-        auto parent = task.parent();
-		if (opack::is_a<Task>(parent))
+		if(auto parent = parent_of(task))
 			ctx_entity<R>(parent, entity);
 		else
 			task.add<R>(entity);
