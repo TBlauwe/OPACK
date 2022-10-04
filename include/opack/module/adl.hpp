@@ -247,15 +247,7 @@ struct adl
 		{
 			opack_assert(task.has<Constructor>(), "Task {} doesn't have a temporal constructor component.", task.path().c_str());
 
-			// 1. Retrieve all children and sort them by their orders.
-			std::unordered_map<std::size_t, opack::Entity> subtasks{};
-			task.children
-			(
-				[&subtasks](opack::Entity e)
-				{
-					subtasks.emplace(order(e), e);
-				}
-			);
+			auto subtasks = children(task);
 
 			// 2. Check if a task is in progress
 			bool has_active_task{ false };
