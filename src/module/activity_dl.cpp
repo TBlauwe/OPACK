@@ -41,6 +41,18 @@ adl::adl(opack::World& world)
 		}
 	);
 
+	// So we do not have to specify the order when it's omitted (e.g. in plecs file)
+	world.observer()
+		.event(flecs::OnAdd)
+		.term<Constructor>().parent()
+		.term<Satisfaction>().not_()
+		.each(
+		[](opack::Entity task)
+		{
+			condition<Satisfaction>(task, is_finished);
+		}
+	);
+
 	auto task = opack::prefab<Task>(world);
 	condition<Satisfaction>(task, is_finished);
 	opack::prefab<Activity>(world).is_a<Task>();
