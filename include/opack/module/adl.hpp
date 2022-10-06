@@ -107,6 +107,9 @@ struct adl
 	/** Returns parent task of @c task, null entity otherwise. */
 	static opack::Entity parent_of(opack::Entity task);
 
+	/** Returns root task of @c task, null entity otherwise. */
+	static opack::Entity get_root(opack::Entity task);
+
 	/** True if @c task has no parent task. */
 	static bool is_root(opack::Entity task);
 

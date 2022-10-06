@@ -159,6 +159,16 @@ bool adl::is_root(opack::Entity task)
 	return !parent_of(task);
 }
 
+opack::Entity get_root(opack::Entity task)
+{
+	auto root = task;
+	while (!adl::is_root(task) || !root.is_valid())
+	{
+		root = adl::parent_of(task);
+	}
+	return root;
+}
+
 bool adl::is_satisfied(opack::Entity task)
 {
 	bool result{ true };
