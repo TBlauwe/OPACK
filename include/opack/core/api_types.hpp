@@ -106,16 +106,6 @@ namespace opack
 		using entity::entity;
 	};
 
-	struct MessageHandleView : HandleView
-	{
-		using HandleView::HandleView;
-	};
-
-	struct MessageHandle : Handle
-	{
-		using Handle::Handle;
-	};
-
 	/** @}*/ //End of group
 
 	/**

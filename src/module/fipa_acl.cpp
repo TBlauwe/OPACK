@@ -36,11 +36,12 @@ fipa_acl::fipa_acl(opack::World& world)
 
 	world.emplace<queries::Messages>(world);
 
-	world.system<opack::Timestamp>("System_ConsumeMessageAfterRead")
+	world.system("System_ConsumeMessageAfterRead")
+		.term<const opack::Timestamp>()
 		.term(flecs::IsA).second<Message>()
 		.term<Read>().second(flecs::Wildcard)
-		.term<Receiver>().second(flecs::Wildcard).out()
-		.kind(flecs::PostUpdate)
+		.term<Receiver>().second(flecs::Wildcard).write()
+		.kind<opack::Cycle::End>()
 		.iter([](flecs::iter& iter, opack::Timestamp*)
 			{
 				for (auto i : iter)
@@ -52,11 +53,12 @@ fipa_acl::fipa_acl(opack::World& world)
 			}
 	);
 
-	world.system<opack::Timestamp>("System_CleanUp_Leftover_FIPA_ACL_Messages")
+	world.system("System_CleanUp_Leftover_FIPA_ACL_Messages")
+		.term<const opack::Timestamp>()
 		.term(flecs::IsA).second<Message>()
 		.term<Receiver>().second(flecs::Wildcard).not_()
-		.kind(flecs::PostFrame)
-		.each([](opack::Entity e, opack::Timestamp&)
+		.kind<opack::Cycle::End>()
+		.each([](opack::Entity e)
 			{
 				e.destruct();
 			}
