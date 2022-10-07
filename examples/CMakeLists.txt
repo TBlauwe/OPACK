@@ -21,16 +21,10 @@ foreach(example IN LISTS OPACK_EXAMPLES)
 endforeach()
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-	CPMAddPackage(
-		NAME nlohmann_json
-		GITHUB_REPOSITORY nlohmann/json
-		VERSION 3.9.1)
-	#set_target_properties(nlohmann_json PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:nlohmann_json,INTERFACE_INCLUDE_DIRECTORIES>)
-
 	add_executable(test_bench "test_bench.cpp")
 	target_compile_features(test_bench PRIVATE cxx_std_20)
 	target_compile_options(test_bench PRIVATE -fms-compatibility-version=0)
-	target_link_libraries(test_bench PRIVATE flecs_static fmt nlohmann_json::nlohmann_json)
+	target_link_libraries(test_bench PRIVATE flecs_static fmt)
 	set_target_properties(test_bench PROPERTIES OUTPUT_NAME test_bench_$<CONFIG>_${CMAKE_CXX_COMPILER_ID})
 	set_target_properties(test_bench PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXAMPLE_OUTPUT_DIR})
 endif()

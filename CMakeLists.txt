@@ -105,6 +105,7 @@ set(HEADER_LIST
 	"include/opack/core/operation.hpp"
     "include/opack/core/perception.hpp"
     "include/opack/core/action.hpp" 
+    "include/opack/core/communication.hpp" 
 	"include/opack/core.hpp"
     "include/opack/operations/basic.hpp" 
     "include/opack/operations/influence_graph.hpp" 

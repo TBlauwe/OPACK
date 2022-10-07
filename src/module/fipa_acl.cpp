@@ -42,7 +42,7 @@ fipa_acl::fipa_acl(opack::World& world)
 		.term<Read>().second(flecs::Wildcard)
 		.term<Receiver>().second(flecs::Wildcard).write()
 		.kind<opack::Cycle::End>()
-		.iter([](flecs::iter& iter, opack::Timestamp*)
+		.iter([](flecs::iter& iter)
 			{
 				for (auto i : iter)
 				{
