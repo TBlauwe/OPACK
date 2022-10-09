@@ -1,6 +1,4 @@
 #include <opack/core.hpp>
-#include <opack/core/world.hpp>
-#include <opack/core/perception.hpp>
 
 opack::World opack::create_world()
 {
@@ -137,6 +135,7 @@ void opack::import_opack(World& world)
 	world.component<Begin>();
 	world.component<End>();
 
+	impl::import_communication(world);
 	define_action_systems(world);
 
 	world.system<LastActionPrefabs>("System_RememberLastActionsPrefabs")

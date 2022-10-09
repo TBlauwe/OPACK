@@ -10,9 +10,9 @@ set(SOURCE_LIST
     "core/action.cpp"
     "core/operation.cpp" 
     "algorithm/influence_graph.cpp" 
-    "module/fipa_acl.cpp"
+    
     "module/activity_dl.cpp"
- )
+  "core/communication.cpp")
 
 # Dependencies
 # ============

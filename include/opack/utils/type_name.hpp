@@ -70,7 +70,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] constexpr std::string friendly_type_name()
+[[nodiscard]] std::string friendly_type_name()
 {
     std::string tmp{ impl::type_name_storage<T>.data() };
 	std::ranges::replace(tmp, ':', '_');
