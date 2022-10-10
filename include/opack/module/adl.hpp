@@ -51,6 +51,9 @@ struct adl
 		TemporalConstructor temporal;
 	};
 
+	/** An optional task does not fail satisfaction of parent task. */
+	struct Optional {};
+
 	using cond_func_t = std::function<bool(opack::Entity)>;
 	struct Condition
 	{
@@ -230,7 +233,7 @@ struct adl
 
 	/** Add potential actions to output iterator @c out and returns true if task is satisfied.*/
 	template<typename OutputIterator>
-	static bool potential_actions(opack::Entity task, OutputIterator out)
+	static bool potential_actions(opack::Entity task, OutputIterator out, std::function<bool(opack::EntityView)> should_add = opack::always)
 	{
 		if (is_finished(task))
 		{
@@ -240,7 +243,7 @@ struct adl
 		if (!has_children(task))
 		{
 			opack_assert(opack::is_a<opack::Action>(task), "Leaf task {} is not an action. Does it inherit from opack::Action or adl::Action ?", task.path().c_str());
-			if (is_potential(task))
+			if (is_potential(task) and should_add(task))
 				*out++ = task;
 		}
 		else
@@ -248,15 +251,8 @@ struct adl
 			opack_assert(task.has<Constructor>(), "Task {} doesn't have a temporal constructor component.", task.path().c_str());
 
 			auto subtasks = children(task);
+			bool has_active_task { in_progress(task) };
 
-			// 2. Check if a task is in progress
-			bool has_active_task{ false };
-			for (auto [order, subtask] : subtasks)
-			{
-				has_active_task |= in_progress(subtask);
-			}
-
-			// 3. Determine, based on temporal constructor, which potential actions are added.
 			bool first{ true };
 			bool succeeded{ false };
 			switch (task.get<Constructor>()->temporal)
@@ -265,7 +261,7 @@ struct adl
 			case TemporalConstructor::IND: // Every potential actions are added, even if another isn't finished.
 				for (auto [order, subtask] : subtasks)
 				{
-					succeeded |= potential_actions(subtask, out);
+					succeeded |= potential_actions(subtask, out, should_add);
 				}
 				break;
 			case TemporalConstructor::SEQ: // Every potential actions are added, if last one is finished
@@ -273,7 +269,7 @@ struct adl
 				{
 					if (!has_active_task && !is_satisfied(subtask))
 					{
-						succeeded |= potential_actions(subtask, out);
+						succeeded |= potential_actions(subtask, out, should_add);
 					}
 				}
 				break;
@@ -282,7 +278,7 @@ struct adl
 				{
 					if (!has_active_task && first && (!is_satisfied(subtask) && !is_finished(subtask)))
 					{
-						succeeded |= potential_actions(subtask, out);
+						succeeded |= potential_actions(subtask, out, should_add);
 						first = false;
 					}
 				}
@@ -292,7 +288,7 @@ struct adl
 				{
 					if (first && (!is_satisfied(subtask) && !has_started(subtask)))
 					{
-						succeeded |= potential_actions(subtask, out);
+						succeeded |= potential_actions(subtask, out, should_add);
 						first = false;
 					}
 				}
