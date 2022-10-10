@@ -34,6 +34,20 @@ namespace opack
 	};
 
     /** 
+    @brief Returns true if @c entity is entity identified by @c prefab.
+
+    Usage :
+
+    @code{.cpp}
+    OPACK_ACTION(A); 
+    auto e = opack::init<A>(world);
+    opack::is<A>(e); // true
+    @endcode
+    */
+    template<typename T>
+    bool is(EntityView entity);
+
+    /** 
     @brief Returns true if @c entity is an instance of @c prefab.
 
     Usage :
@@ -93,6 +107,12 @@ namespace opack
     // --------------------------------------------------------------------------- 
     // Definition
     // --------------------------------------------------------------------------- 
+    template<typename T>
+    bool is(EntityView entity)
+    {
+		return entity == entity.world().id<T>();
+    }
+
 	inline bool is_a(EntityView prefab, EntityView entity)
 	{
 		return entity.has(flecs::IsA, prefab);
