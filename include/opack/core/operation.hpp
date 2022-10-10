@@ -259,7 +259,7 @@ namespace opack
 		template<std::derived_from<Flow> T>
 		OperationBuilder& flow()
 		{
-			system_builder.template term<T, Begin>().inout(flecs::In);
+			system_builder.template term<T, Begin>();
 			opack::entity<T>(world).template add<Operation, TOper>();
 			return *this;
 		}
