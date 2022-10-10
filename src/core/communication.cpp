@@ -13,17 +13,17 @@ namespace opack
         world.entity<Broadcast>().add<Channel>();
 	    world.emplace<queries::Messages>(world);
 
-        world.system("System_ConsumeMessageAfterRead")
+        world.system("System_CleanMessage")
             .term<const Timestamp>()
             .term(flecs::IsA).second<Message>()
             .term<ReaderLeft>(flecs::Wildcard).not_()
+            .term<DoNotClean>().not_()
             .kind<Cycle::End>()
             .each([](Entity message)
                 {
                     message.destruct();
                 }
         );
-
 	}
 
     MessageHandle& MessageHandle::sender(EntityView sender)
@@ -55,7 +55,7 @@ namespace opack
     MessageHandle& MessageHandle::send()
     {
         opack_assert(has<Sender>(flecs::Wildcard), "Message {} has no sender.", path().c_str());
-        opack_assert(has<Receiver>(flecs::Wildcard) || has<Channel>(flecs::Wildcard), "Message {} has no receiver.", path().c_str());
+        opack_assert(has<Receiver>(flecs::Wildcard) || has<Channel>(flecs::Wildcard), "Message {} has no receiver or channel set.", path().c_str());
 	    set<Timestamp>({ world().time() });
         return *this;
     }
