@@ -80,18 +80,14 @@ namespace opack
 		world.system<TInputs ...>()
 			.term(flecs::IsA).template second<const opack::Agent>()
 			.template term<HasBehaviour, TBeh>().write()
-			.kind(flecs::PreUpdate)
-			.iter(
-				[f = std::forward<TFunc>(func)](flecs::iter& it, TInputs * ... args)
+			.template kind<opack::Reason::PreUpdate>()
+			.each(
+				[f = std::forward<TFunc>(func)](flecs::entity agent, TInputs& ... args)
 				{
-					for (auto i : it)
-					{
-						auto e = it.entity(i);
-						if(f(e, args[i]...))
-							e.add<HasBehaviour, TBeh>();
+						if(f(agent, args...))
+							agent.add<HasBehaviour, TBeh>();
 						else
-							e.remove<HasBehaviour, TBeh>();
-					}
+							agent.remove<HasBehaviour, TBeh>();
 				}
 		)
 #ifndef OPACK_ORGANIZE
@@ -144,23 +140,20 @@ namespace opack
 	public:
 		FlowBuilder(World& world) : 
 			world{ world },
-			flow_system { world.system<const T>() }
+			flow_system { world.system() }
 		{
 			world.component<T>().template child_of<world::flows>();
-
+			flow_system.term<const T>();
 			flow_system.template term<T, Begin>().write();
-			flow_system.kind(flecs::PreUpdate);
+			flow_system.template kind<opack::Reason::PreUpdate>();
 
-		    world.system<const T>()
-				.template term<T, Begin>()
-				.kind(flecs::PostUpdate)
-				.iter(
-					[](flecs::iter& it)
+		    world.system()
+				.term<const T>()
+				.template term<T, Begin>().write()
+				.template kind<opack::Reason::PostUpdate>()
+				.each([](flecs::entity agent)
 					{
-						for (auto i : it)
-						{
-							it.entity(i).remove<T, Begin>();
-						}
+						agent.remove<T, Begin>();
 					}
 				)
 #ifndef OPACK_ORGANIZE
@@ -197,14 +190,10 @@ namespace opack
 
 		void build()
 		{
-			flow_system
-				.iter(
-				[](flecs::iter& it)
+			flow_system.each(
+				[](flecs::entity agent)
 				{
-					for (auto i : it)
-					{
-						it.entity(i).add<T, Begin>();
-					}
+					agent.add<T, Begin>();
 				}
 			)
 #ifndef OPACK_ORGANIZE
@@ -216,7 +205,7 @@ namespace opack
 
 	private:
 		World& world;
-		flecs::system_builder<const T> flow_system;
+		flecs::system_builder<> flow_system;
 	};
 
 	template<typename TFlow>
@@ -253,7 +242,7 @@ namespace opack
 #ifndef OPACK_ORGANIZE
 			operation.child_of<world::operations>();
 #endif
-			system_builder.kind(flecs::OnUpdate);
+			system_builder.template kind<opack::Reason::Update>();
 			(system_builder.template term<df<TOper,TOutput>>().write(),...);
 			//system_builder.multi_threaded(true); // BUG doesn't seem to work with monitor
 		}
@@ -270,7 +259,7 @@ namespace opack
 		template<std::derived_from<Flow> T>
 		OperationBuilder& flow()
 		{
-			system_builder.template term<T, Begin>().inout(flecs::In);
+			system_builder.template term<T, Begin>();
 			opack::entity<T>(world).template add<Operation, TOper>();
 			return *this;
 		}
@@ -291,15 +280,11 @@ namespace opack
 
 		flecs::entity strategy()
 		{
-			system_builder.iter(
-				[](flecs::iter& it, TInput* ... args)
+			system_builder.each(
+				[](flecs::entity agent, TInput& ... args)
 				{
-					for (auto i : it)
-					{
-						auto e = it.entity(i);
-						auto result = typename TOper::template Strategy<TOper>(e).compute(args[i]...);
-						(e.set<df<TOper, TOutput>>({std::get<TOutput>(result)}), ...); 
-					}
+						auto result = typename TOper::template Strategy<TOper>(agent).compute(args...);
+						(agent.set<df<TOper, TOutput>>({std::get<TOutput>(result)}), ...); 
 				}
 			)
 #ifndef OPACK_ORGANIZE

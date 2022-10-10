@@ -233,7 +233,9 @@ struct adl
 	static bool potential_actions(opack::Entity task, OutputIterator out)
 	{
 		if (is_finished(task))
+		{
 			return is_satisfied(task);
+		}
 
 		if (!has_children(task))
 		{
