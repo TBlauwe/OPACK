@@ -23,7 +23,7 @@ namespace opack
                 {
                     message.destruct();
                 }
-        );
+        ).child_of<opack::world::dynamics>();
 	}
 
     MessageHandle& MessageHandle::sender(EntityView sender)

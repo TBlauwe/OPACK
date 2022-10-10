@@ -7,6 +7,7 @@ int main()
 {
 	flecs::world ecs;
 	auto e = ecs.entity().add(Status::Free);
-	fmt::print("{}\n", e.has(Status::Free));
+	auto f = ecs.entity().add(Status::Free);
+	fmt::print("{}\n", e.has(*f.get<Status>()));
 	ecs.app().enable_rest().run();
 }

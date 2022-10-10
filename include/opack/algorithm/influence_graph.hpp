@@ -96,12 +96,12 @@ namespace opack
 			return m_negative_influences;
 		}
 
-		U_t u_at(const UIndex idx)
+		U_t& u_at(const UIndex idx)
 		{
 			return U.at(idx);
 		}
 
-		V_t v_at(const VIndex idx)
+		V_t& v_at(const VIndex idx)
 		{
 			return V.at(idx);
 		}
@@ -136,23 +136,29 @@ namespace opack
 			return m_highest_scores;
 		}
 
-		template<typename T1, typename T2>
-		void print(T1&& f, T2&& g)
+		void print(std::function<const char *(const U_t&)> f,  std::function<const char *(const V_t&)>g)
 		{
-			fmt::print(" --------- IG graph ----------\n");
+			std::unordered_set<VIndex> displayed;
 			for (auto& [u_idx, v_idxs] : positive_influences())
 			{
-				for(auto& v_idx : v_idxs)
-					fmt::print("({}) --- + ---> ({})\n", f(u_at(u_idx)), g(v_at(v_idx)));
+				for (auto& v_idx : v_idxs)
+				{
+					displayed.insert(v_idx);
+					fmt::print("{:>30} --- + ---> {:<30} [{}]\n", f(u_at(u_idx)), g(v_at(v_idx)), score_at_index(v_idx));
+				}
 			}
 			for (auto& [u_idx, v_idxs] : negative_influences())
 			{
-				for(auto& v_idx : v_idxs)
-					fmt::print("({}) --- - ---> ({})\n", f(u_at(u_idx)), g(v_at(v_idx)));
+				for (auto& v_idx : v_idxs)
+				{
+					displayed.insert(v_idx);
+					fmt::print("{:>30} --- = ---> {:<30} [{}]\n", f(u_at(u_idx)), g(v_at(v_idx)), score_at_index(v_idx));
+				}
 			}
 			for (auto& [v_idx, score] : scores())
 			{
-				fmt::print("({}) has {}\n", g(v_at(v_idx)), score);
+				if(!displayed.contains(v_idx))
+					fmt::print("{:>30}            {:<30} [{}]\n", "", g(v_at(v_idx)), score);
 			}
 		}
 
@@ -162,7 +168,7 @@ namespace opack
 		{
 			auto v_idx = v_index(v);
 			auto [_, added] = m_positive_influences.try_emplace(u_idx).first->second.emplace(v_idx);
-			if(added)
+			if (added)
 				++m_scores.try_emplace(v_idx).first->second;
 		}
 
@@ -170,7 +176,7 @@ namespace opack
 		{
 			auto v_idx = v_index(v);
 			auto [_, added] = m_negative_influences.try_emplace(u_idx).first->second.emplace(v_idx);
-			if(added)
+			if (added)
 				--m_scores.try_emplace(v_idx).first->second;
 		}
 
