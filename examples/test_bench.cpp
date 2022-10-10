@@ -1,18 +1,12 @@
 #include <flecs.h>
 #include <fmt/core.h>
 
-struct R { int count; };
+enum class Status { Free, Taken };
 
 int main()
 {
 	flecs::world ecs;
-	ecs.component<R>()
-		.member<int>("count");
-	auto e = ecs.entity();
-	e.add<R>(e);
-
-	fmt::print("{}", e);
-	fmt::print("{}", e.target<R>());
-
+	auto e = ecs.entity().add(Status::Free);
+	fmt::print("{}\n", e.has(Status::Free));
 	ecs.app().enable_rest().run();
 }

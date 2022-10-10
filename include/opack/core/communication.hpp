@@ -99,6 +99,9 @@ namespace opack
 	/** Return a received message, if any (null entity returned otherwise), for @c agent. */
 	MessageHandleView receive(EntityView agent);
 
+	/** From @c reader pov, @c message doesn't matter anymore. If every receiver of a @c message
+	 * has consumed the message, it will be discarded. */
+	void consume(EntityView reader, Entity message);
 
 	// ~~~ Getters ~~~
 	EntityView performative(EntityView message);
@@ -113,7 +116,7 @@ namespace opack
 		/**
 		 * Query :
 		 * @code
-			fipa_acl.Sender(This, $Sender), fipa_acl.Receiver(This, $Receiver), $Performative(This), !fipa_acl.Read(This, $Receiver)
+			opack.Sender(This, $Sender), opack.Receiver(This, $Receiver), opack.Performative(This, $Performative), opack.ReaderLeft(This, $Receiver)
 		 * @endcode.
 		 */
 		struct Messages
@@ -151,7 +154,6 @@ namespace opack
 	namespace impl
 	{
         void import_communication(flecs::world& world);
-        void consume(EntityView reader, Entity message);
 	}
 
 

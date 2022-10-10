@@ -19,7 +19,7 @@ TEST_CASE("Communication API")
 		.receiver(receiver_2)
 		;
 
-	CHECK(opack::performative(message).has(fipa_acl::Performative::AcceptProposal));
+	CHECK(opack::performative(message) == world.to_entity(fipa_acl::Performative::AcceptProposal));
 	CHECK(opack::sender(message) == sender);
 	CHECK(opack::conversation_id(message) == message);
 	CHECK(opack::has_receiver(message, receiver_1));
@@ -36,8 +36,8 @@ TEST_CASE("Communication API")
 
 	SUBCASE("Deletion")
 	{
-		message.remove<opack::Receiver>(receiver_1);
-		message.remove<opack::Receiver>(receiver_2);
+		opack::consume(receiver_1, message);
+		opack::consume(receiver_2, message);
 	    opack::step(world);
 		CHECK(!message.is_alive());
 	}
@@ -45,7 +45,7 @@ TEST_CASE("Communication API")
 	SUBCASE("Reception")
 	{
 		auto m = opack::receive(receiver_1);
-		CHECK(opack::performative(m).has(fipa_acl::Performative::AcceptProposal));
+		CHECK(opack::performative(m) == world.to_entity(fipa_acl::Performative::AcceptProposal));
 		CHECK(opack::conversation_id(m) == message);
 		CHECK(opack::sender(m) == sender);
 		CHECK(opack::has_receiver(m, receiver_1));
@@ -61,10 +61,10 @@ TEST_CASE("Communication API")
 		CHECK(!m.is_valid());
 
 		m = opack::receive(receiver_2);
-		CHECK(opack::performative(m).has(fipa_acl::Performative::AcceptProposal));
+		CHECK(opack::performative(m) == world.to_entity(fipa_acl::Performative::AcceptProposal));
 		CHECK(opack::conversation_id(m) == message);
 		CHECK(opack::sender(m) == sender);
-		CHECK(!opack::has_receiver(m, receiver_1)); // Has been consumed since we step once and receiver_1 has read the message.
+		CHECK(opack::has_receiver(m, receiver_1));
 		CHECK(opack::has_been_read_by(m, receiver_1));
 		CHECK(opack::has_receiver(m, receiver_2));
 		CHECK(opack::has_been_read_by(m, receiver_2));
@@ -72,13 +72,10 @@ TEST_CASE("Communication API")
 		CHECK(!opack::has_been_read_by(m, receiver_3));
 
 	    opack::step(world);
-		CHECK(m.is_alive()); // Message is still alive, but it will be deleted at the beginning 
-							 // of the next cycle
-	    opack::step(world);
-		CHECK(!m.is_alive());
+		CHECK(!m.is_alive()); 
 	}
 
-	SUBCASE("Reception")
+	SUBCASE("Reply")
 	{
 		auto m = opack::receive(receiver_1);
 		auto response = opack::reply(m)
@@ -87,7 +84,7 @@ TEST_CASE("Communication API")
 			.send();
 
 		CHECK(opack::sender(response) == receiver_1);
-		CHECK(opack::performative(response).has(fipa_acl::Performative::Refuse));
+		CHECK(opack::performative(response) == world.to_entity(fipa_acl::Performative::Refuse));
 		CHECK(opack::conversation_id(response) == message);
 		CHECK(opack::has_receiver(response, sender));
 		CHECK(!opack::has_been_read_by(response, sender));
@@ -98,7 +95,7 @@ TEST_CASE("Communication API")
 
 		auto ack = opack::receive(sender);
 		CHECK(opack::sender(ack) == receiver_1);
-		CHECK(opack::performative(ack).has(fipa_acl::Performative::Refuse));
+		CHECK(opack::performative(ack) == world.to_entity(fipa_acl::Performative::Refuse));
 		CHECK(opack::conversation_id(ack) == message);
 		CHECK(opack::has_receiver(response, sender));
 		CHECK(opack::has_been_read_by(response, sender));
