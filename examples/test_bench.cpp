@@ -9,5 +9,6 @@ int main()
 	auto e = ecs.entity().add(Status::Free);
 	auto f = ecs.entity().add(Status::Free);
 	fmt::print("{}\n", e.has(*f.get<Status>()));
+	ecs.system().write();
 	ecs.app().enable_rest().run();
 }

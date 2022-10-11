@@ -74,5 +74,9 @@ template <typename T>
 {
     std::string tmp{ impl::type_name_storage<T>.data() };
 	std::ranges::replace(tmp, ':', '_');
+	std::ranges::replace(tmp, ',', '_');
+	std::ranges::replace(tmp, ' ', '_');
+	std::ranges::replace(tmp, '<', '_'); // TODO Temporary fix while flecs serialization doesn't handle these correctly
+	std::ranges::replace(tmp, '>', '_');
     return tmp;
 }

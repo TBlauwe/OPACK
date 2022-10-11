@@ -206,31 +206,29 @@ namespace opack
 	template<std::derived_from<Action> T>
 	void on_action_begin(World& world, std::function<void(Entity)> func)
 	{
-		world.system()
-			.kind<Act::PreUpdate>()
-			.term(flecs::IsA).second<T>()
+		world.system(fmt::format(fmt::runtime("System_OnBegin_{}"), friendly_type_name<T>().c_str()).c_str())
+			.template kind<Act::PreUpdate>()
+			.term(flecs::IsA).template second<T>()
 			.term(ActionStatus::starting)
 			.each([func](flecs::entity action)
 				{
 					func(action);
 				}
-			).template child_of<opack::world::dynamics>()
-		.set_doc_name(fmt::format(fmt::runtime("System_OnBegin_{}"), type_name_cstr<T>()).c_str());
+			).template child_of<opack::world::dynamics>();
 	}
 
 	template<std::derived_from<opack::Action> T>
 	void on_action_update(World& world, std::function<void(Entity, float)> func)
 	{
-		world.system()
-			.kind<Act::Update>()
-			.term(flecs::IsA).second<T>()
+		world.system(fmt::format(fmt::runtime("System_OnUpdate_{}"), friendly_type_name<T>().c_str()).c_str())
+			.template kind<Act::Update>()
+			.term(flecs::IsA).template second<T>()
 			.term(ActionStatus::running)
 			.each([func](flecs::iter& it, size_t index)
 				{
 					func(it.entity(index), it.delta_system_time());
 				}
-			).template child_of<opack::world::dynamics>()
-		.set_doc_name(fmt::format(fmt::runtime("System_OnUpdate_{}"), type_name_cstr<T>()).c_str());
+			).template child_of<opack::world::dynamics>();
 	}
 
 	template<std::derived_from<opack::Action> T>
@@ -241,17 +239,16 @@ namespace opack
 	template<std::derived_from<opack::Action> T>
 	void on_action_end(World& world, std::function<void(Entity)> func)
 	{
-		world.system()
-			.kind<Act::PostUpdate>()
-			.term(flecs::IsA).second<T>()
+		world.system(fmt::format(fmt::runtime("System_OnEnd_{}"), friendly_type_name<T>().c_str()).c_str())
+			.template kind<Act::PostUpdate>()
+			.term(flecs::IsA).template second<T>()
 			.term(ActionStatus::finished)
 			.template term<Token>().self()
 			.each([func](flecs::entity entity)
 				{
 					func(entity);
 				}
-			).template child_of<opack::world::dynamics>()
-		.set_doc_name(fmt::format(fmt::runtime("System_OnEnd{}"), type_name_cstr<T>()).c_str());
+			).template child_of<opack::world::dynamics>();
 	}
 
 	// --------------------------------------------------------------------------- 

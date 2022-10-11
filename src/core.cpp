@@ -187,7 +187,7 @@ void opack::import_opack(World& world)
 
 void opack::define_action_systems(opack::World& world)
 {
-	world.system("System_BeginAction")
+	world.system("System_Begin_Actions")
 		.kind<Act::Update>()
 		.term(flecs::IsA).second<opack::Action>()
 		.term<By>(flecs::Wildcard)
@@ -201,7 +201,7 @@ void opack::define_action_systems(opack::World& world)
 			}
 	).child_of<opack::world::dynamics>();
 
-	world.system<Duration>("System_UpdateActionDuration")
+	world.system<Duration>("System_Update_ActionDuration")
 		.kind<Act::Update>()
 		.term_at(1).self()
 		.term(flecs::IsA).second<opack::Action>()
@@ -214,7 +214,7 @@ void opack::define_action_systems(opack::World& world)
 			}
 	).child_of<opack::world::dynamics>();
 
-	world.system("System_EndAction")
+	world.system("System_End_Actions")
 		.kind<Act::PostUpdate>()
 		.term(flecs::IsA).second<opack::Action>()
 		.term<By>(flecs::Wildcard)
