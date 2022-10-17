@@ -128,6 +128,13 @@ namespace opack
     opack::Entity init(World& world);
 
     /**
+     * @brief Load a `.flecs` file with path @c filepath.
+     * @param filepath File's path
+     * @param world World ref
+     */
+    void load(const World& world, const char * filepath);
+
+    /**
     @brief Spawn a new entity instantiated from @c prefab.
 
     Usage :
@@ -309,6 +316,11 @@ namespace opack
 	{
 		return static_cast<size_t>(world.count(rel, obj));
 	}
+
+    inline void load(const World& world, const char * filepath)
+    {
+       static_cast<void>(world.plecs_from_file(filepath));
+    }
 
     inline Entity spawn(EntityView prefab)
     {

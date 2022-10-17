@@ -1,8 +1,9 @@
-MyAgent : simple.Agent
-MySuperAgent : simple.Agent
+A : simple.Agent
 {
+	- Stressed
 	simple__Sense
 	{
-		-MyAgent
+		-B
 	}
 }
+B : simple.Agent
