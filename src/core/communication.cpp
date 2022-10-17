@@ -54,8 +54,9 @@ namespace opack
 
     MessageHandle& MessageHandle::send()
     {
-        opack_assert(has<Sender>(flecs::Wildcard), "Message {} has no sender.", path().c_str());
-        opack_assert(has<Receiver>(flecs::Wildcard) || has<Channel>(flecs::Wildcard), "Message {} has no receiver or channel set.", path().c_str());
+        //TODO doesn't work during stages as it will be deferred.
+        //opack_assert(has<Sender>(flecs::Wildcard), "Message {} has no sender.", path().c_str());
+        //opack_assert(has<Receiver>(flecs::Wildcard) || has<Channel>(flecs::Wildcard), "Message {} has no receiver or channel set.", path().c_str());
 	    set<Timestamp>({ world().time() });
         return *this;
     }

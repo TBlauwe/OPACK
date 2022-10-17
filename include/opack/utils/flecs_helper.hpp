@@ -56,7 +56,7 @@ namespace opack::internal
     /**
      * Returns the number of children for entity @c e.
      */
-    inline size_t children_count(flecs::entity e)
+    inline size_t children_count(flecs::entity_view e)
     {
         size_t count{ 0 };
         e.children([&count](flecs::entity) {count++; });
