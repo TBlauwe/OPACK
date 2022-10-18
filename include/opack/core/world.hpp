@@ -325,7 +325,9 @@ namespace opack
     inline Entity spawn(EntityView prefab)
     {
         opack_assert(prefab.has(flecs::Prefab), "\"{}\" is not a prefab ! Is it initialized ? (opack::init<T>(world) if it's a type).", prefab.path().c_str());
-        return prefab.world().entity().is_a(prefab);
+        auto e = prefab.world().entity().is_a(prefab);
+        internal::name_entity_after_prefab(e, prefab);
+        return e;
     }
 
     inline Entity spawn(EntityView prefab, const char * name)

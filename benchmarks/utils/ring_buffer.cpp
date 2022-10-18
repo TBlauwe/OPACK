@@ -19,7 +19,7 @@ static void BM_ring_buffer_write(benchmark::State& state) {
     {
         for(auto i = 0; i < state.range(1); i++)
         {
-            rg.push(i);
+            rg.emplace(i);
         }
     }
 }
@@ -32,7 +32,7 @@ static void BM_ring_buffer_read(benchmark::State& state) {
 	auto rg = ring_buffer<int>(state.range(0));
 	for(auto i = 0; i < state.range(0); i++)
 	{
-		rg.push(i);
+		rg.emplace(i);
 	}
     for ([[maybe_unused]] auto _ : state)
     {

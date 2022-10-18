@@ -109,7 +109,7 @@ TEST_CASE("Ring Buffer")
         CHECK(rg[2] == 0);
     }
 
-    rg.push(1);
+    rg.emplace(1);
     SUBCASE("1 elements")
     {
         std::vector<int> vector;
@@ -123,7 +123,7 @@ TEST_CASE("Ring Buffer")
         CHECK(rg.peek(2) == 0);
     }
 
-    rg.push(2);
+    rg.emplace(2);
     SUBCASE("2 elements")
     {
         std::vector<int> vector;
@@ -137,7 +137,7 @@ TEST_CASE("Ring Buffer")
         CHECK(rg.peek(2) == 0);
     }
 
-    rg.push(3);
+    rg.emplace(3);
     SUBCASE("3 elements")
     {
         std::vector<int> vector;
@@ -151,7 +151,7 @@ TEST_CASE("Ring Buffer")
         CHECK(rg.peek(2) == 1);
     }
 
-    rg.push(4);
+    rg.emplace(4);
     SUBCASE("4 elements")
     {
         std::vector<int> vector;

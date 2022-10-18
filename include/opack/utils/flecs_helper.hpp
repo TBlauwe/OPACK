@@ -19,6 +19,13 @@ namespace opack::internal
 #endif
 	}
 
+	inline void name_entity_after_prefab(flecs::entity entity, flecs::entity_view prefab)
+	{
+#ifndef OPACK_ORGANIZE
+		entity.set_name(fmt::format("{}_{}", prefab.name(), entity).c_str());
+#endif
+	}
+
 	/**
 	 * Get prefab of type @c T.
 	 */

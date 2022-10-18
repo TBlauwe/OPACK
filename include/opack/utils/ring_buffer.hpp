@@ -26,9 +26,11 @@ public:
     using const_reverse_iterator = iterator_t<const T, true>;
     static constexpr std::size_t default_size = 1;
 
-    ring_buffer() : ring_buffer(default_size){}
-    ring_buffer(std::size_t size) : m_container(size)
-    {}
+    ring_buffer(std::size_t size) : m_container(size){}
+    ring_buffer() : ring_buffer(default_size)
+    {
+        assert(m_container.empty());
+    }
 
     /**
      * Return last @c n th element s. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value.
@@ -36,7 +38,7 @@ public:
      */
     T& peek(std::size_t n = 0)
     {
-        assert(n >= 0 && n < size());
+        assert(n < size());
         auto it = begin();
         std::advance(it, n);
         return *it;
@@ -48,7 +50,7 @@ public:
      */
     const T& peek(std::size_t n = 0) const
     {
-        assert(n >= 0 && n < size());
+        assert(n < size());
         auto it = begin();
         std::advance(it, n);
         return *it;
@@ -60,15 +62,23 @@ public:
         return std::find(m_container.begin(), m_container.end(), value) != m_container.end();
     }
 
+    void push(T val)
+    {
+        last = pos;
+        *pos = val;
+        std::advance(pos, 1);
+        if(pos == end_it)
+            pos = begin_it;
+    }
 
     template<typename... Args>
-    void push(Args&&... args)
+    void emplace(Args&&... args)
     {
-        *pos = T{std::forward<Args>(args)...};
         last = pos;
+        *pos = T{std::forward<Args>(args)...};
         std::advance(pos, 1);
-        if(pos == m_container.end())
-            pos = m_container.begin();
+        if(pos == end_it)
+            pos = begin_it;
     }
 
     std::size_t size() const
@@ -100,6 +110,8 @@ private:
     container m_container {};
     container_iterator pos {m_container.begin()};
     container_iterator last {std::prev(m_container.end())};
+    container_iterator begin_it {m_container.begin()}; // Somehow comparing pos with m_container.begin() is invalid but how ?
+    container_iterator end_it {m_container.end()};
 
     template<typename TValue, bool is_reverse>
     struct iterator_t

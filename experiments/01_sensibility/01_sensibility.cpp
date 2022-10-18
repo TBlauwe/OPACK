@@ -108,7 +108,7 @@ int main()
     world.add<Configuration>();
 
     world.system<const opack::LastActionPrefabs>()
-        .term<InspectMemory>()
+        .term<InspectMemory>().parent()
         .kind(flecs::PostUpdate)
         .each([](opack::Entity actuator, const opack::LastActionPrefabs& memory)
             {
@@ -135,7 +135,7 @@ int main()
             {
                 auto action = opack::current_action<simple::Actuator>(agent);
                 if(action)
-					fmt::print("{} is doing \"{}\"\n", agent.name(), action.path());
+					fmt::print("{} is doing \"{}\"\n", agent.name(), action.doc_name());
                 else
 					fmt::print("{} is doing nothing.\n", agent.name());
             });
@@ -154,7 +154,7 @@ int main()
         .kind(flecs::PostFrame)
         .iter([](flecs::iter& iter)
             {
-                fmt::print(" -------------------------------------------------- \n");
+                fmt::print("\n");
             });
 
     opack::prefab<simple::Agent>(world).add<simple::Flow>();
@@ -229,14 +229,12 @@ int main()
 			for (auto& a : ActionSelection::get_choices(inputs))
 			{
                 auto color = *a.get<Color>();
-                auto c = rgb(color);
-                auto count = std::count_if(actions_done.begin(), actions_done.end(), 
-                    [&a](const flecs::entity_view action)
-                    {
-                        return action == a;
-                    }
-                );
-                if(color.r > 0  && count < 2)
+                if(const auto count = std::count_if(actions_done.begin(), actions_done.end(), 
+                                                    [&a](const flecs::entity_view action)
+                                                    {
+	                                                    return action == a;
+                                                    }
+                ); color.r > 0  && count < 2)
 					graph.positive_influence(a);
                 else if(color.r > 0  && count >= 2) 
 					graph.negative_influence(a);
@@ -250,20 +248,14 @@ int main()
         [](opack::Entity agent, ActionSelection::inputs& inputs)
         {
         	auto graph = ActionSelection::get_graph(inputs);
-            const auto& actions_done = simple::get_actuator(agent).get<opack::LastActionPrefabs>()->previous_prefabs_done;
+            const auto& actions_done = simple::get_actuator(agent).get<opack::LastActionPrefabs>();
 			for (auto& a :  ActionSelection::get_choices(inputs))
 			{
                 auto color = *a.get<Color>();
                 auto c = rgb(color);
-                auto count = std::count_if(actions_done.begin(), actions_done.end(), 
-                    [&a](const flecs::entity_view action)
-                    {
-                        return action == a;
-                    }
-                );
-                if (c != ::color::constant::black_t{} && count == 0)
+                if (const auto has_done = actions_done->has_done(a); c != ::color::constant::black_t{} && !has_done)
 					graph.positive_influence(a);
-                else if (count > 0)
+                else if (has_done)
 					graph.negative_influence(a);
 			}
 			return opack::make_outputs<ActionSelection>();
@@ -278,9 +270,9 @@ int main()
 
 	opack::entity<simple::Actuator>(world)
 		.track(world.get<Configuration>()->turns + 1);
-    opack::step_n(world, world.get<Configuration>()->turns + 1);
+    //opack::step_n(world, world.get<Configuration>()->turns + 1);
 
-	//opack::run_with_webapp(world);
+	opack::run_with_webapp(world);
 
 	generate_actions_sequence(world,"test");
     return 0;

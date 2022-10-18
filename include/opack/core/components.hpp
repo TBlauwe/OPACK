@@ -44,8 +44,7 @@ namespace opack
 
 	struct LastActionPrefabs
 	{
-		LastActionPrefabs() = default;
-		LastActionPrefabs(size_t ring_buffer_size) : previous_prefabs_done{ ring_buffer_size } {}
+		LastActionPrefabs(const std::size_t ring_buffer_size = 1) : previous_prefabs_done{ ring_buffer_size }{}
 		ring_buffer<EntityView> previous_prefabs_done;
 
         /**
@@ -58,7 +57,7 @@ namespace opack
 	};
 
 	/** Indicates the minimum and maximum of entities needed by an action. */
-	struct Arity { size_t min{ 1 }; size_t max{ 1 };};
+	struct Arity { std::size_t min{ 1 }; std::size_t max{ 1 };};
 
 	/** Indicates how much time is left, before action is started. */
 	struct Delay { float value{ 1 }; };
