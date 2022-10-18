@@ -1,3 +1,14 @@
+/*****************************************************************//**
+ * \file   ring_buffer.hpp
+ * \brief A ring buffer is a data structure that uses a single, fixed-size buffer as
+ * if it were connected end-to-end. This structure lends itself easily
+ * to buffering data streams (wikipedia).
+ * 
+ * \author Tristan
+ * \date   October 2022
+ *********************************************************************/
+#pragma once
+
 #include <cassert>
 #include <vector>
 

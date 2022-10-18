@@ -9,7 +9,6 @@
 #include <opack/module/simple_agent.hpp>
 #include <matplot/matplot.h>
 #include <color/color.hpp>
-#include <rigtorp/SPSCQueue.h>
 
 template<typename T>
 double percentage(const T& min, const T& max, const T& value)
@@ -27,11 +26,6 @@ struct Color
     explicit operator rgb() const { return rgb{ r, g, b }; }
 
     friend auto operator<=>(const Color&, const Color&) = default;
-};
-
-struct Memory
-{
-    opack::ring_buffer<flecs::entity_view> actions_done;
 };
 
 struct InspectMemory {};
@@ -60,12 +54,12 @@ void generate_actions_sequence(opack::World& world, const char * filename)
 	auto &[r, g, b] = C;
 
 	std::vector<std::string> tick_labels{};
-	world.filter<const Memory>().each([&r, &g, &b, &tick_labels](opack::Entity agent, const Memory& memory)
+	world.filter<const opack::LastActionPrefabs>().each([&r, &g, &b, &tick_labels](opack::Entity actuator, const opack::LastActionPrefabs& memory)
 		{
 			auto sub_r = vector_1d{};
 			auto sub_g = vector_1d{};
 			auto sub_b = vector_1d{};
-			for(auto action : memory.actions_done)
+			for(auto action : memory.previous_prefabs_done)
 			{
                 auto color = action.get<Color>();
 				sub_r.push_back(color->r);
@@ -75,7 +69,7 @@ void generate_actions_sequence(opack::World& world, const char * filename)
 			r.push_back(sub_r);
 			g.push_back(sub_g);
 			b.push_back(sub_b);
-			tick_labels.push_back(agent.name().c_str());
+			tick_labels.push_back(actuator.parent().name().c_str());
 		}
 	);
 	image(C);
@@ -113,13 +107,13 @@ int main()
         ;
     world.add<Configuration>();
 
-    world.system<const Memory>()
+    world.system<const opack::LastActionPrefabs>()
         .term<InspectMemory>()
         .kind(flecs::PostUpdate)
-        .each([](opack::Entity agent, const Memory& memory)
+        .each([](opack::Entity actuator, const opack::LastActionPrefabs& memory)
             {
-                fmt::print("[INSPECTION] - {} has done : [", agent.name());
-                for(auto& action : memory.actions_done)
+                fmt::print("[INSPECTION] - {} has done : [", actuator.parent().name());
+                for(auto& action : memory.previous_prefabs_done)
                 {
                     fmt::print("{} -", action.path());
                 }
@@ -163,7 +157,7 @@ int main()
                 fmt::print(" -------------------------------------------------- \n");
             });
 
-    opack::prefab<simple::Agent>(world).add<Memory>().add<simple::Flow>();
+    opack::prefab<simple::Agent>(world).add<simple::Flow>();
 
     // Instantiate "Action" prefab
     opack::init<Action>(world).require<simple::Actuator>().add<Color>();
@@ -205,7 +199,6 @@ int main()
         {
             auto action = std::get<opack::df<ActionSelection, opack::Action_t>&>(inputs).value;
             opack::act(agent, action);
-    		agent.get_mut<Memory>()->actions_done.push_back(action);
             return opack::make_outputs<Act>();
         }
     );
@@ -232,13 +225,13 @@ int main()
         [](opack::Entity agent, ActionSelection::inputs& inputs)
         {
         	auto graph = ActionSelection::get_graph(inputs);
-            const auto& actions_done = agent.get<Memory>()->actions_done;
+            const auto& actions_done = simple::get_actuator(agent).get<opack::LastActionPrefabs>()->previous_prefabs_done;
 			for (auto& a : ActionSelection::get_choices(inputs))
 			{
                 auto color = *a.get<Color>();
                 auto c = rgb(color);
                 auto count = std::count_if(actions_done.begin(), actions_done.end(), 
-                    [&a](const flecs::entity action)
+                    [&a](const flecs::entity_view action)
                     {
                         return action == a;
                     }
@@ -257,13 +250,13 @@ int main()
         [](opack::Entity agent, ActionSelection::inputs& inputs)
         {
         	auto graph = ActionSelection::get_graph(inputs);
-            const auto& actions_done = agent.get<Memory>()->actions_done;
+            const auto& actions_done = simple::get_actuator(agent).get<opack::LastActionPrefabs>()->previous_prefabs_done;
 			for (auto& a :  ActionSelection::get_choices(inputs))
 			{
                 auto color = *a.get<Color>();
                 auto c = rgb(color);
                 auto count = std::count_if(actions_done.begin(), actions_done.end(), 
-                    [&a](const flecs::entity action)
+                    [&a](const flecs::entity_view action)
                     {
                         return action == a;
                     }
@@ -283,7 +276,10 @@ int main()
     // =========================================================================== 
     world.plecs_from_file("configuration.flecs");
 
+	opack::entity<simple::Actuator>(world)
+		.track(world.get<Configuration>()->turns + 1);
     opack::step_n(world, world.get<Configuration>()->turns + 1);
+
 	//opack::run_with_webapp(world);
 
 	generate_actions_sequence(world,"test");

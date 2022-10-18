@@ -152,7 +152,7 @@ namespace opack
 				for (auto& v_idx : v_idxs)
 				{
 					displayed.insert(v_idx);
-					fmt::print("{:>30} --- = ---> {:<30} [{}]\n", f(u_at(u_idx)), g(v_at(v_idx)), score_at_index(v_idx));
+					fmt::print("{:>30} --- - ---> {:<30} [{}]\n", f(u_at(u_idx)), g(v_at(v_idx)), score_at_index(v_idx));
 				}
 			}
 			for (auto& [v_idx, score] : scores())

@@ -30,8 +30,18 @@ struct simple
 		return opack::ActuatorHandle(world, opack::entity<Actuator>(world));
 	}
 
+	static opack::ActuatorHandle get_actuator(opack::EntityView& entity)
+	{
+		return opack::ActuatorHandle(entity.world(), entity.target<Actuator>());
+	}
+
 	static opack::SenseHandle get_sense(opack::World& world)
 	{
 		return opack::SenseHandle(world, opack::entity<Sense>(world));
+	}
+
+	static opack::ActuatorHandle get_sense(opack::EntityView& entity)
+	{
+		return opack::ActuatorHandle(entity.world(), entity.target<Sense>());
 	}
 };

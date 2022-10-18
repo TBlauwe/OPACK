@@ -64,6 +64,7 @@
                 "strategy": "external"
             },
             "cacheVariables": {
+                "OPACK_ENABLE_RUNTIME_CHECK" : "OFF",
                 "CMAKE_BUILD_TYPE": "Debug"
             }
         },
