@@ -47,6 +47,7 @@ TEST_CASE("Ring Buffer validity")
         int counter{ 0 };
         for (const auto& v : rg)
         {
+            rg.peek(counter);
             counter++;
         }
         CHECK(counter == rg.size());
@@ -57,6 +58,7 @@ TEST_CASE("Ring Buffer validity")
         int counter{ 0 };
         for (auto& v : rg)
         {
+            rg.peek(counter);
             counter++;
         }
         CHECK(counter == rg.size());
@@ -67,6 +69,7 @@ TEST_CASE("Ring Buffer validity")
         int counter{ 0 };
         for (auto v : rg)
         {
+            rg.peek(counter);
             counter++;
         }
         CHECK(counter == rg.size());
@@ -77,6 +80,7 @@ TEST_CASE("Ring Buffer validity")
         int counter{ 0 };
         for (const auto v : rg)
         {
+            rg.peek(counter);
             counter++;
         }
         CHECK(counter == rg.size());
@@ -87,6 +91,7 @@ TEST_CASE("Ring Buffer validity")
         int counter{ 0 };
         for (auto it = rg.rbegin(); it != rg.rend() ; it++)
         {
+            rg.peek(counter);
             counter++;
         }
         CHECK(counter == rg.size());

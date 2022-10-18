@@ -27,10 +27,7 @@ public:
     static constexpr std::size_t default_size = 1;
 
     ring_buffer(std::size_t size) : m_container(size){}
-    ring_buffer() : ring_buffer(default_size)
-    {
-        assert(m_container.empty());
-    }
+    ring_buffer() : ring_buffer(default_size){}
 
     /**
      * Return last @c n th element s. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value.
