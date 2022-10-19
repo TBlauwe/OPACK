@@ -35,10 +35,10 @@ int main()
 	opack::init<MyAction>(world)
 		// 7.2 Define which actuator is needed
 		.require<simple::Actuator>()
-		// 7.3 How long it should take
+		// 7.3 How long should it run
 		.duration(0.0f)
 		// 7.4 What happens when action is beginning
-		.on_action_begin<MyAction>([](flecs::entity action) { fmt::print("{} is beginning with duration {}\n", action.path().c_str(), action.get<opack::Duration>()->value);  })
+		.on_action_begin<MyAction>([](flecs::entity action) { fmt::print("{} is beginning with duration {}\n", action.path().c_str(), action.has<opack::Duration>() ? action.get<opack::Duration>()->value : 0);  })
 		// 7.5 What happens when action is updating
 		.on_action_update<MyAction>([](flecs::entity action, float dt) { fmt::print("{} is updating with a delta-time of {}\n", action.path().c_str(), dt);  })
 		// 7.6 What happens when action is ending
