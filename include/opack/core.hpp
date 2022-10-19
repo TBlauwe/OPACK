@@ -17,6 +17,7 @@
 #include <opack/core/communication.hpp>
 #include <opack/core/simulation.hpp>
 #include <opack/core/operation.hpp>
+#include <opack/utils/debug.hpp>
 
 namespace opack
 {

@@ -207,9 +207,14 @@ namespace opack
 	ActionStatus action_status(EntityView action);
 
 	/**
-	@brief Returns duration of action is simulation time (seconds).
+	@brief Returns supposed duration of action in simulation time (seconds).
 	*/
 	float duration(EntityView action);
+
+	/**
+	@brief Returns effective duration of action in simulation time (seconds).
+	*/
+	float effective_duration(EntityView action);
 
 	/**
 	@brief @c initiatior is now doing an action of type @c T
@@ -221,8 +226,9 @@ namespace opack
 	/** Get the @c n -nth initiator of provided @c action.*/
 	inline Entity initiator(EntityView action, size_t n = 0)
 	{
+		opack_assert(action.is_valid(), "Action is invalid");
 		auto entity = action.target<By>(static_cast<int>(n));
-		return entity.mut(action);
+		return entity;
 	}
 
 	template<std::derived_from<Action> T>
@@ -246,9 +252,9 @@ namespace opack
 			.template kind<Act::Update>()
 			.term(flecs::IsA).template second<T>()
 			.term(ActionStatus::running)
-			.each([func](flecs::iter& it, size_t index)
+			.each([func](flecs::entity entity)
 				{
-					func(it.entity(index), it.delta_system_time());
+					func(entity, entity.delta_time());
 				}
 			).template child_of<opack::world::dynamics>();
 	}
@@ -389,7 +395,7 @@ namespace opack
 		}
 		else
 		{
-			opack_warn("Tried getting last action for entity [{}] with actuator [{}] that do not track previous actions.", entity.path().c_str(), actuator.path().c_str());
+			opack_warn("Tried getting last action for entity [{}] with actuator [{}] that do not track previous actions.", entity.path().c_str(), actuator.path().c_str())
 			return flecs::entity::null();
 		}
 	}
@@ -417,7 +423,7 @@ namespace opack
 			return actuator.get<LastActionPrefabs>()->has_done(action_prefab);
 		}
 		else
-			opack_warn("Tried seeing if entity [{}] has done action [{}], but actuator [{}] is not tracking previous actions.", entity.path().c_str(), action_prefab.path().c_str(), actuator.path().c_str());
+			opack_warn("Tried seeing if entity [{}] has done action [{}], but actuator [{}] is not tracking previous actions.", entity.path().c_str(), action_prefab.path().c_str(), actuator.path().c_str())
 		return false;
 	}
 
@@ -469,10 +475,15 @@ namespace opack
 		auto actuator = opack::actuator(action.get<RequiredActuator>()->value, initiator);
 		auto last_action = actuator.template target<Doing>();
 		if (last_action)
-			last_action.mut(action); //TODO
+			last_action.mut(action); //TODO Handle cancel
+
+		//TODO Wait / Error on arity not satisfied
 
 		effective_action.mut(action)
+			.remove<Begin, Timestamp>()
+			.remove<End, Timestamp>()
 			.add<By>(initiator)
+			.set<Begin, Timestamp>({ action.world().time() })
 			.add(ActionStatus::starting)
 			.set_doc_name(action.name())
 		;
@@ -490,12 +501,21 @@ namespace opack
 
 	inline ActionStatus action_status(EntityView action)
 	{
+		opack_assert(action.is_valid(), "Action is invalid.\n");
 		opack_assert(action.has<ActionStatus>(flecs::Wildcard), "Action {} has no action status.\n", action.path().c_str());
 		return *action.get<ActionStatus>();
 	}
 
 	inline float duration(EntityView action)
 	{
+		opack_assert(action.is_valid(), "Action is invalid.\n");
+		opack_assert(action.has<Duration>(), "Action {} has no action status.\n", action.path().c_str());
+		return action.get<Duration>()->value;
+	}
+
+	inline float effective_duration(EntityView action)
+	{
+		opack_assert(action.is_valid(), "Action is invalid.\n");
 		if (!action.has<Begin, Timestamp>())
 			return 0.0f;
 		if (action.has<End, Timestamp>())

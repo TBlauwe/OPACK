@@ -13,6 +13,7 @@
 
 #include <flecs.h>		// For consistency, we use flecs underlying assert.
 #include <fmt/core.h>	// For more readable messages, we need some string computation.
+#include <fmt/color.h>	
 
 /** Runtime assert only when @c OPACK_RUNTIME_CHECK is true.
  *	@param condition Assert if @c condition is false
@@ -39,9 +40,14 @@
  *	opack_warn_if(false, "This will emit a warning and this {} will be formatted", "argument");
  *	@endcode
  */
-#ifdef OPACK_RUNTIME_CHECK
+#ifdef OPACK_LOG
 #define opack_warn_if(condition, message, ...)\
-	if(!(condition)) flecs::log::warn(message __VA_OPT__(,) __VA_ARGS__)
+	if(!(condition))\
+	{\
+		fmt::print(fmt::fg(fmt::color::coral), "[ WARN] : ");\
+		fmt::print(fmt::fg(fmt::color::dim_gray), message __VA_OPT__(,) __VA_ARGS__);\
+		fmt::print("\n");\
+	}
 #else
 #define opack_warn_if(condition, message, ...) ((void)0)
 #endif
@@ -54,11 +60,11 @@
  *	opack_warn("This will emit a warning and this {} will be formatted", "argument");
  *	@endcode
  */
-#ifdef OPACK_RUNTIME_CHECK
+#ifdef OPACK_LOG
 #define opack_warn(message, ...)\
-	opack_warn_if(true, message __VA_OPT__(,) __VA_ARGS__)
+	opack_warn_if(false, message __VA_OPT__(,) __VA_ARGS__)
 #else
-#define opack_warn(true, message, ...) ((void)0)
+#define opack_warn(false, message, ...) ((void)0)
 #endif
 
 
@@ -71,9 +77,14 @@
  *	opack_trace_if(false, "This will emit a trace and this {} will be formatted", "argument");
  *	@endcode
  */
-#ifdef OPACK_RUNTIME_CHECK
+#ifdef OPACK_LOG
 #define opack_trace_if(condition, message, ...)\
-	if(!(condition)) flecs::log::trace(message __VA_OPT__(,) __VA_ARGS__)
+	if(!(condition))\
+	{\
+		fmt::print(fmt::fg(fmt::color::light_steel_blue), "[TRACE] : ");\
+		fmt::print(fmt::fg(fmt::color::dim_gray), message __VA_OPT__(,) __VA_ARGS__);\
+		fmt::print("\n");\
+	}
 #else
 #define opack_trace_if(condition, message, ...) ((void)0)
 #endif
@@ -86,9 +97,9 @@
  *	opack_trace("This will emit a trace and this {} will be formatted", "argument");
  *	@endcode
  */
-#ifdef OPACK_RUNTIME_CHECK
+#ifdef OPACK_LOG
 #define opack_trace(message, ...)\
-	opack_trace_if(true, message __VA_OPT__(,) __VA_ARGS__)
+	opack_trace_if(false, message __VA_OPT__(,) __VA_ARGS__)
 #else
-#define opack_trace(true, message, ...) ((void)0)
+#define opack_trace(false, message, ...) ((void)0)
 #endif

@@ -37,6 +37,7 @@ option(OPACK_BUILD_BENCHMARKS     "Build benchmarks using google benchmarks." OF
 option(OPACK_DEVELOPPER_WARNINGS  "Enable more warnings when compiling" OFF)
 option(OPACK_ORGANIZE             "Enable organisation of entities, different from C++ namespace (mainly organisation for explorer). Disabling it may lead to more performance." ON)
 option(OPACK_ENABLE_RUNTIME_CHECK "Enable runtime check (assertion). Disabling it may lead to more performance." ON)
+option(OPACK_ENABLE_LOG           "Enable runtime log. Disabling it may lead to more performance." OFF)
 
 
 # Dependencies
@@ -132,6 +133,9 @@ target_include_directories(opack PUBLIC include ${random_SOURCE_DIR}/include)
 target_link_libraries(opack PUBLIC flecs_static fmt)
 if(${OPACK_ENABLE_RUNTIME_CHECK})
     target_compile_definitions(opack PUBLIC OPACK_RUNTIME_CHECK)
+endif()
+if(${OPACK_ENABLE_LOG})
+    target_compile_definitions(opack PUBLIC OPACK_LOG)
 endif()
 target_compile_features(opack PUBLIC cxx_std_20)
 if(OPACK_DEVELOPPER_WARNINGS)

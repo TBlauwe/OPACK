@@ -62,7 +62,7 @@ private:
 	{
 		agent.each<U>([&inputs](flecs::entity target)
 			{
-				adl::potential_actions(target, SuitableActions::iterator(inputs));
+				adl::compute_potential_actions(target, SuitableActions::iterator(inputs));
 			});
 	}
 };

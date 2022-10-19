@@ -49,10 +49,10 @@ void opack::import_opack(World& world)
 	// -------------------------------------------a------------
 	opack::prefab<Tangible>(world);
 	opack::prefab<Agent>(world)
-        .is_a<Tangible>()
+		.is_a<Tangible>()
 		.override<DefaultBehaviour>()
-    ;
-    opack::prefab<Artefact>(world).is_a<Tangible>();
+		;
+	opack::prefab<Artefact>(world).is_a<Tangible>();
 	opack::prefab<Action>(world)
 		.override<Token>()
 		.add<Arity>()
@@ -62,9 +62,9 @@ void opack::import_opack(World& world)
 		;
 	opack::prefab<Sense>(world)
 		.add(flecs::Transitive)
-        ;
+		;
 	opack::prefab<Flow>(world)
-        ;
+		;
 
 	// -------------------------------------------------------
 	// Operation
@@ -93,7 +93,7 @@ void opack::import_opack(World& world)
 
 	world.component<RequiredActuator>();
 
-	world.component<By>(); 
+	world.component<By>();
 	world.component<On>();
 	world.component<Delay>()
 		.member<float, flecs::units::duration::Seconds>("value")
@@ -147,7 +147,7 @@ void opack::import_opack(World& world)
 		.term<Token>()
 		.each([](flecs::entity actuator, LastActionPrefabs& last_actions)
 			{
-				if(const auto prefab = actuator.target<Doing>().target(flecs::IsA))
+				if (const auto prefab = actuator.target<Doing>().target(flecs::IsA))
 					last_actions.previous_prefabs_done.push(prefab);
 			}
 	).child_of<world::dynamics>();
@@ -164,36 +164,36 @@ void opack::import_opack(World& world)
 
 	world.system<Delay>("UpdateDelay")
 		.term<Delay>().write()
-		.each([](flecs::iter& iter, size_t i, Delay& delay)
+		.each([](flecs::entity entity, Delay& delay)
 			{
-					delay.value -= iter.delta_system_time();
-					if (delay.value <= 0)
-						iter.entity(i).remove<Delay>();
+				delay.value -= entity.delta_time();
+				if (delay.value <= 0)
+					entity.remove<Delay>();
 			}
 	).child_of<opack::world::dynamics>();
 
 	world.system<Timer>("UpdateTimer")
-		.each([](flecs::iter& iter, size_t, Timer& timer)
+		.each([](flecs::entity entity, Timer& timer)
 			{
-					timer.value -= iter.delta_system_time();
+				timer.value -= entity.delta_time();
 			}
 	).child_of<opack::world::dynamics>();
 
 	world.system<TickTimeout>("UpdateTickTimeout")
-		.each([](flecs::iter& iter, size_t i, TickTimeout& timeout)
+		.each([](flecs::entity entity, TickTimeout& timeout)
 			{
-					timeout.value--;
-					if (timeout.value <= 0)
-						iter.entity(i).destruct();
+				timeout.value--;
+				if (timeout.value <= 0)
+					entity.destruct();
 			}
 	).child_of<opack::world::dynamics>();
 
 	world.system<TimeTimeout>("UpdateTimeTimeout")
-		.each([](flecs::iter& iter, size_t i, TimeTimeout& timeout)
+		.each([](flecs::entity entity, TimeTimeout& timeout)
 			{
-					timeout.value -= iter.delta_system_time();
-					if (timeout.value <= 0)
-						iter.entity(i).destruct();
+				timeout.value -= entity.delta_time();
+				if (timeout.value <= 0)
+					entity.destruct();
 			}
 	).child_of<opack::world::dynamics>();
 }
@@ -206,24 +206,22 @@ void opack::define_action_systems(opack::World& world)
 		.term<By>(flecs::Wildcard)
 		.term(ActionStatus::starting)
 		.term(ActionStatus::running).write()
-		.term<Begin, Timestamp>().not_().write()
 		.each([](flecs::entity action)
 			{
-		        action.set<Begin, Timestamp>({action.world().time()});
 				action.add(ActionStatus::running);
 			}
 	).child_of<opack::world::dynamics>();
 
 	world.system<Duration>("System_Update_ActionDuration")
 		.kind<Act::Update>()
-		.term_at(1).self()
+		.term<Duration>().self().read_write()
 		.term(flecs::IsA).second<opack::Action>()
 		.term(ActionStatus::running)
-		.each([](flecs::iter& it, size_t index, Duration& duration)
+		.each([](flecs::entity entity, Duration& duration)
 			{
-				duration.value -= it.delta_system_time();
-				if(duration.value <= 0.0f)
-		            it.entity(index).remove<Duration>();
+				duration.value -= entity.delta_time();
+				if (duration.value <= 0.0f)
+					entity.remove<Duration>();
 			}
 	).child_of<opack::world::dynamics>();
 
@@ -237,7 +235,7 @@ void opack::define_action_systems(opack::World& world)
 		.term<End, Timestamp>().not_().write()
 		.each([](flecs::entity action)
 			{
-		        action.set<End, Timestamp>({action.world().time()});
+				action.set<End, Timestamp>({ action.world().time() });
 				action.add(ActionStatus::finished);
 			}
 	).child_of<opack::world::dynamics>();
@@ -251,7 +249,7 @@ void opack::define_action_systems(opack::World& world)
 		.term(ActionStatus::aborted).or_()
 		.each([](flecs::iter& it, size_t index)
 			{
-				if(auto action = it.entity(index) ; it.is_set(1))
+				if (auto action = it.entity(index); it.is_set(1))
 					action.remove<Token>();
 				else
 					action.destruct();

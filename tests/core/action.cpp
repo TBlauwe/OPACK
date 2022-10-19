@@ -52,7 +52,7 @@ TEST_CASE("Action API")
     ;
     auto e3  = opack::spawn<simple::Agent>(world);
     opack::act(e3, action);
-    CHECK(opack::duration(action) == 0.0f);
+    CHECK(opack::effective_duration(action) == 0.0f);
 
     opack::step(world);
     CHECK(e3.has<HasBegun>());
@@ -62,7 +62,7 @@ TEST_CASE("Action API")
     CHECK(action.has<opack::Begin, opack::Timestamp>());
     CHECK(!action.has<opack::End, opack::Timestamp>());
     CHECK(opack::action_status(action) == opack::ActionStatus::running);
-    CHECK(opack::duration(action) == 0.0f);
+    CHECK(opack::effective_duration(action) == doctest::Approx(0.0).epsilon(0.1));
 
     opack::step(world, 1.0f);
     CHECK(e3.has<HasBegun>());
@@ -72,7 +72,7 @@ TEST_CASE("Action API")
     CHECK(action.has<opack::Begin, opack::Timestamp>());
     CHECK(!action.has<opack::End, opack::Timestamp>());
     CHECK(opack::action_status(action) == opack::ActionStatus::running);
-    CHECK(opack::duration(action) == doctest::Approx(1.0f));
+    CHECK(opack::effective_duration(action) == doctest::Approx(1.0).epsilon(0.1));
 
 	e3.remove<HasUpdated>();
     opack::step(world, 2.f);
@@ -89,7 +89,7 @@ TEST_CASE("Action API")
     ;
     auto e4  = opack::spawn<simple::Agent>(world);
     opack::act(e4, action);
-    CHECK(opack::duration(action) == 0.0f);
+    CHECK(opack::effective_duration(action) == 0.0f);
 
     opack::step(world);
     CHECK(e4.has<HasBegun>());
@@ -99,7 +99,7 @@ TEST_CASE("Action API")
     CHECK(action.has<opack::Begin, opack::Timestamp>());
     CHECK(!action.has<opack::End, opack::Timestamp>());
     CHECK(opack::action_status(action) == opack::ActionStatus::running);
-    CHECK(opack::duration(action) == 0.0f);
+    CHECK(opack::effective_duration(action) == doctest::Approx(0.0).epsilon(0.1));
 
     opack::step(world, 1.0f);
     CHECK(e4.has<HasBegun>());
@@ -109,7 +109,7 @@ TEST_CASE("Action API")
     CHECK(action.has<opack::Begin, opack::Timestamp>());
     CHECK(!action.has<opack::End, opack::Timestamp>());
     CHECK(opack::action_status(action) == opack::ActionStatus::running);
-    CHECK(opack::duration(action) == doctest::Approx(1.0f));
+    CHECK(opack::effective_duration(action) == doctest::Approx(1.0).epsilon(0.1));
 
 	e4.remove<HasUpdated>();
     opack::step(world, 2.f);
@@ -121,6 +121,37 @@ TEST_CASE("Action API")
     CHECK(action.has<opack::Begin, opack::Timestamp>());
     CHECK(action.has<opack::End, opack::Timestamp>());
     CHECK(opack::action_status(action) == opack::ActionStatus::finished);
+    CHECK(opack::effective_duration(action) == doctest::Approx(3.0).epsilon(0.1));
+
+    MESSAGE("Continous action 0.0f ending in same cycle");
+    action = opack::spawn<MoveTo>(world)
+        .set<opack::Duration>({0.0})
+    ;
+    auto e5  = opack::spawn<simple::Agent>(world);
+    opack::act(e5, action);
+    CHECK(opack::effective_duration(action) == 0.0f);
+
+    opack::step(world);
+    CHECK(e5.has<HasBegun>());
+    CHECK(e5.has<HasUpdated>());
+    CHECK(e5.has<HasEnded>());
+    CHECK(!action.is_valid());
+
+    MESSAGE("Continous action 5.0f s ending in same cycle");
+    action = opack::spawn<MoveTo>(world)
+        .set<opack::Duration>({5.0})
+    ;
+    auto e6  = opack::spawn<simple::Agent>(world);
+    opack::act(e6, action);
+    CHECK(opack::duration(action) == 5.0f);
+
+    opack::step(world, 4.9f);
+    CHECK(opack::effective_duration(action) == doctest::Approx(4.9f));
+    opack::step(world, 0.1f);
+    CHECK(e6.has<HasBegun>());
+    CHECK(e6.has<HasUpdated>());
+    CHECK(e6.has<HasEnded>());
+    CHECK(!action.is_valid());
 }
 
 TEST_CASE("Action API : tracking")

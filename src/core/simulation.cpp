@@ -24,7 +24,14 @@ float opack::time(const World& world)
 	return world.time();
 }
 
-void opack::run_with_webapp(World& world) {world.app().enable_rest().enable_monitor().run(); }
+void opack::run_with_webapp(World& world)
+{
+	fmt::print(fmt::fg(fmt::color::dim_gray) | fmt::emphasis::italic,
+		"See explorer here : ");
+	fmt::print(fmt::fg(fmt::color::steel_blue) | fmt::emphasis::italic | fmt::emphasis::bold,
+		"https://www.flecs.dev/explorer/?remote=true\n");
+	world.app().enable_rest().enable_monitor().run();
+}
 
 void opack::run(World& world) { world.app().run(); }
 

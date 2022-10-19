@@ -98,6 +98,12 @@ struct adl
 	/** True if one child or itself is in progress (started but not finished). */
 	static bool in_progress(opack::EntityView task);
 
+	/** Returns logical constructor of task. */
+	static LogicalConstructor logical_constructor(opack::EntityView task);
+
+	/** Returns temporal constructor of task. */
+	static TemporalConstructor temporal_constructor(opack::EntityView task);
+
 	/** Returns order of @c task in regards to its parent. */
 	static std::size_t order(opack::EntityView task);
 
@@ -113,19 +119,19 @@ struct adl
 	/** Returns root task of @c task, null entity otherwise. */
 	static opack::Entity get_root(opack::EntityView task);
 
+	/** Returns depth of task in activity tree (0 -> root). */
+	static std::size_t get_depth(opack::EntityView task);
+
 	/** True if @c task has no parent task. */
 	static bool is_root(opack::EntityView task);
+
+	/** True if @c entity is a task (has children and a constructor{logical, temporal}. */
+	static bool is_leaf(opack::EntityView task);
 
 	/** Returns true if @c task is satisfied. True by default or
 	 *depending on the satisfaction condition
 	 */
 	static bool is_satisfied(opack::EntityView task);
-
-	/** Returns true if @c task is a suitable task for action. */
-	static bool is_potential(opack::EntityView task);
-
-	/** Returns the @c n -th agent doing this @c task. */
-	static opack::Entity initiator(opack::EntityView task, std::size_t n = 0);
 
 	/** Retrieve pointer to value @c T, stored in context
 	 *(either from current task or parent tasks).
@@ -186,7 +192,7 @@ struct adl
 	template<std::derived_from<Condition> T>
 	static bool check_condition(opack::EntityView task)
 	{
-		return !task.has<T>() || (task.has<T>() && task.get<T>()->func(task));
+		return !task.has<T>() || task.get<T>()->func(task);
 	}
 
 	/** Create an activity model referred as @c T. */
@@ -233,70 +239,66 @@ struct adl
 
 	/** Add potential actions to output iterator @c out and returns true if task is satisfied.*/
 	template<typename OutputIterator>
-	static bool potential_actions(opack::EntityView task, OutputIterator out, std::function<bool(opack::EntityView)> should_add = opack::always)
+	static void compute_potential_actions(opack::Entity task, OutputIterator out, std::function<bool(opack::EntityView)> should_add = opack::always)
 	{
-		if (is_finished(task))
-		{
-			return is_satisfied(task);
-		}
-
-		if (!has_children(task))
+		opack_trace("{0:-^{1}} Potential actions {2}", "", 2*adl::get_depth(task), task.path().c_str());
+		if (is_leaf(task))
 		{
 			opack_assert(opack::is_a<opack::Action>(task), "Leaf task {} is not an action. Does it inherit from opack::Action or adl::Action ?", task.path().c_str());
-			if (is_potential(task) and should_add(task))
+			if (!in_progress(task) && !is_finished(task) && !is_satisfied(task) && check_condition<Contextual>(task) && should_add(task))
 				*out++ = task;
+			return ;
 		}
-		else
+
+		opack_assert(task.has<Constructor>(), "Task {} doesn't have a temporal constructor component.", task.path().c_str());
+		switch (task.get<Constructor>()->temporal)
 		{
-			opack_assert(task.has<Constructor>(), "Task {} doesn't have a temporal constructor component.", task.path().c_str());
-
-			auto subtasks = children(task);
-			bool has_active_task { in_progress(task) };
-
-			bool first{ true };
-			bool succeeded{ false };
-			switch (task.get<Constructor>()->temporal)
+		case TemporalConstructor::PAR: // TODO
+		case TemporalConstructor::IND: // Every potential actions are added, even if another isn't finished.
+			for (auto [order, subtask] : children(task))
 			{
-			case TemporalConstructor::PAR: // TODO
-			case TemporalConstructor::IND: // Every potential actions are added, even if another isn't finished.
-				for (auto [order, subtask] : subtasks)
-				{
-					succeeded |= potential_actions(subtask, out, should_add);
-				}
-				break;
-			case TemporalConstructor::SEQ: // Every potential actions are added, if last one is finished
-				for (auto [order, subtask] : subtasks)
-				{
-					if (!has_active_task && !is_satisfied(subtask))
-					{
-						succeeded |= potential_actions(subtask, out, should_add);
-					}
-				}
-				break;
-			case TemporalConstructor::SEQ_ORD: // First non satisfied task is next, if last one is finished.
-				for (auto [order, subtask] : subtasks)
-				{
-					if (!has_active_task && first && (!is_satisfied(subtask) && !is_finished(subtask)))
-					{
-						succeeded |= potential_actions(subtask, out, should_add);
-						first = false;
-					}
-				}
-				break;
-			case TemporalConstructor::ORD: // First non satisfied task is next, even if last one isn't finished.
-				for (auto [order, subtask] : subtasks)
-				{
-					if (first && (!is_satisfied(subtask) && !has_started(subtask)))
-					{
-						succeeded |= potential_actions(subtask, out, should_add);
-						first = false;
-					}
-				}
-				break;
+				compute_potential_actions(subtask, out, should_add);
 			}
-			return succeeded;
+			break;
+		case TemporalConstructor::SEQ: // Every potential actions are added, if last one is finished
+			if(!in_progress(task))
+			{
+				for (auto [order, subtask] : children(task))
+				{
+					compute_potential_actions(subtask, out, should_add);
+				}
+			}
+			break;
+		case TemporalConstructor::SEQ_ORD: // First non satisfied task is next, if last one is finished.
+			if(!in_progress(task))
+			{
+				bool first {true};
+				auto subtasks {children(task)};
+				for (auto it {subtasks.begin()} ; it != subtasks.end() && first ; ++it)
+				{
+					if (auto subtask = it->second; !is_finished(subtask) && !is_satisfied(subtask))
+					{
+						compute_potential_actions(subtask, out, should_add);
+						first = false;
+					}
+				}
+			}
+			break;
+		case TemporalConstructor::ORD: // First non satisfied task is next, even if last one isn't finished.
+			{
+				bool first {true};
+				auto subtasks {children(task)};
+				for (auto it {subtasks.begin()} ; it != subtasks.end() && first ; ++it)
+				{
+					if (auto subtask = it->second; !is_finished(subtask) && !in_progress(subtask) && !is_satisfied(subtask))
+					{
+						compute_potential_actions(subtask, out, should_add);
+						first = false;
+					}
+				}
+			}
+			break;
 		}
-		return false;
 	}
 
 	/**

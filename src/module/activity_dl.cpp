@@ -90,9 +90,9 @@ bool adl::has_children(opack::EntityView task)
 
 bool adl::is_finished(opack::EntityView task)
 {
-	bool result{ true };
-	if (has_children(task))
+	if (!is_leaf(task))
 	{
+		bool result {false} ; 
 		opack_assert(task.has<Constructor>(), "Task {} doesn't have a logical constructor component.", task.path().c_str());
 		// False if children are not finished ...
 		task.children([&result](opack::Entity e) {result &= is_finished(e); });
@@ -110,25 +110,18 @@ bool adl::is_finished(opack::EntityView task)
 			break;
 		}
 	}
-	else
-	{
-		opack::is_finished(task);
-	}
-	return result;
+	return opack::is_finished(task);
 }
 
 bool adl::has_started(opack::EntityView task)
 {
-	bool result{ false };
-	if (has_children(task))
+	if (!is_leaf(task))
 	{
+		bool result {false} ; 
 		task.children([&result](opack::Entity e) {result |= has_started(e); });
+		return result;
 	}
-	else
-	{
-		opack::has_started(task);
-	}
-	return result;
+	return opack::has_started(task);
 }
 
 std::size_t adl::order(opack::EntityView task)
@@ -159,7 +152,14 @@ opack::Entity adl::parent_of(opack::EntityView task)
 
 bool adl::is_root(opack::EntityView task)
 {
+	opack_assert(task.is_valid(), "Task is invalid");
 	return !parent_of(task);
+}
+
+bool adl::is_leaf(opack::EntityView entity)
+{
+	opack_assert(entity.is_valid(), "Entity is invalid");
+	return !has_children(entity);
 }
 
 opack::Entity adl::get_root(opack::EntityView task)
@@ -174,30 +174,28 @@ opack::Entity adl::get_root(opack::EntityView task)
 
 bool adl::is_satisfied(opack::EntityView task)
 {
-	if (bool result {true} ; has_children(task))
+	opack_trace("{0:-^{1}} is satisfied {2} ?", "", 2*adl::get_depth(task), task.path().c_str())
+	bool result {true};
+	if (!is_leaf(task))
 	{
 		ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a logical constructor.");
 		switch (task.get<Constructor>()->logical)
 		{
 		case LogicalConstructor::AND:
+			opack_trace("{0:-^{1}} {2}", "", 2*adl::get_depth(task), "AND")
 			// False if one child is not satisfied
 			task.children([&result](opack::Entity e) {result &= is_satisfied(e); });
-		case LogicalConstructor::XOR:
+			break;
+		case LogicalConstructor::XOR: 
 			[[fallthrough]];
 		case LogicalConstructor::OR:
+			opack_trace("{0:-^{1}} {2}", "", 2*adl::get_depth(task), "XOR or OR")
 			result = false;  // True if one child is satisfied
 			task.children([&result](opack::Entity e) {result |= is_satisfied(e); });
-			return result;
+			break;
 		}
 	}
-	return check_condition<Satisfaction>(task);
-}
-
-bool adl::is_potential(opack::EntityView task)
-{
-	if (is_satisfied(task) || in_progress(task))
-		return false;
-	return check_condition<Contextual>(task);
+	return result && check_condition<Satisfaction>(task);
 }
 
 std::map<std::size_t, opack::Entity> adl::children(opack::EntityView task)
@@ -215,7 +213,7 @@ std::map<std::size_t, opack::Entity> adl::children(opack::EntityView task)
 
 bool adl::in_progress(opack::EntityView task)
 {
-	if (has_children(task))
+	if (!is_leaf(task))
 	{
 		bool result{ false };
 		task.children([&result](opack::Entity e) {result |= in_progress(e); }); // False if one child is not satisfied
@@ -224,7 +222,28 @@ bool adl::in_progress(opack::EntityView task)
 	return opack::is_in_progress(task);
 }
 
-opack::Entity adl::initiator(opack::EntityView action, std::size_t n)
+adl::LogicalConstructor adl::logical_constructor(opack::EntityView task)
 {
-	return action.target<opack::By>(static_cast<int>(n));
+	opack_assert(task.is_valid(), "Task is invalid");
+	opack_assert(task.has<Constructor>(), "Task {} has no constructor", task.name().c_str());
+	return task.get<Constructor>()->logical;
+}
+
+adl::TemporalConstructor adl::temporal_constructor(opack::EntityView task)
+{
+	opack_assert(task.is_valid(), "Task is invalid");
+	opack_assert(task.has<Constructor>(), "Task {} has no constructor", task.name().c_str());
+	return task.get<Constructor>()->temporal;
+}
+
+std::size_t adl::get_depth(opack::EntityView task)
+{
+	std::size_t depth {0};
+	auto root = task;
+	while (!is_root(root) && root.is_valid())
+	{
+		root = parent_of(root);
+		depth++;
+	}
+	return depth;
 }

@@ -112,7 +112,7 @@ CPMAddPackage(
 			"OPACK_BUILD_BENCHMARKS         OFF"
 			"OPACK_DEVELOPPER_WARNINGS      OFF"
 			"OPACK_ORGANIZE                 ON"
-			"OPACK_ENABLE_RUNTIME ASSERTS   ON"
+			"OPACK_ENABLE_RUNTIME_CHECK     ON"
 )
 ```
 
@@ -126,7 +126,8 @@ CPMAddPackage(
 | OPACK_BUILD_BENCHMARKS       | OFF      | "Build benchmarks using google benchmarks." |
 | OPACK_DEVELOPPER_WARNINGS    | OFF      | "Enable more warnings when compiling" |
 | OPACK_ORGANIZE               | ON       | "Enable organisation of entities, different from C++ namespace (mainly organisation for explorer). Disabling it may lead to more performance." |
-| OPACK_ENABLE_RUNTIME_ASSERTS | ON       | "Enable assertions. Disabling it may lead to more performance." |
+| OPACK_ENABLE_RUNTIME_CHECK   | ON       | "Enable assertions. Disabling it may lead to more performance." |
+| OPACK_ENABLE_LOG             | ON       | "Enable log. Disabling it may lead to more performance." |
 
 
 ### Prerequisites
