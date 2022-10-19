@@ -1,9 +1,12 @@
 #include <doctest/doctest.h>
+#include <fmt/ranges.h>
 
+#include "../utils.hpp"
 #include <opack/core.hpp>
 #include <opack/module/adl.hpp>
 #include <opack/module/flows.hpp>
 #include <opack/module/simple_agent.hpp>
+
 
 struct Satisfied {};
 
@@ -239,15 +242,15 @@ TEST_CASE("Activity-DL operators")
 	adl::condition<adl::Satisfaction>(action2, lambda);
 	adl::condition<adl::Satisfaction>(action3, lambda);
 
+	auto instance = opack::spawn<Activity_A>(world);
+	auto children = adl::children(instance);
+	auto a1 = children.at(1);
+	auto a2 = children.at(2);
+	auto a3 = children.at(3);
+
 	MESSAGE("IND OR");
 	{
-		std::vector<flecs::entity> actions{};
-		auto instance = opack::spawn<Activity_A>(world);
 		instance.set<adl::Constructor>({ adl::LogicalConstructor::OR, adl::TemporalConstructor::IND });
-		auto children = adl::children(instance);
-		auto a1 = children.at(1);
-		auto a2 = children.at(2);
-		auto a3 = children.at(3);
 
 		step{
 			.title = "START",

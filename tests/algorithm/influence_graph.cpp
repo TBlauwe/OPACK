@@ -1,7 +1,6 @@
 #include <doctest/doctest.h>
 #include <opack/core.hpp>
 #include <opack/algorithm/influence_graph.hpp>
-#include <iostream>
 
 TEST_SUITE_BEGIN("Algorithm : influence graph");
 

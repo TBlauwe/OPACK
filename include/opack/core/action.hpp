@@ -530,7 +530,7 @@ namespace opack
 
 	inline bool is_in_progress(EntityView action)
 	{
-		return action.has(ActionStatus::running);
+		return action.has<Begin, Timestamp>() && !action.has<End, Timestamp>();
 	}
 
 	inline bool is_finished(EntityView action)

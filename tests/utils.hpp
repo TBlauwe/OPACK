@@ -18,3 +18,19 @@
                         std::to_string(_doctest_subcase_idx++) + "]").c_str()) { data = in; }  \
     });                                                                                         \
     _doctest_subcase_idx = 0
+
+// To print vector
+namespace std // NOLINT(cert-dcl58-cpp)
+{
+template <typename T>
+ostream& operator<<(ostream& stream, const vector<T>& in) {
+    stream << "[";
+    for (size_t i = 0; i < in.size(); ++i) {
+        if (i != 0) { stream << ", "; }
+        stream << in[i];
+    }
+    stream << "]";
+    return stream;
+}
+}
+
