@@ -1,13 +1,19 @@
 /*****************************************************************//**
- * \file   agents.hpp
- * \brief  Defines some ready to use agent model.
+ * \file   simple_agent.hpp
+ * \brief  Module to import a simple agent with one actuator, one sense and one flow.
  * 
  * \author Tristan
  * \date   September 2022
  *********************************************************************/
+#pragma once
 
 #include <opack/core.hpp>
 
+/**
+ * \brief  Module to import a simple agent with one actuator, one sense and one flow.
+ * Flow is activated every cycle.
+ *
+ */
 struct simple
 {
 	OPACK_AGENT(Agent);
@@ -43,5 +49,10 @@ struct simple
 	static opack::ActuatorHandle get_sense(opack::EntityView& entity)
 	{
 		return opack::ActuatorHandle(entity.world(), entity.target<Sense>());
+	}
+
+	static opack::FlowHandle get_flow(opack::World& world)
+	{
+		return opack::FlowHandle(world, opack::entity<Flow>(world));
 	}
 };
