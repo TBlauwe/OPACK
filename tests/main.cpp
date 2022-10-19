@@ -8,7 +8,7 @@ int main(int argc, char** argv) {
     // defaults
     //context.addFilter("test-case-exclude", "*math*"); // exclude test cases with "math" in their name
     //context.setOption("order-by", "name");            // sort the test cases by their name
-    //context.addFilter("test-case", "*Ring Buffer*"); 
+    context.addFilter("test-case", "*Ring Buffer*"); 
 
     context.applyCommandLine(argc, argv);
 

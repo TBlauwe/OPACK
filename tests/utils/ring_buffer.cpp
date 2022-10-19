@@ -21,7 +21,7 @@ TEST_CASE("Ring Buffer validity")
     SUBCASE("No size")
     {
         rg = ring_buffer<int>();
-        CHECK(rg.size() == ring_buffer<int>::default_size);
+        CHECK(rg.size() == 1);
     }
 
     SUBCASE("Size 1")
@@ -47,7 +47,6 @@ TEST_CASE("Ring Buffer validity")
         int counter{ 0 };
         for (const auto& v : rg)
         {
-            rg.peek(counter);
             counter++;
         }
         CHECK(counter == rg.size());
@@ -58,7 +57,6 @@ TEST_CASE("Ring Buffer validity")
         int counter{ 0 };
         for (auto& v : rg)
         {
-            rg.peek(counter);
             counter++;
         }
         CHECK(counter == rg.size());
@@ -69,7 +67,6 @@ TEST_CASE("Ring Buffer validity")
         int counter{ 0 };
         for (auto v : rg)
         {
-            rg.peek(counter);
             counter++;
         }
         CHECK(counter == rg.size());
@@ -80,7 +77,6 @@ TEST_CASE("Ring Buffer validity")
         int counter{ 0 };
         for (const auto v : rg)
         {
-            rg.peek(counter);
             counter++;
         }
         CHECK(counter == rg.size());
@@ -89,9 +85,8 @@ TEST_CASE("Ring Buffer validity")
     MESSAGE("Const ref reverse iteration");
     {
         int counter{ 0 };
-        for (auto it = rg.rbegin(); it != rg.rend() ; it++)
+        for (auto it = rg.rbegin(); it != rg.rend() ; ++it)
         {
-            rg.peek(counter);
             counter++;
         }
         CHECK(counter == rg.size());
@@ -160,7 +155,7 @@ TEST_CASE("Ring Buffer")
     SUBCASE("4 elements")
     {
         std::vector<int> vector;
-        for (auto v : rg)
+        for (auto v : std::as_const(rg))
         {
             vector.push_back(v);
         }
