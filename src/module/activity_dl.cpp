@@ -11,6 +11,7 @@ adl::adl(opack::World& world)
 	world.component<LogicalConstructor>()
 		.constant("AND", static_cast<int32_t>(LogicalConstructor::AND))
 		.constant("OR", static_cast<int32_t>(LogicalConstructor::OR))
+		.constant("XOR", static_cast<int32_t>(LogicalConstructor::XOR))
 		;
 	world.component<TemporalConstructor>()
 		.constant("IND", static_cast<int32_t>(TemporalConstructor::IND))
@@ -82,39 +83,41 @@ opack::Entity adl::task(const char* name, opack::Entity parent, LogicalConstruct
 	return entity;
 }
 
-bool adl::has_children(opack::Entity task)
+bool adl::has_children(opack::EntityView task)
 {
 	return children_count(task) > 0;
 }
 
-bool adl::is_finished(opack::Entity task)
+bool adl::is_finished(opack::EntityView task)
 {
 	bool result{ true };
 	if (has_children(task))
 	{
 		opack_assert(task.has<Constructor>(), "Task {} doesn't have a logical constructor component.", task.path().c_str());
-		// False if children are not finished 
+		// False if children are not finished ...
 		task.children([&result](opack::Entity e) {result &= is_finished(e); });
 		switch (task.get<Constructor>()->logical)
 		{
 		case LogicalConstructor::AND:
-			// But true if one is and is not satisfied
+			// ... but true if one is and is not satisfied.
 			task.children([&result](opack::Entity e) {result |= is_finished(e) && !is_satisfied(e); });
 			break;
-		case LogicalConstructor::OR:
-			// True if one child is finished
+		case LogicalConstructor::XOR:
+			// ... true if one child is finished and satisfied.
 			task.children([&result](opack::Entity e) {result |= is_finished(e) && is_satisfied(e); });
+			break;
+		case LogicalConstructor::OR:
 			break;
 		}
 	}
 	else
 	{
-		result = task.has<opack::End, opack::Timestamp>();
+		opack::is_finished(task);
 	}
 	return result;
 }
 
-bool adl::has_started(opack::Entity task)
+bool adl::has_started(opack::EntityView task)
 {
 	bool result{ false };
 	if (has_children(task))
@@ -123,30 +126,30 @@ bool adl::has_started(opack::Entity task)
 	}
 	else
 	{
-		result = task.has<opack::Begin, opack::Timestamp>();
+		opack::has_started(task);
 	}
 	return result;
 }
 
-std::size_t adl::order(opack::Entity task)
+std::size_t adl::order(opack::EntityView task)
 {
 	opack_assert(task.has<Order>(), "Somehow task {} does not have an order. It should never happen. File an issue.", task.path().c_str());
 	return task.get<Order>()->value;
 }
 
-std::size_t adl::children_count(opack::Entity task)
+std::size_t adl::children_count(opack::EntityView task)
 {
 	return opack::internal::children_count(task);
 }
 
-std::size_t adl::size(opack::Entity task)
+std::size_t adl::size(opack::EntityView task)
 {
 	std::size_t count{ 0 };
-	traverse_dfs(task, [&count](opack::Entity) {count++; });
+	traverse_dfs(task, [&count](opack::EntityView) {count++; });
 	return count;
 }
 
-opack::Entity adl::parent_of(opack::Entity task)
+opack::Entity adl::parent_of(opack::EntityView task)
 {
 	auto parent = task.parent();
 	if (parent && opack::is_a<Task>(parent))
@@ -154,14 +157,14 @@ opack::Entity adl::parent_of(opack::Entity task)
 	return opack::Entity::null();
 }
 
-bool adl::is_root(opack::Entity task)
+bool adl::is_root(opack::EntityView task)
 {
 	return !parent_of(task);
 }
 
-opack::Entity adl::get_root(opack::Entity task)
+opack::Entity adl::get_root(opack::EntityView task)
 {
-	auto root = task;
+	opack::Entity root = task.mut(task);
 	while (!is_root(root) && root.is_valid())
 	{
 		root = parent_of(root);
@@ -169,10 +172,9 @@ opack::Entity adl::get_root(opack::Entity task)
 	return root;
 }
 
-bool adl::is_satisfied(opack::Entity task)
+bool adl::is_satisfied(opack::EntityView task)
 {
-	bool result{ true };
-	if (has_children(task))
+	if (bool result {true} ; has_children(task))
 	{
 		ecs_assert(task.has<Constructor>(), ECS_INVALID_PARAMETER, "Task doesn't have a logical constructor.");
 		switch (task.get<Constructor>()->logical)
@@ -180,28 +182,25 @@ bool adl::is_satisfied(opack::Entity task)
 		case LogicalConstructor::AND:
 			// False if one child is not satisfied
 			task.children([&result](opack::Entity e) {result &= is_satisfied(e); });
-			break;
+		case LogicalConstructor::XOR:
+			[[fallthrough]];
 		case LogicalConstructor::OR:
 			result = false;  // True if one child is satisfied
 			task.children([&result](opack::Entity e) {result |= is_satisfied(e); });
-			break;
+			return result;
 		}
 	}
-	else
-	{
-		result = check_condition<Satisfaction>(task);
-	}
-	return result;
+	return check_condition<Satisfaction>(task);
 }
 
-bool adl::is_potential(opack::Entity task)
+bool adl::is_potential(opack::EntityView task)
 {
 	if (is_satisfied(task) || in_progress(task))
 		return false;
 	return check_condition<Contextual>(task);
 }
 
-std::map<std::size_t, opack::Entity> adl::children(opack::Entity task)
+std::map<std::size_t, opack::Entity> adl::children(opack::EntityView task)
 {
 	std::map<std::size_t, opack::Entity> subtasks{};
 	task.children
@@ -214,7 +213,7 @@ std::map<std::size_t, opack::Entity> adl::children(opack::Entity task)
 	return subtasks;
 }
 
-bool adl::in_progress(opack::Entity task)
+bool adl::in_progress(opack::EntityView task)
 {
 	if (has_children(task))
 	{
@@ -222,10 +221,10 @@ bool adl::in_progress(opack::Entity task)
 		task.children([&result](opack::Entity e) {result |= in_progress(e); }); // False if one child is not satisfied
 		return result;
 	}
-	return has_started(task) && !is_finished(task);
+	return opack::is_in_progress(task);
 }
 
-opack::Entity adl::initiator(opack::Entity action, std::size_t n)
+opack::Entity adl::initiator(opack::EntityView action, std::size_t n)
 {
 	return action.target<opack::By>(static_cast<int>(n));
 }

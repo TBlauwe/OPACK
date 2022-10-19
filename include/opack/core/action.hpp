@@ -170,6 +170,21 @@ namespace opack
 	bool has_done(EntityView entity, EntityView action_prefab);
 
 	/**
+	 * Return true if @c action has started.
+	 */
+	bool has_started(EntityView action);
+
+	/**
+	 * Return true if @c action is in progress.
+	 */
+	bool is_in_progress(EntityView action);
+
+	/**
+	 * Return true if @c action is finished.
+	 */
+	bool is_finished(EntityView action);
+
+	/**
 	 * Return true if @c entity has done @c T. False otherwise, even more if
 	 * @c actuator do not track actions.
 	 */
@@ -487,4 +502,20 @@ namespace opack
 			return action.get<End, Timestamp>()->value - action.get<Begin, Timestamp>()->value;
 		return action.world().time() - action.get<Begin, Timestamp>()->value;
 	}
+
+	inline bool has_started(EntityView action)
+	{
+		return action.has<Begin, Timestamp>();
+	}
+
+	inline bool is_in_progress(EntityView action)
+	{
+		return action.has(ActionStatus::running);
+	}
+
+	inline bool is_finished(EntityView action)
+	{
+		return action.has<End, Timestamp>();
+	}
+
 }

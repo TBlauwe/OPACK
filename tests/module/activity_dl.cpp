@@ -75,9 +75,9 @@ TEST_CASE("API Activity-DL")
 
 	SUBCASE("Contextual Condition")
 	{
-		adl::condition<adl::Contextual>(root, [](opack::Entity task) { return adl::ctx_entity<opack::By>(task).has<ReadyA>(); });
-		adl::condition<adl::Contextual>(action, [](opack::Entity task) { return adl::ctx_entity<opack::By>(task).has<ReadyB>(); });
-		adl::condition<adl::Satisfaction>(action, [](opack::Entity task) { return task.has<Satisfied>(); });
+		adl::condition<adl::Contextual>(root, [](opack::EntityView task) { return adl::ctx_entity<opack::By>(task).has<ReadyA>(); });
+		adl::condition<adl::Contextual>(action, [](opack::EntityView task) { return adl::ctx_entity<opack::By>(task).has<ReadyB>(); });
+		adl::condition<adl::Satisfaction>(action, [](opack::EntityView task) { return task.has<Satisfied>(); });
 		auto instance = opack::spawn<Activity_A>(world);
 		adl::ctx_entity<opack::By>(instance, agent);
 
@@ -194,7 +194,7 @@ TEST_CASE("API Activity-DL - Operators")
 	auto action1 = adl::action<Action1>(root);
 	auto action2 = adl::action<Action2>(root);
 	auto action3 = adl::action<Action3>(root);
-	auto lambda = [](opack::Entity task) {return task.has<Satisfied>(); };
+	auto lambda = [](opack::EntityView task) {return task.has<Satisfied>(); };
 	adl::condition<adl::Satisfaction>(action1, lambda);
 	adl::condition<adl::Satisfaction>(action2, lambda);
 	adl::condition<adl::Satisfaction>(action3, lambda);

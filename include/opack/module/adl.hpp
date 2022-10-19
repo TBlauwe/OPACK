@@ -42,7 +42,7 @@ struct adl
 		std::size_t value{ 0 };
 	};
 
-	enum class LogicalConstructor { AND, OR };
+	enum class LogicalConstructor { AND, OR, XOR };
 	enum class TemporalConstructor { IND, SEQ_ORD, ORD, SEQ, PAR };
 
 	struct Constructor
@@ -54,7 +54,7 @@ struct adl
 	/** An optional task does not fail satisfaction of parent task. */
 	struct Optional {};
 
-	using cond_func_t = std::function<bool(opack::Entity)>;
+	using cond_func_t = std::function<bool(opack::EntityView)>;
 	struct Condition
 	{
 		cond_func_t func;
@@ -81,7 +81,7 @@ struct adl
 	);
 
 	/** True if @c task has any children, i.e sub-tasks or actions, false otherwise.*/
-	static bool has_children(opack::Entity task);
+	static bool has_children(opack::EntityView task);
 
 	/**
 	 *@brief True if @c task is finished.
@@ -90,48 +90,48 @@ struct adl
 	 *	- it has no child, i.e an action, and it has been done.
 	 *	- it has child and there are finished.
 	 */
-	static bool is_finished(opack::Entity task);
+	static bool is_finished(opack::EntityView task);
 
 	/** True if one child or itself has started. */
-	static bool has_started(opack::Entity task);
+	static bool has_started(opack::EntityView task);
 
 	/** True if one child or itself is in progress (started but not finished). */
-	static bool in_progress(opack::Entity task);
+	static bool in_progress(opack::EntityView task);
 
 	/** Returns order of @c task in regards to its parent. */
-	static std::size_t order(opack::Entity task);
+	static std::size_t order(opack::EntityView task);
 
 	/** Returns number of direct children of @c task. */
-	static std::size_t children_count(opack::Entity task);
+	static std::size_t children_count(opack::EntityView task);
 
 	/** Returns number of direct and indirect children of @c task. */
-	static std::size_t size(opack::Entity task);
+	static std::size_t size(opack::EntityView task);
 
 	/** Returns parent task of @c task, null entity otherwise. */
-	static opack::Entity parent_of(opack::Entity task);
+	static opack::Entity parent_of(opack::EntityView task);
 
 	/** Returns root task of @c task, null entity otherwise. */
-	static opack::Entity get_root(opack::Entity task);
+	static opack::Entity get_root(opack::EntityView task);
 
 	/** True if @c task has no parent task. */
-	static bool is_root(opack::Entity task);
+	static bool is_root(opack::EntityView task);
 
 	/** Returns true if @c task is satisfied. True by default or
 	 *depending on the satisfaction condition
 	 */
-	static bool is_satisfied(opack::Entity task);
+	static bool is_satisfied(opack::EntityView task);
 
 	/** Returns true if @c task is a suitable task for action. */
-	static bool is_potential(opack::Entity task);
+	static bool is_potential(opack::EntityView task);
 
 	/** Returns the @c n -th agent doing this @c task. */
-	static opack::Entity initiator(opack::Entity task, std::size_t n = 0);
+	static opack::Entity initiator(opack::EntityView task, std::size_t n = 0);
 
 	/** Retrieve pointer to value @c T, stored in context
 	 *(either from current task or parent tasks).
 	 */
 	template<typename T>
-	static const T* ctx_value(opack::Entity task)
+	static const T* ctx_value(opack::EntityView task)
 	{
 		const T* result = task.get<T>();
 		if(!result)
@@ -154,7 +154,7 @@ struct adl
 
 	/** Retrieve entity from context using relation @c (R, *). */
 	template<typename R>
-	static opack::Entity ctx_entity(opack::Entity task)
+	static opack::Entity ctx_entity(opack::EntityView task)
 	{
 		auto result = task.target<R>();
 		if(!result)
@@ -177,14 +177,14 @@ struct adl
 
 	/** Set condition @c T of @c task. */
 	template<std::derived_from<Condition> T>
-	static void condition(opack::Entity& task, cond_func_t func)
+	static void condition(opack::Entity task, cond_func_t func)
 	{
 		task.set<T>({ func });
 	}
 
 	/** Check if condition @c T of @c task is true or false. */
 	template<std::derived_from<Condition> T>
-	static bool check_condition(opack::Entity& task)
+	static bool check_condition(opack::EntityView task)
 	{
 		return !task.has<T>() || (task.has<T>() && task.get<T>()->func(task));
 	}
@@ -229,11 +229,11 @@ struct adl
 	}
 
 	/** Returns an ordered map of @c task children. */
-	static std::map<std::size_t, opack::Entity> children(opack::Entity task);
+	static std::map<std::size_t, opack::Entity> children(opack::EntityView task);
 
 	/** Add potential actions to output iterator @c out and returns true if task is satisfied.*/
 	template<typename OutputIterator>
-	static bool potential_actions(opack::Entity task, OutputIterator out, std::function<bool(opack::EntityView)> should_add = opack::always)
+	static bool potential_actions(opack::EntityView task, OutputIterator out, std::function<bool(opack::EntityView)> should_add = opack::always)
 	{
 		if (is_finished(task))
 		{
@@ -297,6 +297,17 @@ struct adl
 			return succeeded;
 		}
 		return false;
+	}
+
+	/**
+	 * Iterate an activity using dfs.
+	 * Function @c func signature is @c void<opack::Entity>.
+	 */
+	template<typename Func>
+	static void traverse_dfs(opack::EntityView task, Func&& func)
+	{
+		func(task);
+		task.children([&func](opack::Entity e) {traverse_dfs(e, std::forward<Func>(func)); });
 	}
 
 	/**
