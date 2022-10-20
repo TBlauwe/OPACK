@@ -9,6 +9,7 @@
 
 #include <map>
 #include <opack/core.hpp>
+#define ADL_TRACE
 
 /** Shorthand for creating an activity type.*/
 #define ADL_ACTIVITY(name) OPACK_SUB_PREFAB(name, adl::Activity)
@@ -98,8 +99,14 @@ struct adl
 	/** True if one child or itself is in progress (started but not finished). */
 	static bool in_progress(opack::EntityView task);
 
+	/** Set logical constructor of task. */
+	static void logical_constructor(opack::Entity task, LogicalConstructor constructor);
+
 	/** Returns logical constructor of task. */
 	static LogicalConstructor logical_constructor(opack::EntityView task);
+
+	/** Set temporal constructor of task. */
+	static void temporal_constructor(opack::Entity task, TemporalConstructor constructor);
 
 	/** Returns temporal constructor of task. */
 	static TemporalConstructor temporal_constructor(opack::EntityView task);
@@ -241,7 +248,15 @@ struct adl
 	template<typename OutputIterator>
 	static void compute_potential_actions(opack::Entity task, OutputIterator out, std::function<bool(opack::EntityView)> should_add = opack::always)
 	{
-		opack_trace("{0:-^{1}} Potential actions {2}", "", 2*adl::get_depth(task), task.path().c_str());
+#ifdef ADL_TRACE
+		opack_trace("{0:-^{1}} Evaluating task {2}", "", 2*adl::get_depth(task), task.path().c_str());
+		opack_trace("{0:-^{1}}-> is leaf ? {2}", "", 2*adl::get_depth(task), is_leaf(task));
+		opack_trace("{0:-^{1}}-> in progress ? {2}", "", 2*adl::get_depth(task), in_progress(task));
+		opack_trace("{0:-^{1}}-> is finished ? {2}", "", 2*adl::get_depth(task), is_finished(task));
+		opack_trace("{0:-^{1}}-> is satisfied ? {2}", "", 2*adl::get_depth(task), is_satisfied(task));
+		opack_trace("{0:-^{1}}-> is contextual ? {2}", "", 2*adl::get_depth(task), check_condition<Contextual>(task));
+#endif
+
 		if (is_leaf(task))
 		{
 			opack_assert(opack::is_a<opack::Action>(task), "Leaf task {} is not an action. Does it inherit from opack::Action or adl::Action ?", task.path().c_str());

@@ -46,6 +46,7 @@ adl::adl(opack::World& world)
 	world.observer("Observer_IfMissing_AddSatisfaction")
 		.event(flecs::OnAdd)
 		.term<Constructor>().parent()
+		.term<Constructor>().self().not_()
 		.term<Satisfaction>().not_()
 		.each(
 		[](opack::Entity task)
@@ -66,8 +67,7 @@ adl::adl(opack::World& world)
 		}
 	).child_of<opack::world::dynamics>();
 
-	auto task = opack::prefab<Task>(world);
-	condition<Satisfaction>(task, is_finished);
+	opack::prefab<Task>(world);
 	opack::prefab<Activity>(world).is_a<Task>();
 	auto action = opack::init<Action>(world).add<opack::DoNotClean>();
 	condition<Satisfaction>(action, is_finished);
@@ -92,23 +92,26 @@ bool adl::is_finished(opack::EntityView task)
 {
 	if (!is_leaf(task))
 	{
-		bool result {false} ; 
+		bool result {true} ; 
 		opack_assert(task.has<Constructor>(), "Task {} doesn't have a logical constructor component.", task.path().c_str());
-		// False if children are not finished ...
 		task.children([&result](opack::Entity e) {result &= is_finished(e); });
+		if(result)
+			return result; //Early return if all children are finished.
+
 		switch (task.get<Constructor>()->logical)
 		{
 		case LogicalConstructor::AND:
-			// ... but true if one is and is not satisfied.
+			// Still true if one is finished but not satisfied.
 			task.children([&result](opack::Entity e) {result |= is_finished(e) && !is_satisfied(e); });
 			break;
 		case LogicalConstructor::XOR:
-			// ... true if one child is finished and satisfied.
+			// Still true if one child is finished and satisfied.
 			task.children([&result](opack::Entity e) {result |= is_finished(e) && is_satisfied(e); });
 			break;
 		case LogicalConstructor::OR:
 			break;
 		}
+		return result;
 	}
 	return opack::is_finished(task);
 }
@@ -174,7 +177,6 @@ opack::Entity adl::get_root(opack::EntityView task)
 
 bool adl::is_satisfied(opack::EntityView task)
 {
-	opack_trace("{0:-^{1}} is satisfied {2} ?", "", 2*adl::get_depth(task), task.path().c_str())
 	bool result {true};
 	if (!is_leaf(task))
 	{
@@ -182,14 +184,12 @@ bool adl::is_satisfied(opack::EntityView task)
 		switch (task.get<Constructor>()->logical)
 		{
 		case LogicalConstructor::AND:
-			opack_trace("{0:-^{1}} {2}", "", 2*adl::get_depth(task), "AND")
 			// False if one child is not satisfied
 			task.children([&result](opack::Entity e) {result &= is_satisfied(e); });
 			break;
 		case LogicalConstructor::XOR: 
 			[[fallthrough]];
 		case LogicalConstructor::OR:
-			opack_trace("{0:-^{1}} {2}", "", 2*adl::get_depth(task), "XOR or OR")
 			result = false;  // True if one child is satisfied
 			task.children([&result](opack::Entity e) {result |= is_satisfied(e); });
 			break;
@@ -216,10 +216,22 @@ bool adl::in_progress(opack::EntityView task)
 	if (!is_leaf(task))
 	{
 		bool result{ false };
-		task.children([&result](opack::Entity e) {result |= in_progress(e); }); // False if one child is not satisfied
+		task.children([&result](opack::Entity e) {result |= in_progress(e); }); // True if one child is in progress. 
 		return result;
 	}
 	return opack::is_in_progress(task);
+}
+
+void adl::temporal_constructor(opack::Entity task, TemporalConstructor constructor)
+{
+	opack_assert(task.is_valid(), "Task is invalid");
+	task.get_mut<Constructor>()->temporal = constructor;
+}
+
+void adl::logical_constructor(opack::Entity task, LogicalConstructor constructor)
+{
+	opack_assert(task.is_valid(), "Task is invalid");
+	task.get_mut<Constructor>()->logical = constructor;
 }
 
 adl::LogicalConstructor adl::logical_constructor(opack::EntityView task)

@@ -45,7 +45,7 @@ TEST_CASE("API Activity-DL")
 	MESSAGE("Validity");
 	CHECK(adl::logical_constructor(root) == adl::LogicalConstructor::AND);
 	CHECK(adl::temporal_constructor(root) == adl::TemporalConstructor::SEQ_ORD);
-	CHECK(root.has<adl::Satisfaction>());
+	CHECK(!root.has<adl::Satisfaction>());
 	CHECK(action.has<adl::Satisfaction>());
 	CHECK(adl::has_children(root));
 	CHECK(!adl::is_leaf(root));
@@ -183,12 +183,12 @@ TEST_CASE("API Activity-DL")
 	}
 }
 
-void begin(flecs::entity e) { e.add<opack::Cycle::Begin, opack::Timestamp>();}
-void end(flecs::entity e) { e.add<opack::Cycle::End, opack::Timestamp>();}
+void begin(flecs::entity e) { e.add<opack::Begin, opack::Timestamp>();}
+void end(flecs::entity e) { e.add<opack::End, opack::Timestamp>();}
 void satisfy(flecs::entity e) { e.add<Satisfied>();}
 
 
-struct step
+struct test
 {
 	std::string title {};	
 	std::vector<flecs::entity>	expected_actions {};	
@@ -248,11 +248,12 @@ TEST_CASE("Activity-DL operators")
 	auto a2 = children.at(2);
 	auto a3 = children.at(3);
 
-	MESSAGE("IND OR");
+	SUBCASE("IND OR")
 	{
-		instance.set<adl::Constructor>({ adl::LogicalConstructor::OR, adl::TemporalConstructor::IND });
+		adl::temporal_constructor(instance, adl::TemporalConstructor::IND);
+		adl::logical_constructor(instance, adl::LogicalConstructor::OR);
 
-		step{
+		test{
 			.title = "START",
 			.expected_actions {a1, a2, a3},
 			.in_progress = false,
@@ -261,7 +262,7 @@ TEST_CASE("Activity-DL operators")
 		}.check(instance);
 
 		begin(a1);
-		step{
+		test{
 			.title = "Begin a1",
 			.expected_actions {a2, a3},
 			.in_progress = true,
@@ -270,7 +271,7 @@ TEST_CASE("Activity-DL operators")
 		}.check(instance);
 
 		begin(a2);
-		step{
+		test{
 			.title = "Begin a2",
 			.expected_actions {a3},
 			.in_progress = true,
@@ -279,7 +280,7 @@ TEST_CASE("Activity-DL operators")
 		}.check(instance);
 
 		end(a1);
-		step{
+		test{
 			.title = "End a1",
 			.expected_actions {a3},
 			.in_progress = true,
@@ -288,7 +289,7 @@ TEST_CASE("Activity-DL operators")
 		}.check(instance);
 
 		end(a2);
-		step{
+		test{
 			.title = "End a2",
 			.expected_actions {a3},
 			.in_progress = false,
@@ -297,7 +298,7 @@ TEST_CASE("Activity-DL operators")
 		}.check(instance);
 
 		satisfy(a2);
-		step{
+		test{
 			.title = "Satisfy a2",
 			.expected_actions {a3},
 			.in_progress = false,
@@ -306,7 +307,7 @@ TEST_CASE("Activity-DL operators")
 		}.check(instance);
 
 		begin(a3);
-		step{
+		test{
 			.title = "Begin a3",
 			.expected_actions {},
 			.in_progress = true,
@@ -315,30 +316,505 @@ TEST_CASE("Activity-DL operators")
 		}.check(instance);
 
 		end(a3);
-		step{
+		test{
 			.title = "End a3",
 			.expected_actions {},
 			.in_progress = false,
 			.is_satisfied = true,
-			.is_finished = false
+			.is_finished = true, 
 		}.check(instance);
 
 		satisfy(a1);
-		step{
+		test{
 			.title = "Satisfy a1",
 			.expected_actions {},
 			.in_progress = false,
 			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+	}
+
+	SUBCASE("IND AND")
+	{
+		adl::temporal_constructor(instance, adl::TemporalConstructor::IND);
+		adl::logical_constructor(instance, adl::LogicalConstructor::AND);
+
+		test{
+			.title = "START",
+			.expected_actions {a1, a2, a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a1);
+		test{
+			.title = "Begin a1",
+			.expected_actions {a2, a3},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a2);
+		test{
+			.title = "Begin a2",
+			.expected_actions {a3},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a1);
+		test{
+			.title = "End a1",
+			.expected_actions {a3},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = true,
+		}.check(instance);
+
+		end(a2);
+		test{
+			.title = "End a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true,
+		}.check(instance);
+
+		satisfy(a2);
+		test{
+			.title = "Satisfy a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true
+		}.check(instance);
+
+		begin(a3);
+		test{
+			.title = "Begin a3",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = true
+		}.check(instance);
+
+		end(a3);
+		test{
+			.title = "End a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true
+		}.check(instance);
+
+		satisfy(a1);
+		test{
+			.title = "Satisfy a1",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+	}
+
+	SUBCASE("IND XOR")
+	{
+		adl::temporal_constructor(instance, adl::TemporalConstructor::IND);
+		adl::logical_constructor(instance, adl::LogicalConstructor::XOR);
+
+		test{
+			.title = "START",
+			.expected_actions {a1, a2, a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a1);
+		test{
+			.title = "Begin a1",
+			.expected_actions {a2, a3},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a2);
+		test{
+			.title = "Begin a2",
+			.expected_actions {a3},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a1);
+		test{
+			.title = "End a1",
+			.expected_actions {a3},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a2);
+		test{
+			.title = "End a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
 			.is_finished = false
 		}.check(instance);
 
 		satisfy(a2);
-		step{
+		test{
 			.title = "Satisfy a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		begin(a3);
+		test{
+			.title = "Begin a3",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		end(a3);
+		test{
+			.title = "End a3",
 			.expected_actions {},
 			.in_progress = false,
 			.is_satisfied = true,
+			.is_finished = true, 
+		}.check(instance);
+
+		satisfy(a1);
+		test{
+			.title = "Satisfy a1",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+	}
+
+	SUBCASE("SEQ OR")
+	{
+		adl::temporal_constructor(instance, adl::TemporalConstructor::SEQ);
+		adl::logical_constructor(instance, adl::LogicalConstructor::OR);
+
+		test{
+			.title = "START",
+			.expected_actions {a1, a2, a3},
+			.in_progress = false,
+			.is_satisfied = false,
 			.is_finished = false
+		}.check(instance);
+
+		begin(a1);
+		test{
+			.title = "Begin a1",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a1);
+		test{
+			.title = "End a1",
+			.expected_actions {a2, a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a2);
+		test{
+			.title = "Begin a2",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a2);
+		test{
+			.title = "End a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		satisfy(a2);
+		test{
+			.title = "Satisfy a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = false 
+		}.check(instance);
+
+		begin(a3);
+		test{
+			.title = "Begin a3",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = true,
+			.is_finished = false 
+		}.check(instance);
+
+		end(a3);
+		test{
+			.title = "End a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true, 
+		}.check(instance);
+
+		satisfy(a1);
+		test{
+			.title = "Satisfy a1",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+	}
+
+	SUBCASE("SEQ AND")
+	{
+		adl::temporal_constructor(instance, adl::TemporalConstructor::SEQ);
+		adl::logical_constructor(instance, adl::LogicalConstructor::AND);
+
+		test{
+			.title = "START",
+			.expected_actions {a1, a2, a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a1);
+		test{
+			.title = "Begin a1",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a1);
+		test{
+			.title = "End a1",
+			.expected_actions {a2, a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true
+		}.check(instance);
+
+		begin(a2);
+		test{
+			.title = "Begin a2",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		end(a2);
+		test{
+			.title = "End a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a2);
+		test{
+			.title = "Satisfy a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		begin(a3);
+		test{
+			.title = "Begin a3",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		end(a3);
+		test{
+			.title = "End a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true, 
+		}.check(instance);
+
+		satisfy(a1);
+		test{
+			.title = "Satisfy a1",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+	}
+
+	SUBCASE("SEQ XOR")
+	{
+		adl::temporal_constructor(instance, adl::TemporalConstructor::SEQ);
+		adl::logical_constructor(instance, adl::LogicalConstructor::XOR);
+
+		test{
+			.title = "START",
+			.expected_actions {a1, a2, a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a1);
+		test{
+			.title = "Begin a1",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a1);
+		test{
+			.title = "End a1",
+			.expected_actions {a2, a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		begin(a2);
+		test{
+			.title = "Begin a2",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		end(a2);
+		test{
+			.title = "End a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		satisfy(a2);
+		test{
+			.title = "Satisfy a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		begin(a3);
+		test{
+			.title = "Begin a3",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		end(a3);
+		test{
+			.title = "End a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a1);
+		test{
+			.title = "Satisfy a1",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
 		}.check(instance);
 	}
 }
