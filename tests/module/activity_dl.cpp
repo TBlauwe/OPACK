@@ -817,743 +817,579 @@ TEST_CASE("Activity-DL operators")
 			.is_finished = true
 		}.check(instance);
 	}
+
+	SUBCASE("SEQ-ORD OR")
+	{
+		adl::temporal_constructor(instance, adl::TemporalConstructor::SEQ_ORD);
+		adl::logical_constructor(instance, adl::LogicalConstructor::OR);
+
+		test{
+			.title = "START",
+			.expected_actions {a1},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a1);
+		test{
+			.title = "Begin a1",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a1);
+		test{
+			.title = "End a1",
+			.expected_actions {a2},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		begin(a2);
+		test{
+			.title = "Begin a2",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		end(a2);
+		test{
+			.title = "End a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		satisfy(a2);
+		test{
+			.title = "Satisfy a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = false 
+		}.check(instance);
+
+		begin(a3);
+		test{
+			.title = "Begin a3",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = true,
+			.is_finished = false 
+		}.check(instance);
+
+		end(a3);
+		test{
+			.title = "End a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a1);
+		test{
+			.title = "Satisfy a1",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+	}
+
+	SUBCASE("SEQ-ORD XOR")
+	{
+		adl::temporal_constructor(instance, adl::TemporalConstructor::SEQ_ORD);
+		adl::logical_constructor(instance, adl::LogicalConstructor::XOR);
+
+		test{
+			.title = "START",
+			.expected_actions {a1},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a1);
+		test{
+			.title = "Begin a1",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a1);
+		test{
+			.title = "End a1",
+			.expected_actions {a2},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		begin(a2);
+		test{
+			.title = "Begin a2",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		end(a2);
+		test{
+			.title = "End a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		satisfy(a2);
+		test{
+			.title = "Satisfy a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		begin(a3);
+		test{
+			.title = "Begin a3",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		end(a3);
+		test{
+			.title = "End a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a1);
+		test{
+			.title = "Satisfy a1",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+	}
+
+	SUBCASE("SEQ-ORD AND")
+	{
+		adl::temporal_constructor(instance, adl::TemporalConstructor::SEQ_ORD);
+		adl::logical_constructor(instance, adl::LogicalConstructor::AND);
+
+		test{
+			.title = "START",
+			.expected_actions {a1},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a1);
+		test{
+			.title = "Begin a1",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a1);
+		test{
+			.title = "End a1",
+			.expected_actions {a2},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		begin(a2);
+		test{
+			.title = "Begin a2",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		end(a2);
+		test{
+			.title = "End a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a2);
+		test{
+			.title = "Satisfy a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		begin(a3);
+		test{
+			.title = "Begin a3",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		end(a3);
+		test{
+			.title = "End a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a1);
+		test{
+			.title = "Satisfy a1",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+	}
+
+	SUBCASE("ORD OR")
+	{
+		adl::temporal_constructor(instance, adl::TemporalConstructor::ORD);
+		adl::logical_constructor(instance, adl::LogicalConstructor::OR);
+
+		test{
+			.title = "START",
+			.expected_actions {a1},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a1);
+		test{
+			.title = "Begin a1",
+			.expected_actions {a2},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a1);
+		test{
+			.title = "End a1",
+			.expected_actions {a2},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		begin(a2);
+		test{
+			.title = "Begin a2",
+			.expected_actions {a3},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		end(a2);
+		test{
+			.title = "End a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		satisfy(a2);
+		test{
+			.title = "Satisfy a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = false 
+		}.check(instance);
+
+		begin(a3);
+		test{
+			.title = "Begin a3",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = true,
+			.is_finished = false 
+		}.check(instance);
+
+		end(a3);
+		test{
+			.title = "End a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a1);
+		test{
+			.title = "Satisfy a1",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+	}
+
+	SUBCASE("ORD XOR")
+	{
+		adl::temporal_constructor(instance, adl::TemporalConstructor::ORD);
+		adl::logical_constructor(instance, adl::LogicalConstructor::XOR);
+
+		test{
+			.title = "START",
+			.expected_actions {a1},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a1);
+		test{
+			.title = "Begin a1",
+			.expected_actions {a2},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a1);
+		test{
+			.title = "End a1",
+			.expected_actions {a2},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		begin(a2);
+		test{
+			.title = "Begin a2",
+			.expected_actions {a3},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		end(a2);
+		test{
+			.title = "End a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false 
+		}.check(instance);
+
+		satisfy(a2);
+		test{
+			.title = "Satisfy a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		begin(a3);
+		test{
+			.title = "Begin a3",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		end(a3);
+		test{
+			.title = "End a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a1);
+		test{
+			.title = "Satisfy a1",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+	}
+
+	SUBCASE("ORD AND")
+	{
+		adl::temporal_constructor(instance, adl::TemporalConstructor::ORD);
+		adl::logical_constructor(instance, adl::LogicalConstructor::AND);
+
+		test{
+			.title = "START",
+			.expected_actions {a1},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		begin(a1);
+		test{
+			.title = "Begin a1",
+			.expected_actions {a2},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = false
+		}.check(instance);
+
+		end(a1);
+		test{
+			.title = "End a1",
+			.expected_actions {a2},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		begin(a2);
+		test{
+			.title = "Begin a2",
+			.expected_actions {a3},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		end(a2);
+		test{
+			.title = "End a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a2);
+		test{
+			.title = "Satisfy a2",
+			.expected_actions {a3},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		begin(a3);
+		test{
+			.title = "Begin a3",
+			.expected_actions {},
+			.in_progress = true,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		end(a3);
+		test{
+			.title = "End a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a1);
+		test{
+			.title = "Satisfy a1",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = false,
+			.is_finished = true 
+		}.check(instance);
+
+		satisfy(a3);
+		test{
+			.title = "Satisfy a3",
+			.expected_actions {},
+			.in_progress = false,
+			.is_satisfied = true,
+			.is_finished = true
+		}.check(instance);
+	}
 }
 
-//TEST_CASE("API Activity-DL - Operators")
-//{
-//	OPACK_AGENT(MyAgent);
-//	ADL_ACTIVITY(MyActivity);
-//	struct Satisfied {};
-//	struct Data { float value{ 1.0 }; };
-//
-//	OPACK_ACTION(Action1);
-//	OPACK_ACTION(Action2);
-//	OPACK_ACTION(Action3);
-//
-//	auto world = opack::create_world();
-//	world.import<adl>();
-//
-//	opack::init<Action1>(world);
-//	opack::init<Action2>(world);
-//	opack::init<Action3>(world);
-//	opack::init<MyAgent>(world);
-//
-//	auto agent = opack::spawn<MyAgent>(world);
-//
-//
-//	auto root = adl::activity<MyActivity>(world);
-//	auto action1 = adl::action<Action1>(root);
-//	auto action2 = adl::action<Action2>(root);
-//	auto action3 = adl::action<Action3>(root);
-//	auto lambda = [](opack::EntityView task) {return task.has<Satisfied>(); };
-//	adl::condition<adl::Satisfaction>(action1, lambda);
-//	adl::condition<adl::Satisfaction>(action2, lambda);
-//	adl::condition<adl::Satisfaction>(action3, lambda);
-//
-//	SUBCASE("IND AND")
-//	{
-//		auto instance = opack::spawn<MyActivity>(world);
-//		instance.set<adl::Constructor>({ adl::LogicalConstructor::AND, adl::TemporalConstructor::IND });
-//		auto children = adl::children(instance);
-//		auto a1 = children.at(1);
-//		auto a2 = children.at(2);
-//		auto a3 = children.at(3);
-//
-//		std::vector<flecs::entity> actions{};
-//		SUBCASE("All tasks")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 3);
-//			CHECK(!success);
-//			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//		}
-//
-//		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("A2 & A3")
-//		{
-//			adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//		}
-//
-//		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("T3")
-//		{
-//			adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//		}
-//
-//		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("None")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(adl::in_progress(instance));
-//			CHECK(!success);
-//		}
-//
-//		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-//		a2.set<opack::End, opack::Timestamp>({ 0.0f });
-//		a3.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Finished but failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!adl::in_progress(instance));
-//			CHECK(!success);
-//		}
-//
-//		a1.add<Satisfied>();
-//		SUBCASE("Finished but failed 2")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!adl::in_progress(instance));
-//			CHECK(!success);
-//		}
-//
-//		a2.add<Satisfied>();
-//		SUBCASE("Finished but failed 3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!adl::in_progress(instance));
-//			CHECK(!success);
-//		}
-//
-//		a3.add<Satisfied>();
-//		SUBCASE("Finished and succeeded")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!adl::in_progress(instance));
-//			CHECK(success);
-//		}
-//	}
-//
-//	SUBCASE("IND OR")
-//	{
-//		auto instance = opack::spawn<MyActivity>(world);
-//		instance.set<adl::Constructor>({ adl::LogicalConstructor::OR, adl::TemporalConstructor::IND });
-//		auto children = adl::children(instance);
-//		auto a1 = children.at(1);
-//		auto a2 = children.at(2);
-//		auto a3 = children.at(3);
-//
-//		std::vector<flecs::entity> actions{};
-//		SUBCASE("All tasks")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//		}
-//
-//		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("A2 & A3")
-//		{
-//			adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//		}
-//
-//		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("T3")
-//		{
-//			adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//		}
-//
-//		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("None")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(adl::in_progress(instance));
-//			CHECK(!success);
-//		}
-//
-//		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-//		a2.set<opack::End, opack::Timestamp>({ 0.0f });
-//		a3.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Finished but failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!adl::in_progress(instance));
-//			CHECK(!success);
-//		}
-//
-//		a1.add<Satisfied>();
-//		SUBCASE("Finished and succeeded 1")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!adl::in_progress(instance));
-//			CHECK(success);
-//		}
-//
-//		a2.add<Satisfied>();
-//		SUBCASE("Finished and succeeded 2")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!adl::in_progress(instance));
-//			CHECK(success);
-//		}
-//
-//		a3.add<Satisfied>();
-//		SUBCASE("Finished and succeeded 3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!adl::in_progress(instance));
-//			CHECK(success);
-//		}
-//	}
-//
-//	SUBCASE("SEQ AND")
-//	{
-//		auto instance = opack::spawn<MyActivity>(world);
-//		instance.set<adl::Constructor>({ adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ });
-//		auto children = adl::children(instance);
-//		auto a1 = children.at(1);
-//		auto a2 = children.at(2);
-//		auto a3 = children.at(3);
-//
-//		std::vector<flecs::entity> actions{};
-//
-//		SUBCASE("A1 & A2 & A3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//		}
-//
-//		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("None")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a1.add<Satisfied>();
-//		SUBCASE("A2 & A3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("None")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a2.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a2.add<Satisfied>();
-//		SUBCASE("A3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		a3.set<opack::End, opack::Timestamp>({ 0.0f });
-//		a3.add<Satisfied>();
-//
-//		SUBCASE("Success")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//	}
-//
-//	SUBCASE("SEQ OR")
-//	{
-//		auto instance = opack::spawn<MyActivity>(world);
-//		instance.set<adl::Constructor>({ adl::LogicalConstructor::OR, adl::TemporalConstructor::SEQ });
-//		auto children = adl::children(instance);
-//		auto a1 = children.at(1);
-//		auto a2 = children.at(2);
-//		auto a3 = children.at(3);
-//
-//		std::vector<flecs::entity> actions{};
-//
-//		SUBCASE("A1 & A2 & A3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//		}
-//
-//		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("None")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 2);
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a1.add<Satisfied>();
-//		SUBCASE("Success")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a1.remove<Satisfied>();
-//		SUBCASE("A2 & A3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("None")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a2.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 1);
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		SUBCASE("A3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		a3.set<opack::End, opack::Timestamp>({ 0.0f });
-//		a3.add<Satisfied>();
-//
-//		SUBCASE("Success")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//	}
-//
-//	SUBCASE("SEQ_ORD OR")
-//	{
-//		auto instance = opack::spawn<MyActivity>(world);
-//		instance.set<adl::Constructor>({ adl::LogicalConstructor::OR, adl::TemporalConstructor::SEQ_ORD });
-//		auto children = adl::children(instance);
-//		auto a1 = children.at(1);
-//		auto a2 = children.at(2);
-//		auto a3 = children.at(3);
-//
-//		std::vector<flecs::entity> actions{};
-//
-//		SUBCASE("A1")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) == actions.end());
-//		}
-//
-//		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("None")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 1);
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a1.add<Satisfied>();
-//		SUBCASE("Success")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a1.remove<Satisfied>();
-//		SUBCASE("A2")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) == actions.end());
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("None")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a2.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed - left only A3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 1);
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		a3.set<opack::End, opack::Timestamp>({ 0.0f });
-//		a3.add<Satisfied>();
-//
-//		SUBCASE("Success")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//	}
-//
-//	SUBCASE("SEQ_ORD AND")
-//	{
-//		auto instance = opack::spawn<MyActivity>(world);
-//		instance.set<adl::Constructor>({ adl::LogicalConstructor::AND, adl::TemporalConstructor::SEQ_ORD });
-//		auto children = adl::children(instance);
-//		auto a1 = children.at(1);
-//		auto a2 = children.at(2);
-//		auto a3 = children.at(3);
-//
-//		std::vector<flecs::entity> actions{};
-//
-//		SUBCASE("A1")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a2) == actions.end());
-//			CHECK(std::find(actions.begin(), actions.end(), a3) == actions.end());
-//		}
-//
-//		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("None")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a1.add<Satisfied>();
-//		SUBCASE("A2")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 1);
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("None")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a2.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a2.add<Satisfied>();
-//		SUBCASE("A3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 1);
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		a3.set<opack::End, opack::Timestamp>({ 0.0f });
-//
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a3.add<Satisfied>();
-//		SUBCASE("Success")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//	}
-//
-//	SUBCASE("ORD AND")
-//	{
-//		auto instance = opack::spawn<MyActivity>(world);
-//		instance.set<adl::Constructor>({ adl::LogicalConstructor::AND, adl::TemporalConstructor::ORD });
-//		auto children = adl::children(instance);
-//		auto a1 = children.at(1);
-//		auto a2 = children.at(2);
-//		auto a3 = children.at(3);
-//
-//		std::vector<flecs::entity> actions{};
-//
-//		SUBCASE("A1")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 1);
-//			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
-//		}
-//
-//		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("A2")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 1);
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		a2.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a2.add<Satisfied>();
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a1.add<Satisfied>();
-//		SUBCASE("A3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 1);
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("None")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a3.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a3.add<Satisfied>();
-//		SUBCASE("Success")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//	}
-//
-//	SUBCASE("ORD OR")
-//	{
-//		auto instance = opack::spawn<MyActivity>(world);
-//		instance.set<adl::Constructor>({ adl::LogicalConstructor::OR, adl::TemporalConstructor::ORD });
-//		auto children = adl::children(instance);
-//		auto a1 = children.at(1);
-//		auto a2 = children.at(2);
-//		auto a3 = children.at(3);
-//
-//		std::vector<flecs::entity> actions{};
-//
-//		SUBCASE("A1")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 1);
-//			CHECK(std::find(actions.begin(), actions.end(), a1) != actions.end());
-//		}
-//
-//		a1.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("A2")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 1);
-//			CHECK(std::find(actions.begin(), actions.end(), a2) != actions.end());
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a2.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		a2.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Unfinished A3")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 1);
-//			CHECK(std::find(actions.begin(), actions.end(), a3) != actions.end());
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a3.set<opack::Begin, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Unfinished none")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(adl::in_progress(instance));
-//		}
-//
-//		a1.set<opack::End, opack::Timestamp>({ 0.0f });
-//		a2.set<opack::End, opack::Timestamp>({ 0.0f });
-//		a3.set<opack::End, opack::Timestamp>({ 0.0f });
-//		SUBCASE("Failed")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(!success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//
-//		a3.add<Satisfied>();
-//		SUBCASE("Success")
-//		{
-//			auto success = adl::compute_potential_actions(instance, std::back_inserter(actions));
-//			CHECK(actions.size() == 0);
-//			CHECK(success);
-//			CHECK(!adl::in_progress(instance));
-//		}
-//	}
-//}
-//
+//TEST_CASE("API Activity-DL//
 //#include <opack/module/flows.hpp>
 //TEST_CASE("Sample Activity-Tree")
 //{
