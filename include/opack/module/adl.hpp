@@ -9,7 +9,6 @@
 
 #include <map>
 #include <opack/core.hpp>
-#define ADL_TRACE
 
 /** Shorthand for creating an activity type.*/
 #define ADL_ACTIVITY(name) OPACK_SUB_PREFAB(name, adl::Activity)
@@ -19,6 +18,29 @@
 /**
  * Module for anything related to Activity-DL.
  * It's a domain language to represent an activity by a hierarchy of tasks.
+ *
+ * An activity has tree indicators :
+ * - Satisfied : whether or not the activity is satisfied
+ * - Finished : whether or not we should continue to reason on the activity.
+ * - In progress : whether or not a task in in progress
+ *
+ * Additionally, you can retrieve potential actions for an activity by calling :
+ * @code{.cpp}
+	std::vector<flecs::entity> vec {};
+	if(!adl::is_finished(activity))
+		adl::compute_potential_actions(activity, back_inserter(vec));
+ * @endcode
+ *
+ * We first check if the activity is finished. A finished activity is an activity that should stop to be considered.
+ * Because condition and operator evaluations tells us so.
+ *
+ * Why is this not integrated in computation ? So we can inspect (for ai) what action would have been next.
+ * You can also stop early if the activty is satisfied but not finished (meaning there are still optional actions left).
+ * @code{.cpp}
+	std::vector<flecs::entity> vec {};
+	if(!adl::is_finished(activity) || adl::is_satisfied(activity))
+		adl::compute_potential_actions(activity, back_inserter(vec));
+ * @endcode
  */
 struct adl
 {
@@ -244,7 +266,18 @@ struct adl
 	/** Returns an ordered map of @c task children. */
 	static std::map<std::size_t, opack::Entity> children(opack::EntityView task);
 
-	/** Add potential actions to output iterator @c out and returns true if task is satisfied.*/
+	/**
+	 * Add potential actions to output iterator @c out
+	 * Added actions can be filtered by specifying the @c should_add std::function<bool(opack::EntityView)>.
+	 * It will still output actions even if @c task is finished or satisfied. You can check beforehand if needed.
+	 *
+	 * Depending on what you are looking for, the following snippet can be used :
+	 * @code{.cpp}
+		std::vector<flecs::entity> vec {};
+		if(!adl::is_finished(activity) || adl::is_satisfied(activity))
+			adl::compute_potential_actions(activity, back_inserter(vec));
+	 * @endcode
+	 */
 	template<typename OutputIterator>
 	static void compute_potential_actions(opack::Entity task, OutputIterator out, std::function<bool(opack::EntityView)> should_add = opack::always)
 	{

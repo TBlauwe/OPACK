@@ -5,13 +5,13 @@ using TemporalConstructor
 
 Prefab Root : Activity
 {
-	- Constructor{AND, SEQ_ORD}
+	- Constructor{OR, ORD}
 
-	Prefab Task : Task
+	Prefab Task1 : Task
 	{
-		- Constructor{AND, SEQ_ORD}
-		DoThis : MyAction
-		AndAlsoDoThis : MyAction
+		- Constructor{XOR, SEQ_ORD}
+		TryThis : MyAction
+		OrTryThis : MyAction
 		{
 			- Duration {1}
 		}
@@ -20,25 +20,31 @@ Prefab Root : Activity
 	Prefab Task2 : Task
 	{
 		- Constructor{AND, SEQ_ORD}
-		OrThis : MyAction
+		Task2_Action1 : MyAction
+		Task2_Action2 : MyAction
+		Task2_Action3 : MyAction
 	}
 
 	Prefab Task3 : Task
 	{
-		- Constructor{AND, SEQ_ORD}
-		OrThis : MyAction
+		- Constructor{OR, SEQ_ORD}
+		Task3_Action1 : MyAction
+		Task3_Action2 : MyAction
+		Task3_Action3 : MyAction
 	}
 
 	Prefab Task4 : Task
 	{
-		- Constructor{AND, SEQ_ORD}
-		OrThis : MyAction
+		- Constructor{XOR, ORD}
+		Task4_Action1 : MyAction
+		Task4_Action2 : MyAction
+		Task4_Action3 : MyAction
 	}
 
 	Prefab Task5 : Task
 	{
 		- Constructor{AND, SEQ_ORD}
-		OrThis : MyAction
+		Task5_Action1 : MyAction
 	}
 }
 
