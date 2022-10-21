@@ -395,7 +395,7 @@ namespace opack
 		}
 		else
 		{
-			opack_warn("Tried getting last action for entity [{}] with actuator [{}] that do not track previous actions.", entity.path().c_str(), actuator.path().c_str())
+			opack_warn("Tried getting last action for entity [{}] with actuator [{}] that do not track previous actions.", entity.path().c_str(), actuator.path().c_str());
 			return flecs::entity::null();
 		}
 	}
@@ -423,7 +423,7 @@ namespace opack
 			return actuator.get<LastActionPrefabs>()->has_done(action_prefab);
 		}
 		else
-			opack_warn("Tried seeing if entity [{}] has done action [{}], but actuator [{}] is not tracking previous actions.", entity.path().c_str(), action_prefab.path().c_str(), actuator.path().c_str())
+			opack_warn("Tried seeing if entity [{}] has done action [{}], but actuator [{}] is not tracking previous actions.", entity.path().c_str(), action_prefab.path().c_str(), actuator.path().c_str());
 		return false;
 	}
 

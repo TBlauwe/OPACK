@@ -47,7 +47,8 @@
 		fmt::print(fmt::fg(fmt::color::coral), "[ WARN] : ");\
 		fmt::print(fmt::fg(fmt::color::dim_gray), message __VA_OPT__(,) __VA_ARGS__);\
 		fmt::print("\n");\
-	}
+	}\
+	static_assert(true, "")
 #else
 #define opack_warn_if(condition, message, ...) ((void)0)
 #endif
@@ -84,7 +85,8 @@
 		fmt::print(fmt::fg(fmt::color::light_steel_blue), "[TRACE] : ");\
 		fmt::print(fmt::fg(fmt::color::dim_gray), message __VA_OPT__(,) __VA_ARGS__);\
 		fmt::print("\n");\
-	}
+	}\
+	static_assert(true, "")
 #else
 #define opack_trace_if(condition, message, ...) ((void)0)
 #endif
