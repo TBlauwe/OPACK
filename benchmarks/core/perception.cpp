@@ -7,7 +7,7 @@ static void BM_create_n_percepts_with_n_agents(benchmark::State& state) {
     auto artefact = opack::spawn<opack::Artefact>(world);
     opack::init<MySense>(world);
     opack::add_sense<MySense, opack::Agent>(world);
-    spawn_n<opack::Agent>(world, state.range(0));
+    opack::spawn_n<opack::Agent>(world, state.range(0));
     auto filter = world.filter_builder<>()
         .term(flecs::IsA).second<opack::Agent>()
         .term(flecs::Prefab).not_()

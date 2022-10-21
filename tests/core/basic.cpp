@@ -72,3 +72,23 @@ TEST_CASE("World & Entity API")
     }
 }
 
+TEST_CASE("World : Bulk init")
+{
+    OPACK_PREFAB(A);        
+
+	opack::World world = opack::create_world();
+	opack::prefab<A>(world);
+
+	SUBCASE("1")
+	{
+		opack::spawn_n<A>(world, 1);
+		CHECK(opack::count_instance<A>(world) == 1);
+	}
+
+	SUBCASE("1 million")
+	{
+		opack::spawn_n<A>(world, 1 << 20);
+		CHECK(opack::count_instance<A>(world) == 1 << 20);
+	}
+}
+

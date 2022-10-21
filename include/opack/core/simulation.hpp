@@ -53,7 +53,7 @@ namespace opack {
     void time_scale(World& world, float value);
 
     /** Return number of elapsed ticks. */
-    int32_t tick(const World& world);
+    int64_t tick(const World& world);
 
     /** Returns last reported delta time (elapsed time between two cycles). Affected by time scale. */
     float delta_time(const World& world);

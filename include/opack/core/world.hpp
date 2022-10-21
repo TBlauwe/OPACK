@@ -150,6 +150,20 @@ namespace opack
     Entity spawn(EntityView prefab);
 
     /**
+    @brief Spawn @c n new entities instantiated from @c prefab.
+
+    Usage :
+
+    @code{.cpp}
+    struct A {};
+    auto prefab = opack::prefab<A>(world);
+    // customize prefab ...
+    opack::spawn_n(prefab, 10);
+    @endcode
+    */
+    void spawn_n(EntityView prefab, std::size_t n);
+
+    /**
     @brief Spawn a new entity instantiated from @c prefab, with @c name.
 
     @return A entity instantiated from @c prefab.
@@ -185,6 +199,26 @@ namespace opack
     */
     template<typename T>
     Entity spawn(World& world);
+
+    /**
+    @brief Spawn @c n new entities instantiated from prefab @c T.
+
+    @tparam T Any type that matches a prefab.
+    @param world explicit.
+    @param n number of entities to spawn.
+
+    Usage :
+
+    @code{.cpp}
+    struct A {};
+    auto prefab = opack::prefab<A>(world);
+    // customize prefab ...
+    auto e = opack::spawn<A>(world);
+    opack::is_a<A>(e); // true
+    @endcode
+    */
+    template<typename T>
+    void spawn(World& world, std::size_t n);
 
     /**
     @brief Spawn a new entity with name @c name, instantiated from prefab @c T.
@@ -330,6 +364,20 @@ namespace opack
         return e;
     }
 
+    inline void spawn_n(EntityView prefab, std::size_t n)
+    {
+        opack_assert(prefab.has(flecs::Prefab), "\"{}\" is not a prefab ! Is it initialized ? (opack::init<T>(world) if it's a type).", prefab.path().c_str());
+        const ecs_bulk_desc_t desc
+					{
+						.count = static_cast<int32_t>(n),
+						.ids =
+						{
+							ecs_pair(EcsIsA, prefab),
+						}
+					};
+		ecs_bulk_init(prefab.world(), &desc);
+    }
+
     inline Entity spawn(EntityView prefab, const char * name)
     {
         opack_assert(prefab.has(flecs::Prefab), "\"{}\" is not a prefab ! Is it initiliazed it ? (opack::init<T>(world) if it's a type).", prefab.path().c_str());
@@ -343,6 +391,15 @@ namespace opack
         auto e = world.entity().is_a<T>();
         internal::organize_entity<T>(e);
         return e;
+    }
+
+    template<typename T>
+    void spawn_n(World& world, std::size_t n)
+    {
+        opack_assert(world.entity<T>().has(flecs::Prefab), "\"{0}\" is not a prefab ! Has this been called : `opack::init<{0}>(world)` ?", type_name_cstr<T>());
+        opack_assert(n > 0, "Tried to bulk init prefab {} n times, but n is equal to zero ! ", type_name_cstr<T>());
+        auto prefab = opack::entity<T>(world);
+        opack::spawn_n(prefab, n);
     }
 
     template<typename T>

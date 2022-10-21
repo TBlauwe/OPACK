@@ -9,7 +9,7 @@ float opack::time_scale(const World& world) { return world.get_time_scale(); }
 
 void opack::time_scale(World& world, float value) { return world.set_time_scale(value); }
 
-int32_t opack::tick(const World& world)
+int64_t opack::tick(const World& world)
 {
 	return world.tick();
 }
