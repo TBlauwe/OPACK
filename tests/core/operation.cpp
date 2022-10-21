@@ -24,7 +24,7 @@ TEST_CASE("Operation API Basics")
 	auto world = opack::create_world();
 
     opack::init<MyActuator>(world);
-    opack::init<MyAction>(world).require<MyActuator>();
+    opack::init<MyAction>(world).require<MyActuator>().add<opack::DoNotClean>();
     opack::init<Action1>(world);
     opack::init<Action2>(world);
     opack::init<Action3>(world);
