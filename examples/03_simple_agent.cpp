@@ -1,5 +1,6 @@
-#include <opack/core.hpp>
-#include <opack/module/simple_agent.hpp>
+#include <opack/core.hpp>					// Core header to use the library
+#include <opack/module/simple_agent.hpp>	// Additional library header to
+											// import a simple agent module
 
 int main()
 {

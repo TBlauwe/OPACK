@@ -1,0 +1,12 @@
+Alain : opack.Agent
+{
+	Vision
+	{
+		-Beatrice
+	}
+}
+
+Beatrice : opack.Agent
+{
+	- Appearance {5.0}
+}

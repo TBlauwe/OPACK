@@ -2,8 +2,11 @@
 # ==============
 set(OPACK_EXAMPLES
 	00_empty
-	01_simple_agent
-	02_activity
+	01_simulation_controls
+	02_world
+	03_simple_agent
+	04_activity
+	05_perception
 )
 
 set(EXAMPLE_OUTPUT_DIR "${OPACK_SOURCE_DIR}/bin/examples")

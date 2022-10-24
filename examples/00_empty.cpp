@@ -1,4 +1,4 @@
-#include <opack/core.hpp>
+#include <opack/core.hpp> // Core header to use the library
 
 int main()
 {

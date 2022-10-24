@@ -300,8 +300,9 @@ namespace opack
 		    return nullptr;
 		}
 
+		//TODO Handle at compile time if T is a prefab or tag
 		template<typename T>
-		void each(std::function<void(Entity)> func)
+		void each(std::function<void(Entity, const T*)> func)
 		{
 		     auto query = observer.world().get<opack::queries::perception::Entity>();
              query->rule.iter()
@@ -311,9 +312,9 @@ namespace opack
                 {
                     auto subject = it.entity(index);
 					if (opack::is_a<T>(subject))
-						func(subject);
+						func(subject, nullptr);
 					else if (subject.has<T>())
-						func(subject);
+						func(subject, subject.get<T>());
                 }
 			 );
 		}
