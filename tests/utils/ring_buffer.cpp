@@ -93,7 +93,7 @@ TEST_CASE("Ring Buffer validity")
     }
 }
 
-TEST_CASE("Ring Buffer")
+TEST_CASE("Ring buffer")
 {
     auto rg = ring_buffer<int>(3);
     SUBCASE("0 elements")

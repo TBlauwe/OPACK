@@ -11,7 +11,6 @@
 
 #include <cassert>
 #include <vector>
-#include <concepts>
 
 /**
  * @brief A ring buffer is a data structure that uses a single, fixed-size buffer as
@@ -45,7 +44,7 @@ public:
     using         const_iterator    = iterator_t<const T, false>;
     using const_reverse_iterator    = iterator_t<const T, true>;
 
-    explicit ring_buffer(std::size_t size = 1) : m_container(size)
+    explicit ring_buffer(std::size_t size = 1) : m_container(size), m_size(size)
     {
         assert(size > 0);
     }
@@ -82,56 +81,52 @@ public:
 
     void push(T val)
     {
-        last = pos;
-        *pos = val;
-        std::advance(pos, 1);
-        if(pos == m_container.end())
-            pos = m_container.begin();
+        m_last = m_pos;
+        m_container[m_pos] = val;
+        m_pos++;
+        if(m_pos == m_size)
+            m_pos = 0;
     }
 
     template<typename... Args>
     void emplace(Args&&... args)
     {
-        last = pos;
-        *pos = T{std::forward<Args>(args)...};
-        std::advance(pos, 1);
-        if(pos == m_container.end())
-            pos = m_container.begin();
+        m_last = m_pos;
+        m_container[m_pos] = T{std::forward<Args>(args)...};
+        m_pos++;
+        if(m_pos == m_size)
+            m_pos = 0;
     }
 
     [[nodiscard]] std::size_t size() const
     {
-        return m_container.size();
-    }
-
-    [[nodiscard]] std::size_t capacity() const
-    {
-        return m_container.capacity();
+        return m_size;
     }
 
           T& operator[](const std::size_t idx)       { return peek(idx); }
     const T& operator[](const std::size_t idx) const { return peek(idx); }
 
-          iterator  begin()         { return iterator(*this, static_cast<T*>(& *last)); }
-    const_iterator  begin() const   { return const_iterator(*this, static_cast<const T*>(& *last)); }
-    const_iterator  cbegin() const  { return const_iterator(*this, static_cast<const T*>(& *last)); }
-	      iterator  end()           { return iterator(*this, nullptr); }
-    const_iterator  end() const     { return const_iterator(*this, nullptr); }
-    const_iterator  cend() const    { return const_iterator(*this, nullptr); }
+          iterator  begin()         { return iterator(*this,  m_last); }
+    const_iterator  begin() const   { return const_iterator(*this, m_last); }
+    const_iterator  cbegin() const  { return const_iterator(*this, m_last); }
+	      iterator  end()           { return iterator(*this, m_size); }
+    const_iterator  end() const     { return const_iterator(*this, m_size); }
+    const_iterator  cend() const    { return const_iterator(*this, m_size); }
 
-          reverse_iterator  rbegin()        { return reverse_iterator(*this, static_cast<T*>(& *pos)); }
-    const_reverse_iterator  rbegin() const  { return const_reverse_iterator(*this, static_cast<const T*>(& *pos)); }
-    const_reverse_iterator  crbegin() const { return const_reverse_iterator(*this, static_cast<const T*>(& *pos)); }
-          reverse_iterator  rend()          { return reverse_iterator(*this, nullptr); }
-    const_reverse_iterator  rend() const    { return const_reverse_iterator(*this, nullptr); }
-    const_reverse_iterator  crend() const   { return const_reverse_iterator(*this, nullptr); }
+          reverse_iterator  rbegin()        { return reverse_iterator(*this, m_pos); }
+    const_reverse_iterator  rbegin() const  { return const_reverse_iterator(*this, m_pos); }
+    const_reverse_iterator  crbegin() const { return const_reverse_iterator(*this, m_pos); }
+          reverse_iterator  rend()          { return reverse_iterator(*this, m_size); }
+    const_reverse_iterator  rend() const    { return const_reverse_iterator(*this, m_size); }
+    const_reverse_iterator  crend() const   { return const_reverse_iterator(*this, m_size); }
 
 
 private:
 
-             container m_container  {};
-    container_iterator pos          {m_container.begin()};
-    container_iterator last         {std::prev(m_container.end())};
+	container m_container;
+    std::size_t m_size;
+    std::size_t m_pos {0};
+    std::size_t m_last {m_size - 1};
 
 public:
     template<typename TValue, bool Reverse>
@@ -144,10 +139,10 @@ public:
         using reference         = value_type&;
         using container         = const ring_buffer<std::remove_const_t<value_type>>&;
 
-        iterator_t(container rg, pointer ptr) : m_rg{ rg }, m_ptr { ptr }{}
+        iterator_t(container rg, std::size_t idx) : m_rg{ rg }, m_idx { idx }{}
 
-        reference operator*() const { return *m_ptr; }
-        pointer operator->() { return m_ptr; }
+        reference operator*() const { return const_cast<reference>(m_rg.m_container[m_idx]); }
+        pointer operator->() { return &m_rg.m_container[m_idx]; }
 
         // Prefix increment
         iterator_t& operator++() 
@@ -170,44 +165,34 @@ public:
         iterator_t operator++(int) { iterator_t tmp = *this; ++(*this); return tmp; }
         iterator_t operator--(int) { iterator_t tmp = *this; --(*this); return tmp; }
 
-        friend bool operator== (const iterator_t& a, const iterator_t& b) { return a.m_ptr == b.m_ptr; }
-        friend bool operator!= (const iterator_t& a, const iterator_t& b) { return a.m_ptr != b.m_ptr; }
+        friend bool operator== (const iterator_t& a, const iterator_t& b) { return a.m_idx == b.m_idx; }
+        friend bool operator!= (const iterator_t& a, const iterator_t& b) { return a.m_idx != b.m_idx; }
 
     private:
 
         iterator_t& forward()
         {
-            if (m_ptr == &*m_rg.pos)
-                m_ptr = nullptr;
-            else if (m_ptr == &*m_rg.m_container.begin())
-            {
-                if constexpr (std::is_const_v<value_type>)
-                    m_ptr = &*m_rg.m_container.rbegin();
-                else
-                    m_ptr = const_cast<value_type*>(&*m_rg.m_container.rbegin());
-            }
+            if (m_idx == m_rg.m_pos)
+                m_idx = m_rg.m_size;
+            else if (m_idx == 0)
+            	m_idx = m_rg.m_size - 1 ;
             else
-                --m_ptr; 
+        		--m_idx; 
             return *this; 
         }
 
         iterator_t& backward()
         {
-            if (m_ptr == &*m_rg.last)
-                m_ptr = nullptr;
-            else if (m_ptr == &*m_rg.m_container.rbegin())
-            {
-                if constexpr (std::is_const_v<value_type>)
-                    m_ptr = &*m_rg.m_container.begin();
-                else
-                    m_ptr = const_cast<value_type*>(&*m_rg.m_container.begin());
-            }
+            if (m_idx == m_rg.m_last)
+                m_idx = m_rg.m_size;
+            else if (m_idx == m_rg.m_size - 1)
+            	m_idx = 0;
             else
-                ++m_ptr; 
+        		++m_idx; 
             return *this; 
         }
 
-        container   m_rg;
-          pointer   m_ptr;
+        container m_rg;
+    	std::size_t m_idx;
     };
 };
