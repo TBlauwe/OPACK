@@ -180,4 +180,7 @@ TEST_CASE("Action API : tracking")
 
     CHECK(opack::has_done<SomeAction>(e1));
     CHECK(opack::last_action_prefab<simple::Actuator>(e1) == action_prefab);
+	CHECK(opack::last_actions<simple::Actuator>(e1).previous_prefabs_done.contains(action_prefab));
+	CHECK(opack::last_actions<simple::Actuator>(e1).peek(0) == action_prefab);
+	CHECK(opack::last_actions<simple::Actuator>(e1).has_done(action_prefab));
 }

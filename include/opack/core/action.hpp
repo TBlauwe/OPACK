@@ -160,8 +160,8 @@ namespace opack
 	 * Return last action_prefab done.
 	 * If @c actuator do not track actions, it will assert.
 	 */
-	//template<ActuatorPrefab T>
-	//const LastActionPrefabs& last_actions(EntityView entity);
+	template<ActuatorPrefab T>
+	const LastActionPrefabs& last_actions(EntityView entity);
 
 	/**
 	 * Return true if @c entity has done @c action_prefab, false otherwise. Only relevant if
@@ -401,13 +401,13 @@ namespace opack
 		return last_action_prefab(opack::actuator<T>(entity), n);
 	}
 
-	//template<ActuatorPrefab T>
-	//const LastActionPrefabs& last_actions(EntityView entity)
-	//{
-	//	opack_assert(opack::actuator<T>(entity).is_valid(), "Entity {} has no actuator {}.", entity.path().c_str(), type_name_cstr<T>());
-	//	opack_assert(opack::actuator<T>(entity).template has<LastActionPrefabs>(), "Entity {} with actuator {} has no LastActionsPrefabs. Did you make sure you called 'track' on actuator ?", entity.path().c_str(), type_name_cstr<T>());
-	//	return *opack::actuator<T>(entity).template get<LastActionPrefabs>();
-	//}
+	template<ActuatorPrefab T>
+	const LastActionPrefabs& last_actions(EntityView entity)
+	{
+		opack_assert(opack::actuator<T>(entity).is_valid(), "Entity {} has no actuator {}.", entity.path().c_str(), type_name_cstr<T>());
+		opack_assert(opack::actuator<T>(entity).template has<LastActionPrefabs>(), "Entity {} with actuator {} has no LastActionsPrefabs. Did you make sure you called 'track' on actuator ?", entity.path().c_str(), type_name_cstr<T>());
+		return *opack::actuator<T>(entity).template get<LastActionPrefabs>();
+	}
 
 	inline bool has_done(EntityView entity, EntityView action_prefab)
 	{
