@@ -122,7 +122,7 @@ namespace opack
 	template<SensePrefab T>
 	Entity sense(EntityView entity)
 	{
-		opack_assert(entity.target<T>(), "No sense {0} for entity {1}. Did you called : `opack::add_sense<{0}, YourAgentType>(world) ?", type_name_cstr<T>(), entity.path().c_str());
+		opack_assert(entity.target<T>(), "No sense {0} for entity {1}. Did you called : `opack::add_sense<{0}, {2}>(world) ?", type_name_cstr<T>(), entity.path().c_str(), entity.has(flecs::IsA, flecs::Wildcard) ? entity.target(flecs::IsA).path().c_str() : "YourAgentType");
 		return entity.target<T>();
 	}
 
@@ -297,7 +297,7 @@ namespace opack
 			{
 		        //TODO 	    
 			}
-		    return {};
+		    return nullptr;
 		}
 
 		template<typename T>
