@@ -165,6 +165,12 @@ Alternitavely, you can use `bin\benchmarks\run_benchmarks.py` python script, to 
 
 This line will generate a json file with 'Release' in its name. It will also repeat benchmarks 10 times and compute the mean, median, variance, etc.
 
+To compare two benchmarks, you can use the following command :
+
+> py ./tools/compare.py benchmarks <baseline> <comparison>
+
+Replace `<baseline>` and `<comparison>` with `.json` files obtained when running your benchmarks.
+
 ## Credits
 
 * **[Doctest](https://github.com/doctest/doctest)**
