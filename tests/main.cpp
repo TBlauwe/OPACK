@@ -5,7 +5,7 @@ int main(int argc, char** argv) {
     doctest::Context context;
 
     // defaults
-    context.addFilter("test-case-exclude", "*tracking*"); 
+    //context.addFilter("test-case-exclude", "*tracking*"); 
     //context.setOption("order-by", "name");            // sort the test cases by their name
     //context.addFilter("test-case", "*Ring Buffer*"); 
 

@@ -138,29 +138,6 @@ void opack::import_opack(World& world)
 	impl::import_communication(world);
 	define_action_systems(world);
 
-	world.system<LastActionPrefabs>("System_RememberLastActionsPrefabs")
-		.kind<Act::PostUpdate>()
-		.term(flecs::IsA).second<Actuator>()
-		.term(flecs::Prefab).not_()
-		.term_at(1).self()
-		.term<Doing>(flecs::Wildcard)
-		.term<Token>()
-		.each([](flecs::entity actuator, LastActionPrefabs& last_actions)
-			{
-				if (const auto prefab = actuator.target<Doing>().target(flecs::IsA))
-					last_actions.previous_prefabs_done.push(prefab);
-			}
-	).child_of<world::dynamics>();
-
-	world.system("System_RemoveActuatorToken")
-		.kind<Act::PostUpdate>()
-		.term<Doing>(flecs::Wildcard)
-		.term(flecs::IsA).second<Actuator>()
-		.each([](flecs::entity actuator)
-			{
-				actuator.remove<Token>();
-			}
-	).child_of<world::dynamics>();
 
 	world.system<Delay>("UpdateDelay")
 		.term<Delay>().write()
@@ -239,6 +216,28 @@ void opack::define_action_systems(opack::World& world)
 				action.add(ActionStatus::finished);
 			}
 	).child_of<opack::world::dynamics>();
+
+	world.system<LastActionPrefabs>("System_RememberLastActionsPrefabs")
+		.kind<Act::PostUpdate>()
+		.term(flecs::IsA).second<Actuator>()
+		.term<Doing>(flecs::Wildcard)
+		.term<Token>()
+		.each([](flecs::entity actuator, LastActionPrefabs& last_actions)
+			{
+				if (const auto prefab = actuator.target<Doing>().target(flecs::IsA))
+					last_actions.previous_prefabs_done.push(prefab);
+			}
+	).child_of<world::dynamics>();
+
+	world.system("System_RemoveActuatorToken")
+		.kind<Act::PostUpdate>()
+		.term<Doing>(flecs::Wildcard)
+		.term(flecs::IsA).second<Actuator>()
+		.each([](flecs::entity actuator)
+			{
+				actuator.remove<Token>();
+			}
+	).child_of<world::dynamics>();
 
 	world.system("System_CleanAction")
 		.kind<Cycle::End>()

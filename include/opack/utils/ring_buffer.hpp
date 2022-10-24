@@ -11,6 +11,7 @@
 
 #include <cassert>
 #include <vector>
+#include <algorithm>
 
 /**
  * @brief A ring buffer is a data structure that uses a single, fixed-size buffer as
@@ -76,7 +77,15 @@ public:
     /** True if contains @c value, false otherwise. */
     [[nodiscard]] bool contains(const T& value) const
     {
-        return std::find(m_container.begin(), m_container.end(), value) != m_container.end();
+        auto begin = m_container.begin();
+        auto end = m_container.end();
+        while(begin != end)
+        {
+	        if(*begin == value)
+                return true;
+            std::advance(begin, 1);
+        }
+        return false;
     }
 
     void push(T val)

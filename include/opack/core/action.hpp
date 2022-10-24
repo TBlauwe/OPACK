@@ -133,12 +133,12 @@ namespace opack
 	Entity action(EntityView action_prefab);
 
 	/**
-	@brief Return current action done by @c entity with @c actuator_prefab
+	@brief Return current action done by @c entity with @c actuator_prefab. Returns null entity if action is done.
 	*/
 	Entity current_action(EntityView actuator_prefab, EntityView entity);
 
 	/**
-	@brief Return current action done by @c entity with actuator @c T
+	@brief Return current action done by @c entity with actuator @c T. Returns null entity if action is done.
 	*/
 	template<ActuatorPrefab T>
 	Entity current_action(EntityView entity);
@@ -147,25 +147,25 @@ namespace opack
 	 * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value..
 	 * If @c actuator do not track actions, the null entity is returned.
 	 */
-	EntityView last_action(EntityView entity, EntityView actuator, std::size_t n = 0);
+	EntityView last_action_prefab(EntityView actuator, std::size_t n = 0);
 
 	/**
 	 * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value..
 	 * If @c actuator do not track actions, the null entity is returned.
 	 */
 	template<ActuatorPrefab T>
-	EntityView last_action(EntityView entity, std::size_t n = 0);
+	EntityView last_action_prefab(EntityView entity, std::size_t n = 0);
 
 	/**
 	 * Return last action_prefab done.
 	 * If @c actuator do not track actions, it will assert.
 	 */
-	template<ActuatorPrefab T>
-	const LastActionPrefabs& last_actions(EntityView entity);
+	//template<ActuatorPrefab T>
+	//const LastActionPrefabs& last_actions(EntityView entity);
 
 	/**
-	 * Return true if @c entity has done @c action_prefab. False otherwise, even more if
-	 * @c actuator do not track actions.
+	 * Return true if @c entity has done @c action_prefab, false otherwise. Only relevant if
+	 * @c actuator is tracking actions prefab.
 	 */
 	bool has_done(EntityView entity, EntityView action_prefab);
 
@@ -185,8 +185,8 @@ namespace opack
 	bool is_finished(EntityView action);
 
 	/**
-	 * Return true if @c entity has done @c T. False otherwise, even more if
-	 * @c actuator do not track actions.
+	 * Return true if @c entity has done @c T. False otherwise. Only relevant if
+	 * @c actuator is tracking actions prefab.
 	 */
 	template<ActionPrefab T>
 	bool has_done(EntityView entity);
@@ -286,7 +286,7 @@ namespace opack
 	inline ActuatorHandle& ActuatorHandle::track(std::size_t ring_buffer_size)
 	{
 		opack_assert(ring_buffer_size > 0, "Ring buffer size is equal to zero, which is invalid !");
-		set<LastActionPrefabs>( ring_buffer_size);
+		set_override<LastActionPrefabs>( {ring_buffer_size});
 		return *this;
 	}
 
@@ -380,50 +380,45 @@ namespace opack
 		return opack::spawn<T>(world);
 	}
 
-	//TODO Wrong logic, or I should add another call to cover case when you give an actuator_prefab.
 	/**
 	 * Return last @c n th action_prefab done. @c 0 is the most recent value pushed, whereas @c size()-1 is the oldest value..
 	 * If @c actuator do not track actions, the null entity is returned.
 	 */
-	inline EntityView last_action(EntityView entity, EntityView actuator, std::size_t n)
+	inline EntityView last_action_prefab(EntityView actuator, std::size_t n)
 	{
-		opack_assert(entity.is_valid(), "Given entity is invalid.");
 		opack_assert(actuator.is_valid(), "Given actuator is invalid.");
 		if (actuator.has<LastActionPrefabs>())
 		{
 			return actuator.get<LastActionPrefabs>()->peek(n);
 		}
-		else
-		{
-			opack_warn("Tried getting last action for entity [{}] with actuator [{}] that do not track previous actions.", entity.path().c_str(), actuator.path().c_str());
-			return flecs::entity::null();
-		}
+		opack_warn("Actuator [{}] with parent [{}] do not track previous actions.", actuator.path().c_str(), actuator.parent().path().c_str());
+		return flecs::entity::null();
 	}
 
 	template<ActuatorPrefab T>
-	EntityView last_action(EntityView entity, std::size_t n)
+	EntityView last_action_prefab(EntityView entity, std::size_t n)
 	{
-		return last_action(entity, opack::actuator<T>(entity), n);
+		return last_action_prefab(opack::actuator<T>(entity), n);
 	}
 
-	template<ActuatorPrefab T>
-	const LastActionPrefabs& last_actions(EntityView entity)
-	{
-		opack_assert(opack::actuator<T>(entity).is_valid(), "Entity {} has no actuator {}.", entity.path().c_str(), type_name_cstr<T>());
-		opack_assert(opack::actuator<T>(entity).template has<LastActionPrefabs>(), "Entity {} with actuator {} has no LastActionsPrefabs. Did you make sure you called 'track' on actuator ?", entity.path().c_str(), type_name_cstr<T>());
-		return *opack::actuator<T>(entity).template get<LastActionPrefabs>();
-	}
+	//template<ActuatorPrefab T>
+	//const LastActionPrefabs& last_actions(EntityView entity)
+	//{
+	//	opack_assert(opack::actuator<T>(entity).is_valid(), "Entity {} has no actuator {}.", entity.path().c_str(), type_name_cstr<T>());
+	//	opack_assert(opack::actuator<T>(entity).template has<LastActionPrefabs>(), "Entity {} with actuator {} has no LastActionsPrefabs. Did you make sure you called 'track' on actuator ?", entity.path().c_str(), type_name_cstr<T>());
+	//	return *opack::actuator<T>(entity).template get<LastActionPrefabs>();
+	//}
 
 	inline bool has_done(EntityView entity, EntityView action_prefab)
 	{
 		opack_assert(entity.is_valid(), "Given entity is invalid.");
 		opack_assert(action_prefab.is_valid(), "Given action_prefab is invalid.");
-		if (const auto actuator = opack::actuator(get_required_actuator(action_prefab), entity); actuator.has<LastActionPrefabs>())
+		const auto actuator = opack::actuator(get_required_actuator(action_prefab), entity);
+		if (actuator.has<LastActionPrefabs>())
 		{
 			return actuator.get<LastActionPrefabs>()->has_done(action_prefab);
 		}
-		else
-			opack_warn("Tried seeing if entity [{}] has done action [{}], but actuator [{}] is not tracking previous actions.", entity.path().c_str(), action_prefab.path().c_str(), actuator.path().c_str());
+		opack_warn("Tried seeing if entity [{}] has done action [{}], but actuator [{}] is not tracking previous actions.", entity.path().c_str(), action_prefab.path().c_str(), actuator.path().c_str());
 		return false;
 	}
 
