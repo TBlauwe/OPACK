@@ -319,6 +319,24 @@ namespace opack
 			 );
 		}
 
+		template<typename T>
+		void each(std::function<void(Entity)> func)
+		{
+		     auto query = observer.world().get<opack::queries::perception::Entity>();
+             query->rule.iter()
+                .set_var(query->observer_var, observer)
+            .each(
+                [&func](flecs::iter& it, size_t index)
+                {
+                    auto subject = it.entity(index);
+					if (opack::is_a<T>(subject))
+						func(subject);
+					else if (subject.has<T>())
+						func(subject);
+                }
+			 );
+		}
+
 		EntityView observer;
 	};
 
