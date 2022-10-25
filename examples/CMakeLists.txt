@@ -7,6 +7,7 @@ set(OPACK_EXAMPLES
 	03_simple_agent
 	04_activity
 	05_perception
+	06_action
 )
 
 set(EXAMPLE_OUTPUT_DIR "${OPACK_SOURCE_DIR}/bin/examples")

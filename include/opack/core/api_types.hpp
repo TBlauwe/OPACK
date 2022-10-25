@@ -101,6 +101,7 @@ namespace opack
 		using entity_view::entity_view;
 	};
 
+	// TODO Add type to handle / Better Handle 
 	struct Handle : flecs::entity
 	{
 		using entity::entity;
