@@ -52,7 +52,7 @@ void opack::import_opack(World& world)
 		.is_a<Tangible>()
 		.override<DefaultBehaviour>()
 		;
-	opack::prefab<Artefact>(world).is_a<Tangible>();
+	opack::prefab<Artefact>(world).is_a<Tangible>().add(flecs::Union);
 	opack::prefab<Action>(world)
 		.override<Token>()
 		.add<Arity>()

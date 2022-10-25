@@ -70,7 +70,11 @@ void BM_loop_n_with_m_agents(benchmark::State& state)
 }
 BENCHMARK(BM_loop_n_with_m_agents)
     ->Unit(benchmark::kNanosecond)
-	->Ranges({ { 1 << 0, 1 << 20}, {1 << 0, 1 << 20} });
+	->Ranges({ { 1 << 0, 1 << 2}, {1 << 0, 1 << 2} });
+
+BENCHMARK(BM_loop_n_with_m_agents)
+    ->Unit(benchmark::kMillisecond)
+	->Ranges({ { 1 << 4, 1 << 20}, {1 << 4, 1 << 20} });
 ;
 
 BENCHMARK_MAIN();
