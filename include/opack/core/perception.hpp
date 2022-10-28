@@ -100,9 +100,9 @@ namespace opack
 		//opack::prefab<TSense>(world)
 		//	.child_of<TAgent>()
 	    //  .slot();
-		world.observer()
+		world.observer(fmt::format(fmt::runtime("Observer_AddSense_{}_to_{}"), friendly_type_name<TSense>().c_str(), friendly_type_name<TAgent>().c_str()).c_str())
 			.event(flecs::OnAdd)
-			.term(flecs::IsA).second<TAgent>()
+			.term(flecs::IsA).template second<TAgent>()
 			.each(
 				[](flecs::entity e)
 				{

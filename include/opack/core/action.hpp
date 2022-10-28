@@ -337,9 +337,9 @@ namespace opack
 	void add_actuator(World& world)
 	{
 		// Waiting for fix : https://github.com/SanderMertens/flecs/issues/791
-		world.observer()
+		world.observer(fmt::format(fmt::runtime("Observer_AddActuator_{}_to_{}"), friendly_type_name<TActuator>().c_str(), friendly_type_name<TAgent>().c_str()).c_str())
 			.event(flecs::OnAdd)
-			.term(flecs::IsA).second<TAgent>()
+			.term(flecs::IsA).template second<TAgent>()
 			.each(
 				[](flecs::entity e)
 				{

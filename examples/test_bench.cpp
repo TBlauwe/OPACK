@@ -1,14 +1,25 @@
 #include <flecs.h>
-#include <fmt/core.h>
 
-enum class Status { Free, Taken };
+struct Head {};
+struct Turret {};
 
-int main()
+int main(int, char* [])
 {
-	flecs::world ecs;
-	auto e = ecs.entity().add(Status::Free);
-	auto f = ecs.entity().add(Status::Free);
-	fmt::print("{}\n", e.has(*f.get<Status>()));
-	ecs.system().write();
-	ecs.app().enable_rest().run();
+    flecs::world ecs;
+
+    ecs.prefab<Head>();
+    ecs.prefab<Turret>();
+
+	ecs.observer()
+	.event(flecs::OnAdd)
+	.term(flecs::IsA).second<Turret>()
+	.each(
+		[](flecs::entity e)
+		{
+			auto child = e.world().entity().is_a<Head>();
+			child.child_of(e); // Issue here
+		}
+	);
+
+    ecs.entity().is_a<Turret>(); 
 }
