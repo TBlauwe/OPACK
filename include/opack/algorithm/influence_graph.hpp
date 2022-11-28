@@ -91,7 +91,17 @@ namespace opack
 			return m_positive_influences;
 		}
 
+		const Influences& positive_influences() const
+		{
+			return m_positive_influences;
+		}
+
 		Influences& negative_influences()
+		{
+			return m_negative_influences;
+		}
+
+		const Influences& negative_influences() const
 		{
 			return m_negative_influences;
 		}
@@ -101,22 +111,37 @@ namespace opack
 			return U.at(idx);
 		}
 
+		const U_t& u_at(const UIndex idx) const
+		{
+			return U.at(idx);
+		}
+
 		V_t& v_at(const VIndex idx)
 		{
 			return V.at(idx);
 		}
 
-		int score(const V_t v)
+		const V_t& v_at(const VIndex idx) const
+		{
+			return V.at(idx);
+		}
+
+		int score(const V_t v) const
 		{
 			return score_at_index(v_index(v));
 		}
 
-		int score_at_index(const VIndex idx)
+		int score_at_index(const VIndex idx) const
 		{
 			return m_scores.at(idx);
 		}
 
 		Scores& scores()
+		{
+			return m_scores;
+		}
+
+		const Scores& scores() const
 		{
 			return m_scores;
 		}
@@ -131,12 +156,12 @@ namespace opack
 			return m_highest_scores.size();
 		}
 
-		std::vector<V_t>& highest_scores()
+		const std::vector<V_t>& highest_scores() const
 		{
 			return m_highest_scores;
 		}
 
-		void print(std::function<const char *(const U_t&)> f,  std::function<const char *(const V_t&)>g)
+		void print(std::function<const char *(const U_t&)> f,  std::function<const char *(const V_t&)>g) const
 		{
 			std::unordered_set<VIndex> displayed;
 			for (auto& [u_idx, v_idxs] : positive_influences())
@@ -201,6 +226,18 @@ namespace opack
 			VIndex idx = std::distance(V.begin(), std::find(V.begin(), V.end(), v));
 			if (idx >= V.size())
 				V.push_back(v);
+			return idx;
+		}
+
+		const UIndex u_index(const U_t u) const
+		{
+			UIndex idx = std::distance(U.begin(), std::find(U.begin(), U.end(), u));
+			return idx;
+		}
+
+		const VIndex v_index(const V_t v) const
+		{
+			VIndex idx = std::distance(V.begin(), std::find(V.begin(), V.end(), v));
 			return idx;
 		}
 

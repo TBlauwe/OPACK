@@ -67,7 +67,8 @@ option(OPACK_ENABLE_LOG           "Enable runtime log. Disabling it may lead to 
 CPMAddPackage(
         NAME flecs
         GITHUB_REPOSITORY SanderMertens/flecs
-        GIT_TAG master
+        #GIT_TAG master
+        GIT_TAG v3.1.0
         OPTIONS
         "FLECS_STATIC ON"
         "FLECS_SHARED OFF"
