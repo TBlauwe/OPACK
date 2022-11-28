@@ -51,12 +51,7 @@ void BM_spawn_n_agent_in_bulk(benchmark::State& state) {
 }
 BENCHMARK(BM_spawn_n_agent_in_bulk)
     ->Unit(benchmark::kNanosecond)
-    ->Arg(1 << 0)
-;
-
-BENCHMARK(BM_spawn_n_agent_in_bulk)
-    ->Unit(benchmark::kMillisecond)
-    ->Arg(1<<10)->Arg(1<<20)
+    ->Range(1 << 0, 1 << 20)
 ;
 
 void BM_loop_n_with_m_agents(benchmark::State& state)
