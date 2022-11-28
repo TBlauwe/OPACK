@@ -99,9 +99,13 @@ namespace opack
     /** Always return false. */
 	inline bool never(EntityView) { return false; };
 
-    /** Returns true iff @c agent has all @c Ts. */
+    /** Returns true iff @c agent has all of @c Ts. */
 	template<typename... Ts>
 	bool with(EntityView agent) { return (agent.has<Ts>() && ...); };
+
+    /** Returns true iff @c agent has none of @c Ts. */
+	template<typename... Ts>
+	bool without(EntityView agent) { return (!agent.has<Ts>() && ...); };
 
 
     // --------------------------------------------------------------------------- 
