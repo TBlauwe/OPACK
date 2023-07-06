@@ -15,7 +15,7 @@ project(OPACK
 
 # CMake libraries
 # ===============
-set(CPM_DOWNLOAD_VERSION 0.35.0)
+set(CPM_DOWNLOAD_VERSION 0.38.1)
 include(cmake/FindCPM.cmake)
 include(cmake/target_default_compile_options.cmake)
 
@@ -139,6 +139,7 @@ if(${OPACK_ENABLE_LOG})
     target_compile_definitions(opack PUBLIC OPACK_LOG)
 endif()
 target_compile_features(opack PUBLIC cxx_std_20)
+target_compile_options(opack PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>)
 if(OPACK_DEVELOPPER_WARNINGS)
     target_set_compile_warnings_cxx(opack)
 endif()

@@ -10,6 +10,12 @@ set(OPACK_EXAMPLES
 	06_action
 )
 
+set(EXAMPLES_PLECS
+	activity.flecs
+	perception.flecs
+	simple_agent.flecs
+)
+
 set(EXAMPLE_OUTPUT_DIR "${OPACK_SOURCE_DIR}/bin/examples")
 foreach(example IN LISTS OPACK_EXAMPLES)
 
@@ -17,11 +23,12 @@ foreach(example IN LISTS OPACK_EXAMPLES)
 	target_compile_features(${example} PRIVATE cxx_std_20)
 	target_link_libraries(${example} PRIVATE opack)
 	set_target_properties(${example} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXAMPLE_OUTPUT_DIR})
+endforeach()
 
-	add_custom_command(OUTPUT ${example} ${CMAKE_COMMAND} -E make_directory "${EXAMPLE_OUTPUT_DIR}/plecs")
-	add_custom_command(TARGET ${example}
-			COMMAND ${CMAKE_COMMAND} -E copy_directory
-			"${OPACK_SOURCE_DIR}/examples/plecs" "${EXAMPLE_OUTPUT_DIR}/plecs")
+foreach(plecs IN LISTS EXAMPLES_PLECS)
+	configure_file(
+			"${OPACK_SOURCE_DIR}/examples/plecs/${plecs}" 
+			"${EXAMPLE_OUTPUT_DIR}/plecs/${plecs}")
 endforeach()
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)

@@ -14,12 +14,13 @@ set(SOURCE_LIST
 CPMAddPackage(
         NAME benchmark 
         GITHUB_REPOSITORY google/benchmark
-        GIT_TAG v1.6.1
+        GIT_TAG v1.8.1
         OPTIONS
             "BENCHMARK_ENABLE_TESTING OFF"
 )
 if(benchmark_ADDED)
     set_target_properties(benchmark PROPERTIES CXX_STANDARD 11) # enable c++11 to avoid compilation errors
+    target_compile_options(benchmark PUBLIC -D_CRT_USE_BUILTIN_OFFSETOF)
 endif ()
 
 add_executable(opack_benchmarks "utils.hpp" ${SOURCE_LIST})
