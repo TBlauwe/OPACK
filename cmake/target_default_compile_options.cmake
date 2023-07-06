@@ -1,7 +1,6 @@
 function(target_set_compile_warnings_cxx _TARGET)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
             OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-
         target_compile_options(${_TARGET} PRIVATE
                 #$<$<CONFIG:RELEASE>:-Werror>
                 $<$<CONFIG:Debug>:-Wshadow>
@@ -22,7 +21,6 @@ function(target_set_compile_warnings_cxx _TARGET)
         )
 
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-
         target_compile_options(${_TARGET} PRIVATE
                 #$<$<CONFIG:RELEASE>:-Werror>
                 $<$<CONFIG:Debug>:-Wshadow>
@@ -43,7 +41,6 @@ function(target_set_compile_warnings_cxx _TARGET)
         )
 
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-
         target_compile_options(${_TARGET} PRIVATE
                 #$<$<CONFIG:RELEASE>:/WX>
                 /W4
@@ -56,7 +53,6 @@ function(target_set_compile_warnings_cxx _TARGET)
                 /w14928)
 
     else ()
-
         message(WARNING
                 "No Warnings specified for ${CMAKE_CXX_COMPILER_ID}. "
                 "Consider using one of the following compilers: Clang, GNU, MSVC, AppleClang.")
