@@ -1,6 +1,9 @@
-﻿# CMake configuration 
+﻿# Made after "Modern CMake Tutorial" and example at : 
+# https://gitlab.com/CLIUtils/modern-cmake/-/blob/master/examples/extended-project/CMakeLists.txt
+
+# CMake configuration 
 # =================== 
-cmake_minimum_required (VERSION 3.13...3.23)
+cmake_minimum_required (VERSION 3.14...3.26)
 
 
 # Project information
@@ -12,27 +15,52 @@ project(OPACK
         LANGUAGES C CXX
 )
 
-
 # CMake libraries
 # ===============
+# Dependencies are added via CPM.
+# See https://github.com/cpm-cmake/CPM.cmake for more info.
 set(CPM_DOWNLOAD_VERSION 0.38.1)
-include(cmake/FindCPM.cmake)
-include(cmake/target_default_compile_options.cmake)
+include(cmake/cpm.cmake)
+include(cmake/target_set_compile_warnings.cmake)
+CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.11.0")
 
-# TODO : Since we output build files in a bin/ instead of out/, it doesn't semmes to work.
-# CCache must be installed and available in your path !
-# enables CCACHE support through the USE_CCACHE flag possible values are: YES, NO or equivalent.
-#CPMAddPackage(
-#  NAME Ccache.cmake
-#  GITHUB_REPOSITORY TheLartians/Ccache.cmake
-#  VERSION 1.2
-#)
 
+# Include guards
+# ==============
+
+# Only do these if this is the main project, and not if it is included through add_subdirectory
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+   # Optionally set things like CMAKE_CXX_STANDARD, CMAKE_POSITION_INDEPENDENT_CODE here
+
+  # Let's ensure -std=c++xx instead of -std=g++xx
+  set(CMAKE_CXX_EXTENSIONS OFF)
+
+  # Let's nicely support folders in IDEs
+  set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+  # Testing only available if this is the main app
+  # Note this needs to be done in the main CMakeLists
+  # since it calls enable_testing, which must be in the
+  # main CMakeLists.
+  include(CTest)
+
+  # Docs only available if this is the main app
+  find_package(Doxygen)
+  if(Doxygen_FOUND)
+    add_subdirectory(docs)
+  else()
+    message(STATUS "Doxygen not found, skipping docs")
+  endif()
+
+endif()
+
+
+# Convience variable so that annexes bin (tests, benchmarks, experiments, examples) are outputed to a nice structure.
+set(OPACK_BINARY_OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin/") 
 # Build options
 # =============
 option(OPACK_BUILD_EXAMPLES       "Build examples." OFF)
 option(OPACK_BUILD_EXPERIMENTS    "Build experiments." OFF)
-option(OPACK_BUILD_TESTS          "Build tests." OFF)
 option(OPACK_BUILD_BENCHMARKS     "Build benchmarks using google benchmarks." OFF)
 option(OPACK_DEVELOPPER_WARNINGS  "Enable more warnings when compiling" OFF)
 option(OPACK_ORGANIZE             "Enable organisation of entities, different from C++ namespace (mainly organisation for explorer). Disabling it may lead to more performance." ON)
@@ -42,26 +70,6 @@ option(OPACK_ENABLE_LOG           "Enable runtime log. Disabling it may lead to 
 
 # Dependencies
 # ============
-
-# Boost provides free peer-reviewed portable C++ source libraries
-#CPMAddPackage(
-#  NAME Boost 
-#  GITHUB_REPOSITORY "boostorg/boost"
-#  GIT_TAG "boost-1.80.0"
-#  OPTIONS
-#    "BOOST_RUNTIME_LINK static"
-#)
-
-# General-purpose Parallel and Heterogeneous Task Programming System
-#CPMAddPackage(
-#        NAME taskflow
-#        GITHUB_REPOSITORY taskflow/taskflow
-#        GIT_TAG v3.3.0
-#        OPTIONS
-#        "TF_BUILD_TESTS OFF"
-#        "TF_BUILD_EXAMPLES OFF"
-#)
-#set_target_properties(Taskflow PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:Taskflow,INTERFACE_INCLUDE_DIRECTORIES>)
 
 # A fast entity component system (ECS) for C & C++
 CPMAddPackage(
@@ -81,6 +89,7 @@ CPMAddPackage(
 		GITHUB_REPOSITORY fmtlib/fmt
 		GIT_TAG 9.1.0
 		OPTIONS
+            "FMT_INSTALL ON"
 )
 set_target_properties(fmt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:fmt,INTERFACE_INCLUDE_DIRECTORIES>)
 
@@ -90,6 +99,7 @@ CPMAddPackage(
 		GITHUB_REPOSITORY effolkronium/random
 		GIT_TAG master
 		OPTIONS
+            "Random_BuildTests OFF"
 )
 
 # OPACK Library
@@ -129,54 +139,44 @@ set(SOURCE_LIST
 
 # Target : opack
 # ==============
-add_library (opack STATIC ${SOURCE_LIST} ${HEADER_LIST})
+add_library (opack ${SOURCE_LIST} ${HEADER_LIST})
+target_compile_features(opack PUBLIC cxx_std_20)
+# using __VA_OPT__, we enforce latest preprocess on MSVC
+target_compile_options(opack PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>)
+# being a cross-platform target, we enforce standards conformance on MSVC
+target_compile_options(opack PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 target_include_directories(opack PUBLIC include ${random_SOURCE_DIR}/include)
 target_link_libraries(opack PUBLIC flecs_static fmt)
+
 if(${OPACK_ENABLE_RUNTIME_CHECK})
     target_compile_definitions(opack PUBLIC OPACK_RUNTIME_CHECK)
 endif()
 if(${OPACK_ENABLE_LOG})
     target_compile_definitions(opack PUBLIC OPACK_LOG)
 endif()
-target_compile_features(opack PUBLIC cxx_std_20)
-target_compile_options(opack PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>)
-if(OPACK_DEVELOPPER_WARNINGS)
+if(${OPACK_DEVELOPPER_WARNINGS})
     target_set_compile_warnings_cxx(opack)
 endif()
 
+
+# Other targets
+# =============
+
+if(OPACK_BUILD_BENCHMARKS)
+    add_subdirectory(benchmarks)
+endif()
+
 if(OPACK_BUILD_EXAMPLES)
-    add_subdirectory ("examples")
+    add_subdirectory(examples)
 endif()
 
 if(OPACK_BUILD_EXPERIMENTS)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-		message(WARNING "Matplot++ does not works with clang. Use MSVC. -- skipping experiments")
-    else()
-		find_package(Gnuplot)
-		if(GNUPLOT_FOUND)
-			add_subdirectory ("experiments")
-		else()
-			message(WARNING "GnuPlot not found -- skipping experiments (link : http://www.gnuplot.info/)")
-		endif()
-    endif()
+    add_subdirectory(experiments)
 endif()
 
-if(OPACK_BUILD_BENCHMARKS)
-    add_subdirectory ("benchmarks")
-endif()
-
-if(OPACK_BUILD_TESTS)
-    add_subdirectory ("tests")
-endif()
-
-# Documentation
-# =============
-# * Docs only available if this is the main project
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    find_package(Doxygen)
-    if(Doxygen_FOUND)
-        add_subdirectory(docs)
-    else()
-        message(WARNING "Doxygen not found - skipping docs (link : https://www.doxygen.nl/download.html)")
-    endif()
+# Testing only available if this is the main app
+# Emergency override MODERN_CMAKE_BUILD_TESTING provided as well
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
+   AND BUILD_TESTING)
+  add_subdirectory(tests)
 endif()

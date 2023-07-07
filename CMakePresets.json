@@ -14,7 +14,7 @@
                 "OPACK_BUILD_TESTS": "ON",
                 "OPACK_DEVELOPPER_WARNINGS": "ON",
                 "OPACK_ENABLE_LOG" : "ON",
-                "CPM_SOURCE_CACHE": "${sourceDir}/deps"
+                "CPM_SOURCE_CACHE": "${sourceDir}/../deps"
             },
             "condition": {
                 "type": "equals",

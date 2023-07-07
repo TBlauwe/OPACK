@@ -2,7 +2,7 @@
 # ==============
 set(OPACK_EXAMPLES
 	00_empty
-	01_simulation_controls
+	01_sim_controls
 	02_world
 	03_simple_agent
 	04_activity
@@ -16,26 +16,26 @@ set(EXAMPLES_PLECS
 	simple_agent.flecs
 )
 
-set(EXAMPLE_OUTPUT_DIR "${OPACK_SOURCE_DIR}/bin/examples")
 foreach(example IN LISTS OPACK_EXAMPLES)
-
-	add_executable(${example} ${example}.cpp)
+	add_executable(${example} "${CMAKE_CURRENT_LIST_DIR}/${example}/main.cpp")
 	target_compile_features(${example} PRIVATE cxx_std_20)
 	target_link_libraries(${example} PRIVATE opack)
-	set_target_properties(${example} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXAMPLE_OUTPUT_DIR})
+	set_target_properties(${example} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OPACK_BINARY_OUTPUT_DIR}/examples/${example}/")
+	if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/${example}/state.flecs")
+		configure_file(
+				"${CMAKE_CURRENT_LIST_DIR}/${example}/state.flecs" 
+				"${OPACK_BINARY_OUTPUT_DIR}/examples/${example}/state.flecs")
+	endif()
 endforeach()
 
 foreach(plecs IN LISTS EXAMPLES_PLECS)
-	configure_file(
-			"${OPACK_SOURCE_DIR}/examples/plecs/${plecs}" 
-			"${EXAMPLE_OUTPUT_DIR}/plecs/${plecs}")
 endforeach()
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-	add_executable(test_bench "test_bench.cpp")
-	target_compile_features(test_bench PRIVATE cxx_std_11)
-	target_link_libraries(test_bench PRIVATE flecs_static)
-	set_target_properties(test_bench PROPERTIES OUTPUT_NAME test_bench_$<CONFIG>_${CMAKE_CXX_COMPILER_ID})
-	set_target_properties(test_bench PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXAMPLE_OUTPUT_DIR})
+	add_executable(FlecsTestBench "test_bench.cpp")
+	target_compile_features(FlecsTestBench PRIVATE cxx_std_11)
+	target_link_libraries(FlecsTestBench PRIVATE flecs_static)
+	set_target_properties(FlecsTestBench PROPERTIES OUTPUT_NAME "FlecsTestBench")
+	set_target_properties(FlecsTestBench PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OPACK_BINARY_OUTPUT_DIR}/")
 endif()
 

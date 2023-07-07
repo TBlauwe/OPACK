@@ -1,26 +1,8 @@
 function(target_set_compile_warnings_cxx _TARGET)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-            OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-        target_compile_options(${_TARGET} PRIVATE
-                #$<$<CONFIG:RELEASE>:-Werror>
-                $<$<CONFIG:Debug>:-Wshadow>
-                $<$<CONFIG:Debug>:-Wunused>
-                -Wall -Wextra
-                -Wnon-virtual-dtor
-                -Wold-style-cast
-                -Wcast-align
-                -Woverloaded-virtual
-                -Wpedantic
-                -Wconversion
-                -Wsign-conversion
-                -Wdouble-promotion
-                -Wformat=2
-                -Wno-c++98-compat
-                -Wno-c++98-compat-pedantic
-                -Wno-c++98-c++11-compat-pedantic
-        )
-
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
+            OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
+    )
         target_compile_options(${_TARGET} PRIVATE
                 #$<$<CONFIG:RELEASE>:-Werror>
                 $<$<CONFIG:Debug>:-Wshadow>

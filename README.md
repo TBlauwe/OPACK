@@ -135,19 +135,22 @@ Each target will automatically install dependencies via [CPM](https://github.com
 
 However, some dependencies needs to be downloaded manually (for some targets) :
 
-#### Docs
+## Documentation
 
-> Only if you are building target `OPACK_DOCS` !
+### Dependencies 
 
-Install [doxygen](https://www.doxygen.nl/download.html)
+Doxygen, jinja2 and Pygments are needed to build documentation locally.
 
-If you are seeing this error :
+On MacOs :
+> brew install doxygen
+> pip3 install jinja2 Pygments
 
-```
-error : Problems running epstopdf. Check your TeX installation!
-```
+On windows using chocolatey (need elevated privileges) :
 
-Install a TeX distribution on your systems, see : https://www.latex-project.org/get/ .
+> choco install doxygen.install
+> choco install python
+> pip3 install jinja2 Pygments
+
 
 ## Benchmarks
 

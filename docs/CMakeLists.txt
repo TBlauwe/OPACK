@@ -1,16 +1,22 @@
-set(DOXYGEN_EXTRACT_ALL YES)
-set(DOXYGEN_BUILTIN_STL_SUPPORT YES)
+# Dependencies
+# ============
+CPMAddPackage("gh:mosra/m.css#a0d292ec311b97fefd21e93cdefb60f88d19ede6")
 
-set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
-set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+# Doxygen setup
+# =============
+set(DOXYGEN_PROJECT_NAME opack)
+set(DOXYGEN_PROJECT_VERSION ${opack_VERSION})
+set(DOXYGEN_PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+set(DOXYGEN_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
 
-# request to configure the file
-configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/Doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-add_custom_target(opack_docs
-        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-        COMMAND ${OPACK_SOURCE_DIR}/bin/docs/html/index.html
-        WORKING_DIRECTORY "${OPACK_SOURCE_DIR}/include"
-        COMMENT "Generating API documentation with Doxygen"
-        VERBATIM 
+configure_file(${CMAKE_CURRENT_LIST_DIR}/conf.py ${CMAKE_CURRENT_BINARY_DIR}/conf.py)
+
+add_custom_target(
+  GenerateDocs
+  ${CMAKE_COMMAND} -E make_directory "${DOXYGEN_OUTPUT_DIRECTORY}"
+  COMMAND "${m.css_SOURCE_DIR}/documentation/doxygen.py" "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
+  COMMAND echo "Docs written to: ${DOXYGEN_OUTPUT_DIRECTORY}"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )
