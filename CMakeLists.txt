@@ -109,6 +109,7 @@ set(HEADER_LIST
     "include/opack/utils/flecs_helper.hpp" 
     "include/opack/utils/debug.hpp" 
     "include/opack/utils/type_name.hpp"
+    "include/opack/utils/ring_buffer.hpp"
     "include/opack/core/macros.hpp"
     "include/opack/core/api_types.hpp"
     "include/opack/core/components.hpp"

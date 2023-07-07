@@ -7,17 +7,15 @@ PROJECT_NAME = @DOXYGEN_PROJECT_NAME@
 PROJECT_NUMBER = @DOXYGEN_PROJECT_VERSION@
 
 # Add sources
-INPUT = @DOXYGEN_PROJECT_ROOT@/README.md @DOXYGEN_PROJECT_ROOT@/include @DOXYGEN_PROJECT_ROOT@/docs/pages
+#INPUT = @OPACK_SOURCE_DIR@/README.md @OPACK_SOURCE_DIR@/include @OPACK_SOURCE_DIR@/docs/pages
+INPUT = @OPACK_SOURCE_DIR@/docs/pages @OPACK_SOURCE_DIR@/include/opack/utils/
 EXTRACT_ALL = YES
 RECURSIVE = YES
 OUTPUT_DIRECTORY = @DOXYGEN_OUTPUT_DIRECTORY@
 
-# Use the README as a main page
-USE_MDFILE_AS_MAINPAGE = @DOXYGEN_PROJECT_ROOT@/README.md
-
 # set relative include paths
 FULL_PATH_NAMES = YES
-STRIP_FROM_PATH = @DOXYGEN_PROJECT_ROOT@/include @DOXYGEN_PROJECT_ROOT@
+STRIP_FROM_PATH = "@OPACK_SOURCE_DIR@/includ"
 
 # We use m.css to generate the html documentation, so we only need XML output
 GENERATE_XML = YES
@@ -26,6 +24,14 @@ GENERATE_LATEX = NO
 XML_PROGRAMLISTING = NO
 CREATE_SUBDIRS = NO
 
-# Include all directories, files and namespaces in the documentation
-# Disable to include only explicitly documented objects
-M_SHOW_UNDOCUMENTED = YES
+ALIASES += \
+    "m_div{1}=@xmlonly<mcss:div xmlns:mcss=\"http://mcss.mosra.cz/doxygen/\" mcss:class=\"\1\">@endxmlonly" \
+    "m_enddiv=@xmlonly</mcss:div>@endxmlonly" \
+    "m_span{1}=@xmlonly<mcss:span xmlns:mcss=\"http://mcss.mosra.cz/doxygen/\" mcss:class=\"\1\">@endxmlonly" \
+    "m_endspan=@xmlonly</mcss:span>@endxmlonly" \
+    "m_class{1}=@xmlonly<mcss:class xmlns:mcss=\"http://mcss.mosra.cz/doxygen/\" mcss:class=\"\1\" />@endxmlonly" \
+    "m_footernavigation=@xmlonly<mcss:footernavigation xmlns:mcss=\"http://mcss.mosra.cz/doxygen/\" />@endxmlonly" \
+    "m_examplenavigation{2}=@xmlonly<mcss:examplenavigation xmlns:mcss=\"http://mcss.mosra.cz/doxygen/\" mcss:page=\"\1\" mcss:prefix=\"\2\" />@endxmlonly" \
+    "m_keywords{1}=@xmlonly<mcss:search xmlns:mcss=\"http://mcss.mosra.cz/doxygen/\" mcss:keywords=\"\1\" />@endxmlonly" \
+    "m_keyword{3}=@xmlonly<mcss:search xmlns:mcss=\"http://mcss.mosra.cz/doxygen/\" mcss:keyword=\"\1\" mcss:title=\"\2\" mcss:suffix-length=\"\3\" />@endxmlonly" \
+    "m_enum_values_as_keywords=@xmlonly<mcss:search xmlns:mcss=\"http://mcss.mosra.cz/doxygen/\" mcss:enum-values-as-keywords=\"true\" />@endxmlonly"

@@ -1,11 +1,11 @@
 /*****************************************************************//**
- * \file   ring_buffer.hpp
- * \brief A ring buffer is a data structure that uses a single, fixed-size buffer as
+ * @file   ring_buffer.hpp
+ * @brief Data structure that uses a single, fixed-size buffer as
  * if it were connected end-to-end. This structure lends itself easily
- * to buffering data streams (wikipedia).
+ * to buffering data streams (<a href="https://en.wikipedia.org/wiki/Circular_buffer">Wikipedia</a>).
  * 
- * \author Tristan
- * \date   October 2022
+ * @author Tristan
+ * @date   October 2022
  *********************************************************************/
 #pragma once
 
@@ -14,12 +14,12 @@
 #include <algorithm>
 
 /**
- * @brief A ring buffer is a data structure that uses a single, fixed-size buffer as
+ * @brief Data structure that uses a single, fixed-size buffer as
  * if it were connected end-to-end. This structure lends itself easily
- * to buffering data streams (wikipedia).
+ * to buffering data streams (<a href="https://en.wikipedia.org/wiki/Circular_buffer">Wikipedia</a>).
  *
  * @tparam T Must be default constructible.
- k*
+ *
  * Usage :
  * @code{.cpp}
  ring_buffer<int> rg (10); // A ring buffer of size 10 initialized with 10 default T elements.

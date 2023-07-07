@@ -151,6 +151,8 @@ On windows using chocolatey (need elevated privileges) :
 > choco install python
 > pip3 install jinja2 Pygments
 
+__Make sure to add doxygen to your path !__
+
 
 ## Benchmarks
 
@@ -177,7 +179,7 @@ Replace `<baseline>` and `<comparison>` with `.json` files obtained when running
 ## Credits
 
 * **[Doctest](https://github.com/doctest/doctest)**
-* **[Doxygen-awesome](https://github.com/jothepro/doxygen-awesome-css)**
+* **[m.css](https://mcss.mosra.cz/)** from **[Magnum Engine](https://magnum.graphics/)**
 * **[Flecs](https://github.com/SanderMertens/flecs)**
 * **[fmt](https://github.com/fmtlib/fmt)**
 * **[effolkronium/random](https://github.com/effolkronium/random)**

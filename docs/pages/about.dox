@@ -2,4 +2,20 @@
   @section doc Opack Documentation 
   This is the auto-generated documentation for the initial project of the ModernCppStater.
   It shows how we can use Doxygen to automatically build a browsable documentation for your projects.
+
+  @m_class{m-block m-success}
+
+@par Third-party license info
+    This utility depends on the [Magnum engine](https://magnum.graphics).
+    It's licensed under MIT, so all you need to do is mention it in the
+    credits of your commercial app.
+
+  <p>
+  <aside class="m-block m-default">
+  <h3>Default block</h3>
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ultrices
+  a erat eu suscipit. <a href="#">Link.
+  </a>
+	</aside>
+  </p>
 */
