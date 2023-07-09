@@ -21,7 +21,7 @@ set(SOURCE_LIST
 CPMAddPackage(
         NAME doctest
         GITHUB_REPOSITORY onqtam/doctest
-        GIT_TAG v2.4.9
+        GIT_TAG v2.4.11
 )
 
 add_executable(opack_tests ${SOURCE_LIST} "utils.hpp")
@@ -31,4 +31,5 @@ set_target_properties(opack_tests PROPERTIES OUTPUT_NAME "Tests")
 set_target_properties(opack_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OPACK_BINARY_OUTPUT_DIR}")
 add_test(NAME opack::doctest_all COMMAND tests)
 
-# include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake) # Doesn't seem to work :/
+include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
+doctest_discover_tests(opack_tests)
