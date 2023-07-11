@@ -1,0 +1,5 @@
+cell	
+grid_position(cell) = {}
+
+phase(setup)
+distribute_cell_grid(cells)

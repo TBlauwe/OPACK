@@ -1,0 +1,2 @@
+world.entity("cell")
+world.entity("grid_position"); cell.add<grid_position>();
