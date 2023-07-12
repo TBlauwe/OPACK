@@ -38,6 +38,10 @@ struct Grid
 		}
 	}
 
+	constexpr void swap(const Position a, const Position b) {
+		std::swap(cells[linearize(a)], cells[linearize(b)]);
+	}
+
 	constexpr void set(const size_t w, const size_t h, T value) {
 		cells[linearize(w, h)] = value;
 	}
@@ -60,6 +64,6 @@ struct Grid
 		};
 	}
 
-	std::array<T, H* W> cells;
+	std::array<T, H * W> cells;
 };
 

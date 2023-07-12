@@ -19,7 +19,7 @@ public:
 		:
 		// ----- Flecs -----
 		world{ world },
-		empty_patches{ world.query_builder().term<Position>().term<OccupiedBy>().second(flecs::Wildcard).not_().build() },
+		empty_patches{ world.query_builder().term<Position>().term<Agent>().not_().build()},
 		happy_agents{ world.query_builder().term<Agent>().term<Happy>().build() },
 		agents_query{ world.query_builder().term<Agent>().build() },
 		// ----- Model -----
@@ -29,7 +29,6 @@ public:
 	{
 		init_components(); // For web app inspection
 		populate();
-		compute_neighbours();
 		define_logic();
 		opack::step(world);
 		add_move_system();
@@ -52,28 +51,14 @@ public:
 		// =========================================================================== 
 		// Logic
 		// =========================================================================== 
-		world.system<Agent, Neighbours>("Update_Neighbours")
-			.kind(flecs::PreUpdate)
-			.each([](flecs::entity agent, Agent, Neighbours& neighbours)
-				{
-					neighbours.container.clear();
-					int32_t index = 0;
-					auto patch = agent.target<Occupy>();
-					for (auto neighbour_patch : patch.get<Neighbours>()->container)
-					{
-						auto neighbour = neighbour_patch.target<OccupiedBy>();
-						if (neighbour)
-							neighbours.container.push_back(neighbour);
-					}
-				});
-
-		world.system<const Neighbours, LocalStats>("Update_LocalStats")
+		world.system<const Position, LocalStats>("Update_LocalStats")
 			.kind(flecs::OnUpdate)
-			.each([](flecs::entity agent, const Neighbours& neighbours, LocalStats& stats)
+			.each([this](flecs::entity agent, const Position& pos, LocalStats& stats)
 				{
+					auto neighbours = this->grid.neighbours(pos);
 					auto team = agent.get<Team>();
-					stats.total_nearby = neighbours.container.size();
-					stats.similar_nearby = std::count_if(neighbours.container.begin(), neighbours.container.end(),
+					stats.total_nearby = neighbours.size();
+					stats.similar_nearby = std::count_if(neighbours.begin(), neighbours.end(),
 						[&team](const flecs::entity e) {return team == e.get<Team>(); });
 					stats.other_nearby = stats.total_nearby - stats.similar_nearby;
 				});
@@ -122,67 +107,46 @@ public:
 
 	void add_move_system()
 	{
-		world.system<Agent>("System_Move")
+		world.system<Agent, Position>("System_Move")
 			.kind(flecs::PostUpdate)
 			.term<Happy>().not_()
 			.no_staging()
-			.each([this](flecs::entity agent, Agent)
+			.each([this](flecs::entity agent, Agent, Position& pos)
 				{
-					auto patch = this->empty_patches.first();
-					move(agent, patch);
+					auto empty_cell = this->empty_patches.first();
+					const Position& empty_cell_pos = *empty_cell.template get<Position>();
+					this->grid.swap(pos, empty_cell_pos);
+					Position tmp = pos;
+					pos = empty_cell_pos;
+					empty_cell.set<Position>(tmp);
+					//fmt::print("Moving {} from ({}, {}) to ({}, {})\n", agent.id(), empty_cell_pos.w, empty_cell_pos.h, pos.w, pos.h);
 				});
 	}
 
-	flecs::entity spawn_patch(const size_t w, const size_t h)
+	flecs::entity spawn_entity(const size_t w, const size_t h)
 	{
-		return world.entity(fmt::format("Patch_{}_{}", w, h).c_str())
-				.add<Cell>()
-				.add<Neighbours>()
-				.set<Position>({ w, h });
-				;
+		auto entity = world.entity().set<Position>({ w, h });
+		if (Random::get<bool>(density))
+		{
+			entity.add<Agent>().add<LocalStats>();
+			if (Random::get<bool>())
+				entity.add(Team::Red);
+			else
+				entity.add(Team::Blue);
+		}
+		return entity;
 	}
 
 	void populate()
 	{
-		auto patches = world.entity("Patches");
-		auto scope = world.set_scope(patches);
+		auto agents = world.entity("Agents");
+		auto scope = world.set_scope(agents);
 		for (size_t w = 0; w < W; w++) {
 			for (size_t h = 0; h < H; h++) {
-				grid.set(w, h, spawn_patch(w, h));
-			}
-		}
-
-		auto agents = world.entity("Agents");
-		scope = world.set_scope(agents);
-		for (auto cell : grid.cells)
-		{
-			if (Random::get<bool>(density))
-			{
-				auto agent = world.entity()
-					.add<Agent>()
-					.add<LocalStats>()
-					.add<Neighbours>()
-					;
-				if (Random::get<bool>())
-					agent.add(Team::Red);
-				else
-					agent.add(Team::Blue);
-				move(agent, cell);
+				grid.set(w, h, spawn_entity(w, h));
 			}
 		}
 		world.set_scope(scope);
-	}
-
-	void compute_neighbours()
-	{
-		world.each([this](flecs::entity patch, const Position& position, Neighbours& neighbours)
-			{
-				for (auto neighbour : this->grid.neighbours(position))
-				{
-					neighbours.container.push_back(neighbour);
-				}
-			}
-		);
 	}
 
 	void init_components()
@@ -207,16 +171,6 @@ public:
 		world.component<Position>()
 			.member<size_t>("height")
 			.member<size_t>("width")
-			;
-
-		world.component<OccupiedBy>()
-			.add(flecs::Union)
-			.add(flecs::Exclusive)
-			;
-
-		world.component<Occupy>()
-			.add(flecs::Union)
-			.add(flecs::Exclusive)
 			;
 	}
 };
