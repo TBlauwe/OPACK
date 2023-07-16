@@ -114,11 +114,11 @@ public:
 			.multi_threaded(mt)
 			.each([this](flecs::entity agent, const Position& pos, LocalStats& stats)
 				{
-					auto neighbours = this->grid.neighbours(pos);
-					auto team = agent.get<Team>();
+					const auto neighbours = this->grid.neighbours(pos);
+					const auto& team = *agent.get<Team>();
 					stats.total_nearby = neighbours.size();
 					stats.similar_nearby = std::count_if(neighbours.begin(), neighbours.end(),
-						[&team](const flecs::entity e) {return team == e.get<Team>(); });
+						[&team](const flecs::entity& e) {return e.has(team); });
 					stats.other_nearby = stats.total_nearby - stats.similar_nearby;
 				});
 

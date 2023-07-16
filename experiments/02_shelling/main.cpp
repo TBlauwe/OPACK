@@ -8,8 +8,8 @@ int main()
 	// =========================================================================== 
 	// Parameters
 	// =========================================================================== 
-	constexpr size_t height = 201;
-	constexpr size_t width = 201;
+	constexpr size_t height = 16;
+	constexpr size_t width = 16;
 	constexpr float density = .95f;
 	constexpr float similar_wanted = .30;
 
@@ -30,7 +30,7 @@ int main()
 	//shelling.interactive_run(true, false);
 	//opack::step_n(world, 100);
 	//opack::run_with_webapp(world);
-	opack::run(world);
+	//opack::run(world);
 
 	const sec duration = clock::now() - before;
 
