@@ -14,20 +14,7 @@ int main()
 	constexpr float similar_wanted = .30;
 
 	auto world = opack::create_world();
-	auto shelling = Shelling<true, height, width>(world, density, similar_wanted);
-
-	world.system<const GlobalStats>("Task_PrintGlobalStats")
-		.kind(flecs::PostFrame)
-		.term_at(1).singleton()
-		.iter([&shelling](flecs::iter& it, const GlobalStats* stats)
-			{
-				fmt::print("===== TICK {} =====\n", it.world().get_tick());
-				fmt::print("Percent similar : {}%\n", stats[0].percent_similar);
-				fmt::print("Percent unhappy : {}%\n", stats[0].percent_unhappy);
-				fmt::print("Total agents : {}\n", shelling.agents_query.count());
-				fmt::print("Happy agents : {}\n", shelling.happy_agents.count());
-			}
-		);
+	auto shelling = Shelling<height, width>(world, density, similar_wanted);
 
 	using clock = std::chrono::system_clock;
 	using sec = std::chrono::duration<double>;
@@ -35,7 +22,10 @@ int main()
 
 	const auto before = clock::now();
 
-	shelling.grid_display.display();
+	//shelling.run(false, true, true);
+	shelling.grid_display.display_stats();
+	shelling.grid_display.display_grid();
+	shelling.interactive_run(true, false);
 	//opack::step_n(world, 100);
 	//opack::run_with_webapp(world);
 

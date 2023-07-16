@@ -14,23 +14,35 @@ class GridDisplay
 	using Grid_t = Grid<flecs::entity, H, W>;
 
 public: 
-	GridDisplay(Grid_t& grid) : grid{ grid }
+	GridDisplay(flecs::world& world, Grid_t& grid) : world{ world }, grid { grid }
 	{}
 
-	void clearConsole() {
-		#ifdef _WIN32
-		#include <iostream>
-			static const char* CSI = "\33[";
-			printf("%s%c%s%c", CSI, 'H', CSI, '2J');
-
-		#else
-		#include <unistd.h>
-			write(1, "\E[H\E[2J", 7);
-		#endif
+	void clear() 
+	{
+		#if defined _WIN32
+    system("cls");
+    //clrscr(); // including header file : conio.h
+#elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__)
+    system("clear");
+    //std::cout<< u8"\033[2J\033[1;1H"; //Using ANSI Escape Sequences 
+#elif defined (__APPLE__)
+    system("clear");
+#endif
 	}
 
-	void display()
+	void display_stats()
 	{
+		fmt::print(fmt::fg(border_fg) | fmt::bg(border_bg),"─{0:─^{1}}─\n", "Stats", W * (padding + 3));
+		fmt::print("{0: >15} : {1}\n", "Tick", world.get_tick());
+		fmt::print("{0: >15} : {1}%\n", "Percent similar", world.get<GlobalStats>()->percent_similar);
+		fmt::print("{0: >15} : {1}%\n", "Percent unhappy", world.get<GlobalStats>()->percent_unhappy);
+		fmt::print("{0: >15} : {1}\n", "Total agents", world.count(flecs::id(flecs::IsA, opack::entity<Agent>(world))));
+		fmt::print("{0: >15} : {1}\n", "Happy agents", world.count<Happy>());
+	}
+
+	void display_grid()
+	{
+		fmt::print(fmt::fg(border_fg) | fmt::bg(border_bg),"─{0:─^{1}}─\n", "Grid", W * (padding + 3));
 		// Upper-border
 		fmt::print("{0: ^{1}}", "", padding + 1);
 		for (int i{ 0 }; i < W; i++)
@@ -47,11 +59,11 @@ public:
 			fmt::print(fmt::fg(border_fg) | fmt::bg(border_bg),"│");
 			for (size_t w = 0; w < W; w++) {
 				auto entity = grid.cells[grid.linearize(w, h)];
-				auto team = entity.get<Team>();
+				auto team = entity.template get<Team>();
 				if (team)
 				{
 					auto flag = fmt::fg(fmt::color::white);
-					if (entity.has<Happy>())
+					if (entity.template has<Happy>())
 						flag |= fmt::emphasis::bold;
 					else
 						flag |= fmt::emphasis::strikethrough;
@@ -81,6 +93,7 @@ public:
 	}
 
 private:
+	flecs::world& world;
 	Grid_t& grid;
 	uint8_t padding { 3 };
 

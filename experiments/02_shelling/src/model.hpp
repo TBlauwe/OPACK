@@ -11,7 +11,7 @@ using Random = effolkronium::random_static;
 #include "identifiers.hpp"
 #include "display.hpp"
 
-template<bool display, size_t H, size_t W>
+template<size_t H, size_t W>
 class Shelling
 {
 public:
@@ -20,19 +20,19 @@ public:
 		:
 		// ----- Flecs -----
 		world{ world },
-		empty_patches{ world.query_builder().term<Position>().term<Agent>().not_().build()},
-		happy_agents{ world.query_builder().term<Agent>().term<Happy>().build() },
-		agents_query{ world.query_builder().term<Agent>().build() },
+		empty_patches{ world.query_builder<Position>().term<Agent>().not_().build() },
+		happy_agents{ world.query_builder<const Happy>().build() },
+		agents_query{ world.query_builder<const LocalStats>().build() },
 		// ----- Model -----
 		grid{},
-		grid_display{grid},
+		grid_display{ world, grid },
 		density{ density }
 	{
 		// Singleton
-		world.add<GlobalStats>(); 
+		world.add<GlobalStats>();
 
 		// For web app inspection
-		init_components(); 
+		init_components();
 
 		// Define a entity "model", a prefab, that will be used
 		// to instantiate entities based on it.
@@ -40,7 +40,7 @@ public:
 			.set<SimilarWanted>({ similar_wanted })
 			.add<Agent>()
 			.override<LocalStats>();
-			;
+		;
 
 		populate();
 		define_logic();
@@ -51,9 +51,9 @@ public:
 public:
 	// ----- Flecs
 	flecs::world& world;
-	flecs::query<> empty_patches;
-	flecs::query<> happy_agents;
-	flecs::query<> agents_query;
+	flecs::query<Position> empty_patches;
+	flecs::query<const Happy> happy_agents;
+	flecs::query<const LocalStats> agents_query;
 
 	// ----- Model
 	Grid_t grid;
@@ -62,13 +62,54 @@ public:
 	// ----- Model
 	GridDisplay<H, W> grid_display;
 
+	void interactive_run(bool with_display, bool clear_every_tick)
+	{
+		std::string input;
+		do {
+			std::getline(std::cin, input);
+			world.system()
+				.kind(flecs::PostFrame)
+				.iter([&](flecs::iter& it)
+					{
+						if (clear_every_tick) grid_display.clear();
+						if (with_display)
+						{
+							grid_display.display_stats();
+							grid_display.display_grid();
+						}
+
+					});
+			opack::step(world);
+
+		} while (true);
+	}
+
+	void run(bool with_web_app, bool with_display, bool clear_every_tick)
+	{
+		world.system()
+			.kind(flecs::PostFrame)
+			.iter([&](flecs::iter& it)
+				{
+					if (clear_every_tick) grid_display.clear();
+					if (with_display)
+					{
+						grid_display.display_stats();
+						grid_display.display_grid();
+					}
+
+				});
+			if (with_web_app)
+				opack::run_with_webapp(world);
+			else
+				opack::run(world);
+	}
+
 	void define_logic()
 	{
 		// =========================================================================== 
 		// Logic
 		// =========================================================================== 
 		world.system<const Position, LocalStats>("Update_LocalStats")
-			.kind(flecs::OnUpdate)
 			.each([this](flecs::entity agent, const Position& pos, LocalStats& stats)
 				{
 					auto neighbours = this->grid.neighbours(pos);
@@ -80,7 +121,6 @@ public:
 				});
 
 		world.system<const SimilarWanted, const LocalStats>("System_ComputeHappiness")
-			.kind(flecs::OnUpdate)
 			.term<Happy>().write()
 			.each([this](flecs::entity e, const SimilarWanted& similar_wanted, const LocalStats& stats)
 				{
@@ -94,24 +134,25 @@ public:
 		// =========================================================================== 
 		// Globals update
 		// =========================================================================== 
-		world.system<const LocalStats, GlobalStats>("Update_Globals_Stats")
-			.arg(2).singleton()
-			.kind(flecs::OnValidate)
-			.iter([this](flecs::iter& it, const LocalStats* local_stats, GlobalStats* global_stats)
+		world.system<GlobalStats>("Update_GlobalsStats")
+			.term<Happy>().read()
+			.each([this](flecs::iter& it, size_t i, GlobalStats& global_stats)
 				{
 					int similar_neighbours{ 0 };
 					int total_neighbours{ 0 };
-					for (auto i : it)
-					{
-						similar_neighbours += local_stats[i].similar_nearby;
-						total_neighbours += local_stats[i].total_nearby;
-					}
-					global_stats->percent_similar = (static_cast<float>(similar_neighbours) / total_neighbours) * 100;
-					global_stats->percent_unhappy = (static_cast<float>(this->happy_agents.count()) / this->agents_query.count()) * 100;
+					this->agents_query.each([&similar_neighbours, &total_neighbours](flecs::entity e, const LocalStats& local_stats)
+						{
+							similar_neighbours += local_stats.similar_nearby;
+							total_neighbours += local_stats.total_nearby;
+						}
+					);
+					global_stats.percent_similar = (static_cast<float>(similar_neighbours) / total_neighbours) * 100;
+					global_stats.percent_unhappy = (static_cast<float>(this->happy_agents.count()) / this->agents_query.count()) * 100;
 				}
 		);
 
 		world.system("StopCondition")
+			.term<Happy>().read()
 			.kind(flecs::PreFrame)
 			.iter([this](flecs::iter& it)
 				{
@@ -123,17 +164,24 @@ public:
 
 	void add_move_system()
 	{
-		world.system<Agent, Position>("System_Move")
-			.kind(flecs::PostUpdate)
+		world.system<Position>("System_Move")
+			.term<Position>().read_write()
+			.term(flecs::IsA, opack::entity<Agent>(world))
+			.kind(flecs::PreUpdate)
 			.term<Happy>().not_()
 			.no_staging()
-			.each([this](flecs::entity agent, Agent, Position& pos)
+			.iter([this](flecs::iter& it, Position* pos)
 				{
-					auto empty_cell = this->empty_patches.first();
-					Position& empty_cell_pos = *empty_cell.template get_mut<Position>();
-					this->grid.swap(pos, empty_cell_pos);
-					std::swap(pos, empty_cell_pos);
-					fmt::print("Moving {} from ({}, {}) to ({}, {})\n", agent.id(), empty_cell_pos.w, empty_cell_pos.h, pos.w, pos.h);
+					for (auto i : it)
+					{
+						auto empty_cell = this->empty_patches.first();
+						it.world().defer_suspend();
+						Position& empty_cell_pos = *empty_cell.template get_mut<Position>();
+						this->grid.swap(pos[i], empty_cell_pos);
+						std::swap(pos[i], empty_cell_pos);
+						it.world().defer_resume();
+						//fmt::print("Moving {} from ({}, {}) to ({}, {})\n", it.entity(i).id(), empty_cell_pos.w, empty_cell_pos.h, pos[i].w, pos[i].h);
+					}
 				});
 	}
 
