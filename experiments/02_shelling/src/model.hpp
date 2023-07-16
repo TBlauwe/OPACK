@@ -174,7 +174,8 @@ public:
 				{
 					for (auto i : it)
 					{
-						auto empty_cell = this->empty_patches.first();
+						//auto empty_cell = random_empty_patches();
+						auto empty_cell = random_empty_patches();
 						it.world().defer_suspend();
 						Position& empty_cell_pos = *empty_cell.template get_mut<Position>();
 						this->grid.swap(pos[i], empty_cell_pos);
@@ -234,6 +235,17 @@ public:
 			.member<size_t>("height")
 			.member<size_t>("width")
 			;
+	}
+
+	flecs::entity random_empty_patches()
+	{
+		flecs::entity entity;
+		empty_patches.iter([this, &entity](flecs::iter& it, Position* pos)
+			{
+				entity = it.entity(Random::get<int>(0, this->empty_patches.count()-1));
+			}
+		);
+		return entity;
 	}
 };
 

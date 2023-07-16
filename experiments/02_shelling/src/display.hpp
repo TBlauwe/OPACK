@@ -33,7 +33,7 @@ public:
 	void display_stats()
 	{
 		fmt::print(fmt::fg(border_fg) | fmt::bg(border_bg),"─{0:─^{1}}─\n", "Stats", W * (padding + 3));
-		fmt::print("{0: >15} : {1}\n", "Tick", world.get_tick());
+		//fmt::print("{0: >15} : {1}\n", "Tick", world.get_tick());
 		fmt::print("{0: >15} : {1}%\n", "Percent similar", world.get<GlobalStats>()->percent_similar);
 		fmt::print("{0: >15} : {1}%\n", "Percent unhappy", world.get<GlobalStats>()->percent_unhappy);
 		fmt::print("{0: >15} : {1}\n", "Total agents", world.count(flecs::id(flecs::IsA, opack::entity<Agent>(world))));
@@ -41,6 +41,37 @@ public:
 	}
 
 	void display_grid()
+	{
+		if constexpr (H > 30)
+		{
+			display_small_grid();
+		}
+		else
+		{
+			display_full_grid();
+		}
+	}
+
+	void display_small_grid()
+	{
+		for (size_t h = 0; h < H; h++) {
+			for (size_t w = 0; w < W; w++) {
+				auto entity = grid.cells[grid.linearize(w, h)];
+				auto team = entity.template get<Team>();
+				if (team)
+				{
+					if (*team == Team::Red)
+						fmt::print(fmt::bg(fmt::color::red), " ");
+					else
+						fmt::print(fmt::bg(fmt::color::blue), " ");
+				}
+				else
+					fmt::print(fmt::fg(fmt::color::gray) | fmt::bg(fmt::color::white), " ");
+			}
+		}
+	}
+
+	void display_full_grid()
 	{
 		fmt::print(fmt::fg(border_fg) | fmt::bg(border_bg),"─{0:─^{1}}─\n", "Grid", W * (padding + 3));
 		// Upper-border
