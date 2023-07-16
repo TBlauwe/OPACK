@@ -8,14 +8,14 @@ int main()
 	// =========================================================================== 
 	// Parameters
 	// =========================================================================== 
-	constexpr size_t height = 100;
-	constexpr size_t width = 100;
+	constexpr size_t height = 201;
+	constexpr size_t width = 201;
 	constexpr float density = .95f;
 	constexpr float similar_wanted = .30;
 
 	auto world = opack::create_world();
-	auto shelling = Shelling<height, width>(world, density, similar_wanted);
-	shelling.grid_display.display_grid();
+	auto shelling = Shelling<height, width>(world, false, density, similar_wanted);
+	//shelling.grid_display.display_grid();
 	shelling.run(false, true, false);
 
 
@@ -30,7 +30,7 @@ int main()
 	//shelling.interactive_run(true, false);
 	//opack::step_n(world, 100);
 	//opack::run_with_webapp(world);
-	//opack::run(world);
+	opack::run(world);
 
 	const sec duration = clock::now() - before;
 

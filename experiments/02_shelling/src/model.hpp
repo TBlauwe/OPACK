@@ -16,7 +16,7 @@ class Shelling
 {
 public:
 	using Grid_t = Grid<flecs::entity, H, W>;
-	Shelling(flecs::world& world, float density, float similar_wanted)
+	Shelling(flecs::world& world, bool mt, float density, float similar_wanted)
 		:
 		// ----- Flecs -----
 		world{ world },
@@ -58,6 +58,7 @@ public:
 	// ----- Model
 	Grid_t grid;
 	float density{ 0.95f };
+	bool mt{ false };
 
 	// ----- Model
 	GridDisplay<H, W> grid_display;
@@ -110,6 +111,7 @@ public:
 		// Logic
 		// =========================================================================== 
 		world.system<const Position, LocalStats>("Update_LocalStats")
+			.multi_threaded(mt)
 			.each([this](flecs::entity agent, const Position& pos, LocalStats& stats)
 				{
 					auto neighbours = this->grid.neighbours(pos);
@@ -121,6 +123,7 @@ public:
 				});
 
 		world.system<const SimilarWanted, const LocalStats>("System_ComputeHappiness")
+			.multi_threaded(mt)
 			.term<Happy>().write()
 			.each([this](flecs::entity e, const SimilarWanted& similar_wanted, const LocalStats& stats)
 				{
