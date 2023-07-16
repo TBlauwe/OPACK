@@ -1,5 +1,7 @@
 #pragma once
 #include <functional>
+#include <vector>
+#include <algorithm>
 
 struct Position
 {
@@ -28,29 +30,24 @@ struct Grid
 	static constexpr Position se_neighbour(const Position pos) { return { (pos.w + 1) % W , (pos.h + 1) % H }; }
 	static constexpr Position so_neighbour(const Position pos) { return { (pos.w - 1) % W , (pos.h + 1) % H }; }
 
-	Grid() = default;
-	Grid(std::function<T(const size_t w, const size_t h)> builder)
+	Grid() : cells(H * W, T())
 	{
-		for (size_t w = 0; w < W; w++) {
-			for (size_t h = 0; h < H; h++) {
-				cells[linearize(w, h)] = builder(w, h);
-			}
-		}
 	}
 
-	constexpr void swap(const Position a, const Position b) {
+	void swap(const Position a, const Position b) {
 		std::swap(cells[linearize(a)], cells[linearize(b)]);
 	}
 
-	constexpr void set(const size_t w, const size_t h, T value) {
+	void set(const size_t w, const size_t h, T value) {
 		cells[linearize(w, h)] = value;
+
 	}
 
-	constexpr const T operator()(const size_t w, const size_t h) {
+	const T operator()(const size_t w, const size_t h) {
 		return cells[linearize(w, h)];
 	}
 
-	constexpr std::array<T, 8> neighbours(const Position pos)
+	std::array<T, 8> neighbours(const Position pos)
 	{
 		return std::array<T, 8>{
 			cells[linearize(n_neighbour(pos))],
@@ -63,7 +60,6 @@ struct Grid
 				cells[linearize(so_neighbour(pos))]
 		};
 	}
-
-	std::array<T, H * W> cells;
+	std::vector<T> cells;
 };
 

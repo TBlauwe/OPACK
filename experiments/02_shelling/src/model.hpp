@@ -9,8 +9,9 @@ using Random = effolkronium::random_static;
 
 #include "environment.hpp"
 #include "identifiers.hpp"
+#include "display.hpp"
 
-template<size_t H, size_t W>
+template<bool display, size_t H, size_t W>
 class Shelling
 {
 public:
@@ -24,10 +25,23 @@ public:
 		agents_query{ world.query_builder().term<Agent>().build() },
 		// ----- Model -----
 		grid{},
-		density{ density },
-		similar_wanted{ similar_wanted }
+		grid_display{grid},
+		density{ density }
 	{
-		init_components(); // For web app inspection
+		// Singleton
+		world.add<GlobalStats>(); 
+
+		// For web app inspection
+		init_components(); 
+
+		// Define a entity "model", a prefab, that will be used
+		// to instantiate entities based on it.
+		opack::init<Agent>(world)
+			.set<SimilarWanted>({ similar_wanted })
+			.add<Agent>()
+			.override<LocalStats>();
+			;
+
 		populate();
 		define_logic();
 		opack::step(world);
@@ -44,7 +58,9 @@ public:
 	// ----- Model
 	Grid_t grid;
 	float density{ 0.95f };
-	float similar_wanted{ 0.95f };
+
+	// ----- Model
+	GridDisplay<H, W> grid_display;
 
 	void define_logic()
 	{
@@ -63,12 +79,12 @@ public:
 					stats.other_nearby = stats.total_nearby - stats.similar_nearby;
 				});
 
-		world.system<const LocalStats>("System_ComputeHappiness")
+		world.system<const SimilarWanted, const LocalStats>("System_ComputeHappiness")
 			.kind(flecs::OnUpdate)
 			.term<Happy>().write()
-			.each([this](flecs::entity e, const LocalStats& stats)
+			.each([this](flecs::entity e, const SimilarWanted& similar_wanted, const LocalStats& stats)
 				{
-					if (stats.similar_nearby >= this->similar_wanted * stats.total_nearby)
+					if (stats.similar_nearby >= similar_wanted.value * stats.total_nearby)
 						e.add<Happy>();
 					else
 						e.remove<Happy>();
@@ -114,12 +130,10 @@ public:
 			.each([this](flecs::entity agent, Agent, Position& pos)
 				{
 					auto empty_cell = this->empty_patches.first();
-					const Position& empty_cell_pos = *empty_cell.template get<Position>();
+					Position& empty_cell_pos = *empty_cell.template get_mut<Position>();
 					this->grid.swap(pos, empty_cell_pos);
-					Position tmp = pos;
-					pos = empty_cell_pos;
-					empty_cell.set<Position>(tmp);
-					//fmt::print("Moving {} from ({}, {}) to ({}, {})\n", agent.id(), empty_cell_pos.w, empty_cell_pos.h, pos.w, pos.h);
+					std::swap(pos, empty_cell_pos);
+					fmt::print("Moving {} from ({}, {}) to ({}, {})\n", agent.id(), empty_cell_pos.w, empty_cell_pos.h, pos.w, pos.h);
 				});
 	}
 
@@ -128,7 +142,7 @@ public:
 		auto entity = world.entity().set<Position>({ w, h });
 		if (Random::get<bool>(density))
 		{
-			entity.add<Agent>().add<LocalStats>();
+			entity.is_a<Agent>();
 			if (Random::get<bool>())
 				entity.add(Team::Red);
 			else
@@ -139,28 +153,28 @@ public:
 
 	void populate()
 	{
-		auto agents = world.entity("Agents");
-		auto scope = world.set_scope(agents);
-		for (size_t w = 0; w < W; w++) {
-			for (size_t h = 0; h < H; h++) {
+		for (size_t h = 0; h < H; h++) {
+			for (size_t w = 0; w < W; w++) {
 				grid.set(w, h, spawn_entity(w, h));
 			}
 		}
-		world.set_scope(scope);
 	}
 
 	void init_components()
 	{
-		world.add<GlobalStats>();
 		world.component<GlobalStats>()
 			.member<float>("percent_similar")
 			.member<float>("percent_unhappy")
 			;
 
+		world.component<SimilarWanted>()
+			.member<float>("value")
+			;
+
 		world.component<LocalStats>()
-			.member<int>("similar_nearby")
-			.member<int>("other_nearby")
-			.member<int>("total_nearby")
+			.member<uint8_t>("similar_nearby")
+			.member<uint8_t>("other_nearby")
+			.member<uint8_t>("total_nearby")
 			;
 
 		world.component<Team>()
